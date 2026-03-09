@@ -34,6 +34,11 @@ class Job(models.Model):
     salary_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     salary_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     salary_currency = models.CharField(max_length=3, default="USD")
+    is_remote = models.BooleanField(default=False)
+    salary_visible = models.BooleanField(default=True)
+    license_required = models.BooleanField(default=False)
+    training_required = models.BooleanField(default=False)
+    on_job_training = models.BooleanField(default=False)
 
     # Keep FK shape compatible with backend jobs table usage.
     posted_by = models.ForeignKey(
