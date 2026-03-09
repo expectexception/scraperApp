@@ -1,0 +1,166 @@
+{
+  "FilterName": "FinalStrictAviationCategorization",
+  "SourceData": "Production Aviation Theme",
+  "Filters": [
+    {
+      "FilterType": "Operative_Functional_Control_Keywords",
+      "DisplayName": "Core Operational Roles",
+      "Description": "Keywords for hands-on, day-to-day operational control, dispatch, monitoring, and execution roles.",
+      "Keywords": [
+        "Flight Operations Officer",
+        "Flight Operations Controller",
+        "Flight Control Officer",
+        "Dispatch Officer",
+        "Lead Dispatcher",
+        "Dispatch Coordinator",
+        "Dispatch Planner",
+        "Flight Watch Officer",
+        "Flight Monitoring Officer",
+        "Flight Tracking Specialist",
+        "Flight Following Officer",
+        "Tactical Operations Controller",
+        "Network Flow Controller",
+        "Network Operations Analyst",
+        "System Operations Controller",
+        "Operations Flow Controller",
+        "Fleet Controller",
+        "Aircraft Routing Controller",
+        "Crew Scheduler",
+        "Crew Operations Controller",
+        "Crew Tracking Specialist",
+        "Load Planning Officer",
+        "Aircraft Dispatcher",
+        "Flight Dispatcher",
+        "Airline Dispatcher"
+      ],
+      "NegativeKeywords": [
+        "Pilot",
+        "Pilote",
+        "Captain",
+        "First Officer",
+        "Cabin Crew",
+        "PNC",
+        "HR",
+        "Finance",
+        "IT",
+        "Mechanic",
+        "Mécanicien",
+        "Technician",
+        "Accountant",
+        "Comptable",
+        "Sales",
+        "Marketing",
+        "Apprentice",
+        "Alternance",
+        "Trainee",
+        "Intern",
+        "Internship",
+        "Praktikant",
+        "Azubi",
+        "Stagiaire",
+        "Stage"
+      ]
+    },
+    {
+      "FilterType": "Supervisory_Level_Control_Keywords",
+      "DisplayName": "Supervisory Roles",
+      "Description": "Keywords indicating supervisory or intermediate leadership roles overseeing operational functions.",
+      "Keywords": [
+        "OCC Supervisor",
+        "Operations Control Supervisor",
+        "Integrated Operations Supervisor",
+        "IOC Supervisor",
+        "OCC Shift Supervisor",
+        "Network Operations Supervisor",
+        "System Operations Supervisor",
+        "Dispatch Supervisor"
+      ],
+      "NegativeKeywords": [
+        "Pilot",
+        "Captain",
+        "Cabin Crew",
+        "PNC",
+        "Sales",
+        "Marketing",
+        "Technical",
+        "Maintenance"
+      ]
+    },
+    {
+      "FilterType": "Management_Executive_Control_Keywords",
+      "DisplayName": "Management and Executive Roles",
+      "Description": "Keywords for strategic and senior decision-making roles within OCC/NOC.",
+      "Keywords": [
+        "Director Operations Control",
+        "Head of Operations Control",
+        "VP Integrated Operations",
+        "OCC General Manager",
+        "OCC Manager",
+        "OCC Duty Manager",
+        "Airline Operations Center Manager",
+        "Operations Duty Manager",
+        "IOC Duty Manager",
+        "Dispatch Manager",
+        "Crew Control Duty Manager",
+        "Duty Manager OCC"
+      ],
+      "NegativeKeywords": [
+        "Pilot",
+        "Captain",
+        "Cabin Crew",
+        "PNC",
+        "HR",
+        "Sales",
+        "Marketing",
+        "Finance",
+        "Maintenance",
+        "Engineering",
+        "Commercial"
+      ]
+    },
+    {
+      "FilterType": "Maintenance_Engineering",
+      "DisplayName": "Maintenance & Engineering",
+      "Description": "Keywords for aircraft maintenance and engineering roles provided.",
+      "Keywords": [
+        "Maintenance Controller",
+        "Maintenance Operations Controller",
+        "Maintenance Control Engineer",
+        "Maintenance Control Coordinator",
+        "MCC"
+      ],
+      "NegativeKeywords": [
+        "Pilot",
+        "Captain",
+        "Cabin Crew",
+        "B1",
+        "B2",
+        "Licensed Engineer",
+        "Technician",
+        "Mechanic",
+        "Apprentice",
+        "Handy"
+      ]
+    },
+    {
+      "FilterType": "Ground_Airport_Operations",
+      "DisplayName": "Ground & Airport Operations",
+      "Description": "Keywords for ground handling and airport coordination.",
+      "Keywords": [
+        "Load Controller",
+        "Load Planner",
+        "Load Control Supervisor",
+        "Weight and Balance Controller"
+      ],
+      "NegativeKeywords": [
+        "Pilot",
+        "Captain",
+        "Cabin Crew",
+        "Ramp Agent",
+        "Baggage",
+        "Driver",
+        "Cleaner"
+      ]
+    }
+  ]
+}
