@@ -31,6 +31,8 @@
       "DisplayName": "Core Operational Roles",
       "Description": "Hands-on operational control, dispatch, monitoring and tactical execution roles inside OCC/IOC/NOC environments.",
       "Keywords": [
+        "Dispatcher",
+        "Dispatch",
         "Aircraft Dispatcher",
         "Flight Dispatcher",
         "Airline Dispatcher",

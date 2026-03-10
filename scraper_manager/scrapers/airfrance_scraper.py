@@ -21,7 +21,19 @@ class AirFranceScraper(BaseScraper):
     async def fetch_jobs(self) -> list:
         self.logger.info(f"[{self.site_key}] Fetching jobs from listing...")
         jobs_raw = await self._fetch_jobs_listing()
-        jobs = [get_job_dict(**job) for job in jobs_raw]
+        
+        # Convert to list of dicts for filtering
+        initial_jobs = jobs_raw
+        
+        self.logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+        
+        # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+        matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+        
+        self.logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching descriptions...")
+
+        # Convert matched results to job dicts
+        jobs = [get_job_dict(**job) for job in matched_initial]
 
         if not jobs:
             return []
@@ -33,11 +45,8 @@ class AirFranceScraper(BaseScraper):
         self.print_header()
         jobs = await self.fetch_jobs()
         
-        if self.use_filter and self.filter_manager:
-            matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
-            self.filter_manager.print_filter_stats(filter_stats)
-            jobs = matched_jobs
-
+        # Filter handled in fetch_jobs now
+        
         jobs, duplicate_count = await self.filter_new_jobs(jobs)
         await self.save_results(jobs)
         self.print_sample(jobs)

@@ -24,20 +24,18 @@ class AirbusScraper(BaseScraper):
         
     async def fetch_jobs(self) -> List[Dict[str, Any]]:
         """
-        Scrape jobs from Airbus Workday API
+        Scrape jobs from Airbus Workday API (Listing only)
         """
         jobs = []
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
-            # Create a context to handle cookies/session
             context = await browser.new_context(
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 viewport={'width': 1920, 'height': 1080}
             )
             
             try:
-                # 1. Initialize Session (Workday requires a valid session sometimes)
                 logger.info(f"[{self.site_key}] Initializing session...")
                 page = await context.new_page()
                 try:
@@ -45,20 +43,14 @@ class AirbusScraper(BaseScraper):
                 except Exception:
                     logger.warning(f"[{self.site_key}] Initial navigation timed out, continuing anyway")
                 
-                # 2. Prepare Config Parameters
                 site_config = self.config.get('scrapers', {}).get('airbus', {})
-                search_queries = site_config.get('search_queries', [])
-                
-                # Default query if none provided
-                if not search_queries:
-                    search_queries = [""]
+                search_queries = site_config.get('search_queries', []) or [""]
                 
                 for query in search_queries:
                     if len(jobs) >= self.max_jobs:
                         break
                         
                     logger.info(f"[{self.site_key}] Searching for: {query}")
-                    
                     offset = 0
                     limit = 20
                     
@@ -71,25 +63,18 @@ class AirbusScraper(BaseScraper):
                         }
                         
                         try:
-                            # Use page.request to make the API call with browser session
                             response = await page.request.post(
                                 self.api_url, 
                                 data=payload,
-                                headers={
-                                    "Content-Type": "application/json",
-                                    "Accept": "application/json"
-                                }
+                                headers={"Content-Type": "application/json", "Accept": "application/json"}
                             )
                             
                             if response.status != 200:
-                                logger.error(f"[{self.site_key}] API Error {response.status}: {response.status_text}")
                                 break
                                 
                             data = await response.json()
                             job_items = data.get('jobPostings', [])
-                            
                             if not job_items:
-                                logger.info(f"[{self.site_key}] No more jobs found for query '{query}'")
                                 break
                                 
                             logger.info(f"[{self.site_key}] Found {len(job_items)} jobs (Offset: {offset})")
@@ -98,60 +83,26 @@ class AirbusScraper(BaseScraper):
                                 if len(jobs) >= self.max_jobs:
                                     break
                                     
-                                job_id = item.get('bulletinId')
                                 external_path = item.get('externalPath')
-                                if not job_id and external_path:
-                                    job_id = external_path.split('/')[-1]
-                                    
+                                job_id = item.get('bulletinId') or (external_path.split('/')[-1] if external_path else None)
                                 title = item.get('title') or "Unknown Title"
-                                posted_on = item.get('postedOn')
-                                location = item.get('locationsText')
                                 
-                                # Corrected URL construction: use the domain as base
-                                base_domain = "https://ag.wd3.myworkdayjobs.com"
-                                full_url = f"{base_domain}{external_path}"
-                                
-                                # Basic fields from API
-                                job = {
+                                url = f"https://ag.wd3.myworkdayjobs.com{external_path}"
+                                jobs.append({
                                     'company': self.company_name,
                                     'title': title,
-                                    'location': location,
-                                    'url': full_url,
-                                    'source_url': full_url,
-                                    'apply_url': full_url,
-                                    'posted_date': posted_on, # Raw string like "Posted 2 Days Ago"
-                                    'is_active': True,
-                                    'description': '', # Will fetch if needed or leave empty
+                                    'location': item.get('locationsText'),
+                                    'url': url,
+                                    'apply_url': url,
+                                    'posted_date': item.get('postedOn'),
                                     'job_id': job_id
-                                }
-                                
-                                # Should we fetch description? 
-                                # It requires another API call: /wday/cxs/ag/Airbus/job/{bulletinId}
-                                # Let's do it for completeness as Workday API is fast.
-                                try:
-                                    if job_id:
-                                        desc_url = f"https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/job/{job_id}"
-                                        desc_resp = await page.request.get(desc_url)
-                                        if desc_resp.status == 200:
-                                            desc_data = await desc_resp.json()
-                                            desc_info = desc_data.get('jobPostingInfo', {})
-                                            job['description'] = desc_info.get('jobDescription')
-                                            job['posted_date'] = desc_info.get('postedOn') or job['posted_date']
-                                            job['start_date'] = desc_info.get('startDate')
-                                            job['employment_type'] = desc_info.get('timeType')
-                                            job['job_category'] = desc_info.get('jobCategory')
-                                except Exception as e:
-                                    logger.warning(f"[{self.site_key}] Failed to fetch description for {job_id}: {e}")
-                                
-                                jobs.append(job)
+                                })
                             
                             offset += limit
-                            await asyncio.sleep(0.5) # Politeness
-                            
+                            await asyncio.sleep(0.5)
                         except Exception as e:
                             logger.error(f"[{self.site_key}] Error fetching offset {offset}: {e}")
                             break
-                            
             except Exception as e:
                 logger.error(f"[{self.site_key}] Global error: {e}")
             finally:
@@ -159,11 +110,65 @@ class AirbusScraper(BaseScraper):
                 
         return jobs
 
+    async def fetch_job_descriptions(self, jobs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Fetch full details for matched jobs only"""
+        if not jobs:
+            return []
+            
+        logger.info(f"[{self.site_key}] Fetching descriptions for {len(jobs)} matched jobs...")
+        
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=self.headless)
+            page = await browser.new_page()
+            
+            for job in jobs:
+                if not job.get('job_id'):
+                    continue
+                try:
+                    desc_url = f"https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/job/{job['job_id']}"
+                    resp = await page.request.get(desc_url)
+                    if resp.status == 200:
+                        desc_data = await resp.json()
+                        info = desc_data.get('jobPostingInfo', {})
+                        job['description'] = info.get('jobDescription')
+                        job['posted_date'] = info.get('postedOn') or job['posted_date']
+                        job['employment_type'] = info.get('timeType')
+                        job['job_category'] = info.get('jobCategory')
+                except Exception as e:
+                    logger.warning(f"[{self.site_key}] Failed to fetch description for {job['job_id']}: {e}")
+                await asyncio.sleep(0.3)
+            
+            await browser.close()
+        return jobs
+
     async def run(self):
-        """Main entry point for the scraper"""
+        """Main execution method"""
         self.print_header()
+        
+        # Step 1: Discovery
         jobs = await self.fetch_jobs()
-        # Filter out any None values that might have crept in
-        jobs = [j for j in jobs if j is not None]
+        if not jobs:
+            return []
+
+        # Step 2: Pre-filtering (The "Only Scrape Matches" requirement)
+        if self.use_filter and self.filter_manager:
+            logger.info(f"[{self.site_key}] Applying pre-filter...")
+            matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+            
+            if not matched_jobs:
+                logger.info(f"[{self.site_key}] No jobs matched filter criteria.")
+                return []
+            jobs = matched_jobs
+
+        # Step 3: Duplicate Check
+        jobs, _ = await self.filter_new_jobs(jobs)
+        if not jobs:
+            return []
+
+        # Step 4: Enrichment
+        jobs = await self.fetch_job_descriptions(jobs)
+        
+        # Step 5: Save
         await self.save_results(jobs)
         return jobs

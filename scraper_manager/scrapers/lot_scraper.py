@@ -57,9 +57,14 @@ class LOTScraper(BaseScraper):
                         if '#' not in href and href != self.base_url:
                             job_links.append({"title": text or "Job Detail", "url": href})
             
-            logger.info(f"[{self.site_key}] Found {len(job_links)} potential job links")
+            logger.info(f"[{self.site_key}] Found {len(job_links)} potential job links. Applying pre-filter...")
             
-            for i, link_data in enumerate(job_links):
+            # PRE-FILTER: Filter by title first to skip irrelevant roles (like HR) COMPLETELY
+            matched_links, _, _ = self.apply_title_filter(job_links)
+            
+            logger.info(f"[{self.site_key}] {len(matched_links)} jobs passed pre-filtering. Fetching details...")
+            
+            for i, link_data in enumerate(matched_links):
                 if self.max_jobs and len(jobs) >= self.max_jobs: break
                 
                 try:

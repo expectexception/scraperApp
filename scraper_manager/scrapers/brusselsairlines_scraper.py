@@ -62,24 +62,33 @@ class BrusselsAirlinesScraper(BaseScraper):
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                job_urls = []
+                initial_jobs = []
                 for link in links:
                     href = link['h']
                     title = link['t']
                     if href and href not in seen_urls and self.is_job_link(title, href):
                         seen_urls.add(href)
-                        job_urls.append((href, title))
+                        initial_jobs.append({'title': title, 'url': href})
                 
-                logger.info(f"[{self.site_key}] {len(job_urls)} jobs passed filtering")
+                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles (like HR) completely
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
 
-                for i, (url, title) in enumerate(job_urls):
+                for i, j_initial in enumerate(matched_initial):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         
+                    url = j_initial['url']
+                    title = j_initial['title']
+                    
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                        # Increased timeout for stability
+                        await detail_page.goto(url, wait_until='load', timeout=60000)
                         await detail_page.wait_for_timeout(2000)
                         
                         real_title = title

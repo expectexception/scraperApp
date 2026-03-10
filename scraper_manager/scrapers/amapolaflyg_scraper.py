@@ -65,9 +65,14 @@ class AmapolaFlygScraper(BaseScraper):
                     return results;
                 }''')
                 
-                logger.info(f"[{self.site_key}] Found {len(jobs_data)} jobs")
+                logger.info(f"[{self.site_key}] Found {len(jobs_data)} jobs in listing. Applying pre-filter...")
                 
-                for i, j_data in enumerate(jobs_data):
+                # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+                matched_data, _, _ = self.apply_title_filter(jobs_data)
+                
+                logger.info(f"[{self.site_key}] {len(matched_data)} jobs passed pre-filtering.")
+
+                for i, j_data in enumerate(matched_data):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         

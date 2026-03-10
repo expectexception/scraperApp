@@ -56,7 +56,7 @@ class KLMScraper(BaseScraper):
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                job_urls = []
+                initial_jobs = []
                 for link in links:
                     href = link['h']
                     title = link['t']
@@ -68,16 +68,27 @@ class KLMScraper(BaseScraper):
                             continue
                             
                         seen_urls.add(href)
-                        job_urls.append((href, title))
+                        initial_jobs.append({'title': title, 'url': href})
                 
-                for i, (url, title) in enumerate(job_urls):
+                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+
+                for i, j_initial in enumerate(matched_initial):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
+                    
+                    url = j_initial['url']
+                    title = j_initial['title']
                     
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                        # Increased timeout for stability
+                        await detail_page.goto(url, wait_until='load', timeout=60000)
                         await self.random_delay(1, 2)
                         
                         description = await self.extract_description_from_page(detail_page)

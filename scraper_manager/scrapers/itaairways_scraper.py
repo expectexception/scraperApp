@@ -41,17 +41,27 @@ class ITAScraper(BaseScraper):
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                job_urls = []
+                initial_jobs = []
                 for link in links:
                     href = link['h']
                     title = link['t']
                     if href and href not in seen_urls and title:
                         seen_urls.add(href)
-                        job_urls.append((href, title))
+                        initial_jobs.append({'title': title, 'url': href})
                 
-                for i, (url, title) in enumerate(job_urls):
+                logger.info(f"[{self.site_key}] {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+
+                for i, j_initial in enumerate(matched_initial):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
+                    
+                    url = j_initial['url']
+                    title = j_initial['title']
                     
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")

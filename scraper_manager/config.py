@@ -414,7 +414,7 @@ SCRAPERS = {
     },
     'airbus': {
         'max_jobs': 50,
-        'search_queries': ['Operations', 'Dispatcher','Manager']
+        'search_queries': ['Dispatch' ,'Operations','Manager']
     },
     'pilots_global': {
         'max_jobs': 50

@@ -107,91 +107,73 @@ class JSFirmScraper(BaseScraper):
             if not cards:
                 break
                 
+            page_jobs = []
+            # First pass: Extract initial info for pre-filtering
             for card in cards:
-                if len(self.jobs) >= self.max_jobs:
-                    break
-                
                 try:
-                    # Title and Link
-                    # Selector: a.u
-                    # Note: a.u might appear multiple times (job link, company link). 
-                    # Usually the first one is the job title or checking href structure.
-                    # Analysis showed: 
-                    # <a class="u" ... href="/Maintenance/Quality.../jobID_1591607">Quality Control Inspector</a>
-                    # <a class="u company" ...>Aspire MRO</a>
-                    
                     title_el = await card.query_selector('a.u:not(.company)')
-                    if not title_el:
-                        continue
-                        
-                    title = await title_el.inner_text()
-                    title = title.strip()
+                    if not title_el: continue
+                    title = (await title_el.inner_text()).strip()
                     url_suffix = await title_el.get_attribute('href')
-                    if url_suffix:
-                        url = self.base_url + url_suffix if not url_suffix.startswith('http') else url_suffix
-                    else:
-                        continue # Skip if no URL
-                        
-                    # Company
-                    company_el = await card.query_selector('a.u.company')
-                    company = await company_el.inner_text() if company_el else "Unknown"
-                    company = company.strip()
+                    url = self.base_url + url_suffix if url_suffix and not url_suffix.startswith('http') else url_suffix
                     
-                    # Location
-                    # Location seems to be text in col-xs-8, often after a <span class="label"> tag or just at the end.
-                    # Text content of col-xs-8 contains Title, Company, Labels, Location.
-                    # Let's try to get the whole text and parse, or target specific siblings.
-                    # From HTML: <br> Fort Worth, Texas 
-                    # It's a bit unstructured. Let's grab the text content of the parent div and try to clean it.
-                    # Or look for specific markers. The location is often the last text node in the div.col-xs-8
+                    company_el = await card.query_selector('a.u.company')
+                    company = (await company_el.inner_text()).strip() if company_el else "Unknown"
                     
                     col_8 = await card.query_selector('div.col-xs-8')
                     location = "Unknown"
                     if col_8:
-                        # Extract all text, split by newlines, filter empty.
-                        # Usually Title \n Company \n Labels \n Location
                         text_content = await col_8.inner_text()
                         lines = [line.strip() for line in text_content.split('\n') if line.strip()]
-                        # Heuristic: Location is usually the last non-empty line? 
-                        # But wait, date is in col-xs-4.
-                        # Let's verify this heuristic. 
-                        # Structure: Title > Company > Tags > Location
-                        if len(lines) > 0:
-                            location = lines[-1]
+                        if lines: location = lines[-1]
                             
-                    # Date
                     date_el = await card.query_selector('span.text-muted')
-                    if date_el:
-                        date_posted = await date_el.inner_text()
-                        date_posted = date_posted.strip()
-                    else:
-                        date_posted = "Unknown"
+                    date_posted = (await date_el.inner_text()).strip() if date_el else "Unknown"
 
-                    job = {
+                    page_jobs.append({
                         'title': title,
+                        'url': url,
                         'company': company,
                         'location': location,
-                        'url': url,
-                        'posted_date': date_posted,
-                        'scrape_date': datetime.now().isoformat(),
-                        'source': 'jsfirm',
-                        'job_id': f"jsfirm-{job_count}-{datetime.now().timestamp()}"
-                    }
+                        'date_posted': date_posted
+                    })
+                except Exception:
+                    continue
+
+            print(f"Applying pre-filter to {len(page_jobs)} jobs on page {page_num}...")
+            matched_page_jobs, _, _ = self.apply_title_filter(page_jobs)
+            print(f"{len(matched_page_jobs)} jobs passed pre-filtering. Fetching details...")
+
+            for job_meta in matched_page_jobs:
+                if len(self.jobs) >= self.max_jobs:
+                    break
+                
+                try:
+                    title = job_meta['title']
+                    url = job_meta['url']
                     
-                    # Get description
                     print(f"  Fetching details for: {title}")
                     detail_page = await context.new_page()
                     try:
                         await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
-                        job['description'] = await self.extract_description_from_page(detail_page)
+                        description = await self.extract_description_from_page(detail_page)
+                        
+                        job = {
+                            'title': title,
+                            'company': job_meta['company'],
+                            'location': job_meta['location'],
+                            'url': url,
+                            'posted_date': job_meta['date_posted'],
+                            'scrape_date': datetime.now().isoformat(),
+                            'source': 'jsfirm',
+                            'job_id': f"jsfirm-{len(self.jobs)}-{datetime.now().timestamp()}",
+                            'description': description
+                        }
+                        self.jobs.append(job)
                     except Exception as e:
                         print(f"Error fetching details: {e}")
-                        job['description'] = ""
                     finally:
                         await detail_page.close()
-                        
-                    self.jobs.append(job)
-                    job_count += 1
                     
                 except Exception as e:
                     print(f"Error processing card: {e}")
