@@ -20,8 +20,8 @@ class AustrianAirlinesScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='austrianairlines', db_manager=db_manager)
-        # Direct brand filter: 5909 for Austrian Airlines AG
-        self.base_url = "https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_company%5B%5D=5909&language=2"
+        # Direct division filter: 5909, 5975, 5974 for Austrian Airlines
+        self.base_url = "https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_division%5B%5D=5909&search_criterion_division%5B%5D=5975&search_criterion_division%5B%5D=5974&search_criterion_channel%5B%5D=12&language=2"
         self.company_name = "Austrian Airlines"
 
     async def fetch_jobs(self) -> list:
@@ -43,7 +43,7 @@ class AustrianAirlinesScraper(BaseScraper):
                 
                 # Handling cookie consent
                 try:
-                    cookie_btn = page.locator('text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
+                    cookie_btn = page.locator('text=Select all, text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
                     if await cookie_btn.is_visible():
                         await cookie_btn.click()
                         await page.wait_for_timeout(1000)
@@ -52,13 +52,16 @@ class AustrianAirlinesScraper(BaseScraper):
 
                 # Wait for results to load
                 try:
-                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=20000)
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=25000)
                 except:
                     logger.warning(f"[{self.site_key}] No job links found after wait.")
 
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
-                        .map(a => ({t: a.title || a.innerText.trim(), h: a.href}))
+                        .map(a => {
+                            let h2 = a.querySelector('h2');
+                            return {t: h2 ? h2.innerText.trim() : (a.title || a.innerText.trim()), h: a.href};
+                        })
                         .filter(a => a.h && a.h.includes('job'))
                 }''')
                 
@@ -93,7 +96,7 @@ class AustrianAirlinesScraper(BaseScraper):
                                 real_title = extracted
 
                         description = ""
-                        desc_selectors = ['.jobad-content', '.job-description', '.content', 'main']
+                        desc_selectors = ['.lh-jobad-content-details', '.lh-jobad-collapsible-content-todos-text', '.lh-jobad', '.jobad-content', 'main']
                         for selector in desc_selectors:
                             elem = detail_page.locator(selector).first
                             if await elem.is_visible():
@@ -104,6 +107,10 @@ class AustrianAirlinesScraper(BaseScraper):
                             description = await self.extract_description_from_page(detail_page)
 
                         location = "Austria"
+                        loc_elem = detail_page.locator('.lh-jobad-content-facts li').first
+                        if await loc_elem.is_visible():
+                            loc_text = await loc_elem.inner_text()
+                            if loc_text: location = loc_text.strip()
                         posted_date = await self.extract_posted_date_from_page(detail_page)
                         
                         job_id = f"austrian_{i+1}"
