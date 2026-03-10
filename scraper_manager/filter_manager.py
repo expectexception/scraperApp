@@ -40,6 +40,9 @@ class JobFilterManager:
         self.phrase_patterns = []  # List of (pattern, keyword) tuples
         self.single_patterns = []  # List of (pattern, keyword) tuples
         self.exclusion_compiled = []  # Precompiled exclusion patterns
+        self.global_negative_compiled = [] # Precompiled global negative patterns
+        self.global_negatives = set()
+        self.keyword_patterns_compiled = {}
         
         # Exclusion patterns to filter out truly irrelevant roles (NOT aviation core)
         self.exclusion_patterns = [
@@ -95,14 +98,20 @@ class JobFilterManager:
             
             # Patterns precompiled: 61
             self.keyword_patterns_compiled = {}
-            self.global_negatives = set()
             
-            # Build keyword mappings in single pass - optimized
+            # First pass: collect all global negatives
             for filter_group in self.filters:
-                negatives = filter_group.get('NegativeKeywords', [])
-                for nk in negatives:
+                for nk in filter_group.get('NegativeKeywords', []):
                     self.global_negatives.add(nk.lower())
-
+            
+            # Precompile global negative patterns with word boundaries
+            self.global_negative_compiled = [
+                (re.compile(r'\b' + re.escape(neg) + r'\b', re.IGNORECASE), neg)
+                for neg in self.global_negatives
+            ]
+            
+            # Second pass: Build keyword mappings
+            for filter_group in self.filters:
                 filter_type = filter_group.get('FilterType', '')
                 display_name = filter_group.get('DisplayName', '')
                 keywords = filter_group.get('Keywords', [])
@@ -168,9 +177,9 @@ class JobFilterManager:
     @lru_cache(maxsize=10000)
     def _matches_filter_impl(self, title_lower: str) -> Tuple[bool, Tuple, float, Dict]:
         """Internal implementation of filter matching - optimized for speed"""
-        # Hard Global Exclusion Check (Instant Rejection)
-        for neg in self.global_negatives:
-            if neg in title_lower:
+        # Hard Global Exclusion Check (Instant Rejection with word boundaries)
+        for pattern, neg in self.global_negative_compiled:
+            if pattern.search(title_lower):
                 return False, tuple(), 0.0, {'reason': f'global_negative_{neg}'}
 
         # Fast exclusion pattern check (early return)
@@ -190,9 +199,9 @@ class JobFilterManager:
                 phrase_rejected = False
                 
                 for cat in categories:
-                    # Check negative keywords for this specific category
+                    # Check negative keywords for this specific category with word boundaries
                     for nk in cat.get('negative_keywords', []):
-                        if nk in title_lower:
+                        if re.search(r'\b' + re.escape(nk) + r'\b', title_lower):
                             phrase_rejected = True
                             break
                     if phrase_rejected:
@@ -224,10 +233,10 @@ class JobFilterManager:
                 matched_keywords.append(keyword)
                 categories = self.keyword_to_category[keyword]
                 for cat in categories:
-                    # Check negative keywords for this category match
+                    # Check negative keywords for this category match with word boundaries
                     negative_match = False
                     for nk in cat.get('negative_keywords', []):
-                        if nk in title_lower: # Using 'in' for substring match, can be changed to regex if needed
+                        if re.search(r'\b' + re.escape(nk) + r'\b', title_lower):
                             negative_match = True
                             break
                     
@@ -544,7 +553,7 @@ if __name__ == '__main__':
         "Crew Control Supervisor",
         "First Officer Jobs | Pilot Careers",  # Should be excluded
         "Network Recovery Officer",
-        "Head of Flight Dispatch"
+        "Head of Flight Dispatch", "Agent technique d'exploitation", "Despachador de vuelo", "Flugdienstleiter"
     ]
     
     print("\n" + "="*70)

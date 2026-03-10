@@ -40,16 +40,16 @@ class BrusselsAirlinesScraper(BaseScraper):
                 
                 # Handling cookie consent
                 try:
-                    cookie_btn = page.locator('text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
+                    cookie_btn = page.locator('text="Select all", text="Accept all", [data-hook="cc-ccc-btn-confirm-all"], #ensAcceptAll').first
                     if await cookie_btn.is_visible():
-                        await cookie_btn.click()
-                        await page.wait_for_timeout(1000)
+                        await cookie_btn.click(force=True)
+                        await page.wait_for_timeout(2000)
                 except:
                     pass
 
                 # Wait for results to load
                 try:
-                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=20000)
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=45000)
                 except:
                     logger.warning(f"[{self.site_key}] No job links found after wait.")
 

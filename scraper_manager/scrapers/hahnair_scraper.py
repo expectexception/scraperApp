@@ -21,100 +21,90 @@ class HahnAirScraper(BaseScraper):
         self.company_name = "Hahn Air Lines"
 
     async def fetch_jobs(self) -> list:
+        """
+        Scrape jobs from Hahn Air Personio XML feed
+        """
         jobs = []
+        xml_url = "https://hahnair.jobs.personio.de/xml"
         
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=self.headless)
-            page, context = await self.setup_stealth_page(browser)
+        try:
+            logger.info(f"[{self.site_key}] Fetching jobs from {xml_url}")
+            response_obj = await self.make_request(
+                method='GET',
+                url=xml_url
+            )
             
-            try:
-                logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
+            if not response_obj:
+                logger.error(f"[{self.site_key}] Failed to fetch XML feed")
+                return jobs
+            
+            response = response_obj.text
                 
-                try:
-                    await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
-                except Exception as e:
-                    logger.error(f"[{self.site_key}] Navigation failed: {e}")
-                    return []
+            # Basic regex to extract jobs from XML to avoid additional dependencies
+            position_pattern = r'<position[^>]*>(.*?)</position>'
+            positions = re.findall(position_pattern, response, re.DOTALL)
+            
+            logger.info(f"[{self.site_key}] Found {len(positions)} jobs in XML")
+            
+            for i, pos_xml in enumerate(positions):
+                if self.max_jobs and len(jobs) >= self.max_jobs:
+                    break
+                    
+                # Extract title (handle both CDATA and plain text)
+                title_match = re.search(r'<name>(?:<!\[CDATA\[(.*?)\]\]>|(.*?))</name>', pos_xml, re.DOTALL)
+                if not title_match:
+                    continue
+                title = (title_match.group(1) or title_match.group(2) or "").strip()
                 
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && (a.h.includes('vacancy') || a.h.includes('job') || a.h.includes('career')))
-                }''')
+                # Extract job ID
+                id_match = re.search(r'<id>(.*?)</id>', pos_xml)
+                job_id_str = id_match.group(1).strip() if id_match else f"hahnair_{i+1}"
+                job_id = f"hahnair_{job_id_str}"
                 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
+                # Extract description (handle both CDATA and plain text)
+                desc = ""
+                desc_match = re.search(r'<jobDescriptions>(.*?)</jobDescriptions>', pos_xml, re.DOTALL)
+                if desc_match:
+                    content = desc_match.group(1).strip()
+                    # Remove CDATA wrappers
+                    content = re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', content, flags=re.DOTALL)
+                    # Remove common XML tags inside if they stick
+                    content = re.sub(r'<jobDescription>', '', content)
+                    content = re.sub(r'</jobDescription>', '\n', content)
+                    content = re.sub(r'<name>.*?</name>', '', content, flags=re.DOTALL)
+                    content = re.sub(r'<value>(.*?)</value>', r'\1', content, flags=re.DOTALL)
+                    desc = content.strip()
+                    
+                if not desc or len(desc) < 50:
+                    desc = "Hahn Air Lines career opportunities. Please visit the official career portal for more details."
+                    
+                # Extract location (handle both CDATA and plain text)
+                loc_match = re.search(r'<office>(?:<!\[CDATA\[(.*?)\]\]>|(.*?))</office>', pos_xml, re.DOTALL)
+                location = (loc_match.group(1) or loc_match.group(2) or "Germany").strip() if loc_match else "Germany"
+                    
+                # Extract URLs (we need to construct the URL for Personio jobs)
+                url = f"https://hahnair.jobs.personio.de/job/{job_id_str}"
                 
-                seen_urls = set()
-                job_urls = []
-                for link in links:
-                    href = link['h']
-                    title = link['t']
-                    if href and href not in seen_urls and self.is_job_link(title, href):
-                        seen_urls.add(href)
-                        job_urls.append((href, title))
+                job = get_job_dict(
+                    job_id=job_id,
+                    title=title,
+                    company=self.company_name,
+                    location=location,
+                    url=url,
+                    source_url=url,
+                    description=desc,
+                    apply_url=f"{url}#apply",
+                    posted_date="", # Personio XML often doesn't have an easily parsed publish date
+                    source=self.site_key
+                )
                 
-                for i, (url, title) in enumerate(job_urls):
-                    if self.max_jobs and len(jobs) >= self.max_jobs:
-                        break
-                        
-                    try:
-                        logger.info(f"[{self.site_key}] Fetching details for: {url}")
-                        detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
-                        await detail_page.wait_for_timeout(2000)
-                        
-                        real_title = title
-                        h1 = detail_page.locator('h1').first
-                        if await h1.is_visible():
-                            extracted = await h1.inner_text()
-                            if len(extracted) > 5:
-                                real_title = extracted
-
-                        description = ""
-                        desc_loc = detail_page.locator('main, article, .content, .job-details')
-                        for loc in ['main', 'article', '.content', '.job-details']:
-                            elem = detail_page.locator(loc).first
-                            if await elem.is_visible():
-                                description = await elem.inner_html()
-                                break
-                                
-                        if not description:
-                            description = await self.extract_description_from_page(detail_page)
-
-                        location = "Germany"
-                        posted_date = await self.extract_posted_date_from_page(detail_page)
-                        
-                        job_id = f"hahnair_{i+1}"
-                        match = re.search(r'([0-9]+)$', url)
-                        if match:
-                            job_id = f"hahnair_{match.group(1)}"
-
-                        job = get_job_dict(
-                            job_id=job_id,
-                            title=real_title,
-                            company=self.company_name,
-                            location=location,
-                            url=url,
-                            source_url=url,
-                            description=description,
-                            apply_url=url,
-                            posted_date=posted_date,
-                            source=self.site_key
-                        )
-                        
-                        jobs.append(job)
-                        await detail_page.close()
-                        
-                    except Exception as e:
-                        logger.error(f"[{self.site_key}] Error parsing job {i} ({url}): {e}")
-                        continue
-                        
-            except Exception as e:
-                logger.error(f"[{self.site_key}] Global error: {e}")
-            finally:
-                await context.close()
-                await browser.close()
+                jobs.append(job)
                 
+        except Exception as e:
+            logger.error(f"[{self.site_key}] Error parsing XML feed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
         return jobs
 
     async def run(self):

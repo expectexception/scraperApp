@@ -43,18 +43,22 @@ class AustrianAirlinesScraper(BaseScraper):
                 
                 # Handling cookie consent
                 try:
-                    cookie_btn = page.locator('text=Select all, text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
+                    cookie_btn = page.locator('text="Select all", text="Accept all", [data-hook="cc-ccc-btn-confirm-all"], #ensAcceptAll').first
                     if await cookie_btn.is_visible():
-                        await cookie_btn.click()
-                        await page.wait_for_timeout(1000)
+                        await cookie_btn.click(force=True)
+                        await page.wait_for_timeout(2000)
                 except:
                     pass
 
-                # Wait for results to load
+                # Wait for results to load - results are loaded dynamically
                 try:
-                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=25000)
+                    # The container is 'div.jobboard-datatable'
+                    # We wait for the spinner to disappear or just wait for the links
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=45000)
                 except:
-                    logger.warning(f"[{self.site_key}] No job links found after wait.")
+                    # Take screenshot if failure
+                    await page.screenshot(path="austrian_failure_no_links.png")
+                    logger.warning(f"[{self.site_key}] No job links found after wait. Saved screenshot.")
 
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
@@ -65,7 +69,7 @@ class AustrianAirlinesScraper(BaseScraper):
                         .filter(a => a.h && a.h.includes('job'))
                 }''')
                 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
+                logger.info(f"[{self.site_key}] Found {len(links)} potential job links after dynamic wait")
                 
                 seen_urls = set()
                 job_urls = []

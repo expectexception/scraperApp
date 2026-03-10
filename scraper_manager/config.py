@@ -102,11 +102,9 @@ SCRAPER_SETTINGS = {
     # Title Filtering Settings
     # ---------------------------
     # Global settings for the job filtering system (JobFilterManager).
-    # - use_filter: Enable/disable keyword-based filtering.
     # - filter_file: JSON file containing categories and keywords.
     # - filter_before_scrape: Filter by title BEFORE fetching descriptions.
     #   (Saves significant time and resources).
-    'use_filter': True,
     'filter_file': 'filter_title.json',
     'filter_before_scrape': True,
     
@@ -567,14 +565,14 @@ SITES = {
         'name': 'Alsie Express',
         'enabled': True,
         'base_url': 'https://www.alsie.com',
-        'jobs_url': 'https://www.alsie.com/',
-        'description': 'Alsie Express',
+        'jobs_url': 'https://candidate.hr-manager.net/vacancies/list.aspx?customer=alsie_tr&nocookie=true&uiculture=en',
+        'description': 'Alsie Express (HR Manager)',
     },
     'amapolaflyg': {
         'name': 'Amapola Flyg',
         'enabled': True,
         'base_url': 'https://amapola.nu',
-        'jobs_url': 'https://amapola.nu/',
+        'jobs_url': 'https://amapola.nu/about-us/careers/',
         'description': 'Amapola Flyg careers',
     },
     'aslairlinesbelgium': {
@@ -646,6 +644,13 @@ SITES = {
         'base_url': 'https://jdair.net',
         'jobs_url': 'https://jdair.net',
         'description': 'Beijing Capital Airlines fallback',
+    },
+    'southwest': {
+        'name': 'Southwest Airlines',
+        'enabled': True,
+        'base_url': 'https://careers.southwestair.com',
+        'jobs_url': 'https://careers.southwestair.com/us/en/search-results',
+        'description': 'Southwest Airlines careers (Phenom People)',
     },
     'carpatair': {
         'name': 'Carpatair',
@@ -735,29 +740,29 @@ SITES = {
         'name': 'Iberia',
         'enabled': True,
         'base_url': 'https://www.iberia.com/gb/careers/',
-        'jobs_url': 'https://www.iberia.com/gb/careers/',
-        'description': 'Iberia careers (Fallback, WAF protected)',
+        'jobs_url': 'https://trabajaconnosotros.iberia.es/',
+        'description': 'Iberia careers (SAP SuccessFactors)',
     },
     'iberiaexpress': {
         'name': 'Iberia Express',
         'enabled': True,
         'base_url': 'https://iberiaexpress.com',
-        'jobs_url': 'https://iberiaexpress.com/en/general-info/corporate/employment',
-        'description': 'Iberia Express careers (Fallback, WAF protected)',
+        'jobs_url': 'https://portalempleo.iberiaexpress.com/',
+        'description': 'Iberia Express careers (Custom Portal)',
     },
     'icelandair': {
         'name': 'Icelandair',
         'enabled': True,
         'base_url': 'https://www.icelandair.com/about/job-vacancies/',
-        'jobs_url': 'https://www.icelandair.com/about/job-vacancies/',
-        'description': 'Icelandair careers (Fallback, WAF protected)',
+        'jobs_url': 'https://jobs.50skills.com/icelandair/en',
+        'description': 'Icelandair careers (50skills)',
     },
     'itaairways': {
         'name': 'ITA Airways',
         'enabled': True,
         'base_url': 'https://career.ita-airways.com/',
-        'jobs_url': 'https://career.ita-airways.com/',
-        'description': 'ITA Airways careers',
+        'jobs_url': 'https://career.ita-airways.com/search/',
+        'description': 'ITA Airways careers (SuccessFactors)',
     },
     'klm': {
         'name': 'KLM Royal Dutch Airlines',
@@ -769,8 +774,8 @@ SITES = {
     'lot': {
         'name': 'LOT Polish Airlines',
         'enabled': True,
-        'base_url': 'https://www.lot.com/uz/en/explore/about-lot/our-crew',
-        'jobs_url': 'https://www.lot.com/uz/en/explore/about-lot/our-crew',
+        'base_url': 'https://www.lot.com/',
+        'jobs_url': 'https://www.lot.com/pl/pl/kariera',
         'description': 'LOT Polish Airlines careers',
     },
     'lufthansacityline': {
@@ -784,8 +789,8 @@ SITES = {
         'name': 'Norwegian Air Shuttle',
         'enabled': True,
         'base_url': 'https://careers.norwegian.com',
-        'jobs_url': 'https://careers.norwegian.com/viewalljobs/',
-        'description': 'Norwegian Air Shuttle careers',
+        'jobs_url': 'https://careers.norwegian.com/search/',
+        'description': 'Norwegian Air Shuttle careers (SuccessFactors)',
     },
     'olympicair': {
         'name': 'Olympic Air',
@@ -829,13 +834,6 @@ SITES = {
         'jobs_url': 'https://careers.flytap.com/',
         'description': 'TAP Air Portugal careers',
     },
-    'transavia': {
-        'name': 'Transavia',
-        'enabled': True,
-        'base_url': 'https://careers.klm.com/en/subsidiary/transavia/',
-        'jobs_url': 'https://careers.klm.com/en/subsidiary/transavia/',
-        'description': 'Transavia careers (Fallback, WAF protected)',
-    },
     'tuiairways': {
         'name': 'TUI Airways',
         'enabled': True,
@@ -868,7 +866,7 @@ SITES = {
         'name': 'Air Dolomiti',
         'enabled': True,
         'base_url': 'https://airdolomiti.altamiraweb.com/',
-        'jobs_url': 'https://airdolomiti.altamiraweb.com/',
+        'jobs_url': 'https://airdolomiti.altamiraweb.com/default/',
         'description': 'Air Dolomiti careers',
     },
     'airnostrum': {
@@ -1007,13 +1005,6 @@ SITES = {
         'enabled': True,
         'base_url': 'https://pilotsglobal.com',
         'description': 'PilotsGlobal Job Board'
-    },
-    'zenon': {
-        'name': 'Zenon Aviation Recruitment',
-        'enabled': True,
-        'base_url': 'https://www.zenon.aero',
-        'jobs_url': 'https://www.zenon.aero/candidates/',
-        'description': 'Zenon Aviation Recruitment Jobs'
     },
     'aisats': {
         'name': 'AISATS (Air India SATS)',
@@ -1168,6 +1159,20 @@ SITES = {
         'base_url': 'https://falconaviation.ae',
         'jobs_url': 'https://falconaviation.ae/careers',
         'description': 'Falcon Aviation Services careers',
+    },
+    'transavia': {
+        'name': 'Transavia',
+        'enabled': True,
+        'base_url': 'https://werkenbijtransavia.com',
+        'jobs_url': 'https://werkenbijtransavia.com/l/en/vacatures',
+        'description': 'Transavia vacancy portal',
+    },
+    'zenon': {
+        'name': 'Zenon Aviation Recruitment',
+        'enabled': True,
+        'base_url': 'https://www.zenon.aero',
+        'jobs_url': 'https://www.zenon.aero/candidates/',
+        'description': 'Zenon Aviation agency jobs',
     },
 }
 

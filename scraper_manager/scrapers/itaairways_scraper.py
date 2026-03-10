@@ -15,7 +15,7 @@ class ITAScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='itaairways', db_manager=db_manager)
-        self.base_url = "https://career.ita-airways.com/"
+        self.base_url = "https://career.ita-airways.com/search/"
         self.company_name = "ITA Airways"
 
     async def fetch_jobs(self) -> list:
@@ -27,13 +27,15 @@ class ITAScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             
             try:
-                await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
+                # Direct navigation to search results
+                await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
                 await self.simulate_human_behavior(page)
                 
+                # Double check for the link selector
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
+                    return Array.from(document.querySelectorAll('a.jobTitle-link'))
                         .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
-                        .filter(a => a.h && (a.h.includes('job') || a.h.includes('vacancy') || a.h.includes('career')))
+                        .filter(a => a.h)
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
@@ -43,7 +45,7 @@ class ITAScraper(BaseScraper):
                 for link in links:
                     href = link['h']
                     title = link['t']
-                    if href and href not in seen_urls and self.is_job_link(title, href):
+                    if href and href not in seen_urls and title:
                         seen_urls.add(href)
                         job_urls.append((href, title))
                 

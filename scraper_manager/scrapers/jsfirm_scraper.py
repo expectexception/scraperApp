@@ -37,7 +37,7 @@ class JSFirmScraper(BaseScraper):
                 # We will search just one location for now, or loop if configured.
                 # Assuming 'location' might be in config, defaulting to 'Florida' as per request context
                 # In a real scenario, this might loop through a list.
-                locations = self.config.get('search_locations', ['Florida'])
+                locations = self.site_config.get('search_locations', ['Florida'])
                 
                 for location in locations:
                     print(f"Starting search for location: {location}")

@@ -15,7 +15,7 @@ class IberiaExpressScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='iberiaexpress', db_manager=db_manager)
-        self.base_url = "https://iberiaexpress.com/en/general-info/corporate/employment"
+        self.base_url = "https://career2.successfactors.eu/career?company=iberia"
         self.company_name = "Iberia Express"
 
     async def fetch_jobs(self) -> list:
@@ -27,13 +27,15 @@ class IberiaExpressScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             
             try:
-                await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
+                # Custom portal might need extra time
+                await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
                 await self.simulate_human_behavior(page)
                 
+                # Use standard SuccessFactors selector
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
+                    return Array.from(document.querySelectorAll('a.jobTitle-link'))
                         .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
-                        .filter(a => a.h && (a.h.includes('job') || a.h.includes('vacancy') || a.h.includes('career')))
+                        .filter(a => a.h)
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")

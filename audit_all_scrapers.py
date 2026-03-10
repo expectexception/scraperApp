@@ -12,7 +12,7 @@ from scraper_manager.config import CONFIG
 from jobs.models import Job
 from scraper_manager.models import ScrapedURL
 
-OUTPUT_FILE = '/home/null/.gemini/antigravity/brain/1fd18f91-4fe5-4209-a20c-05b9394d4cfc/scraper_audit_report.md'
+OUTPUT_FILE = '/home/rajat/.gemini/antigravity/brain/a1d52894-5c28-497f-8a62-1eb517f7fada/scraper_audit_report.md'
 
 def audit_scrapers():
     enabled_sites = [k for k, v in CONFIG['sites'].items() if v.get('enabled', False)]
@@ -39,14 +39,14 @@ def audit_scrapers():
         try:
             subprocess.run(
                 ["python3", "manage.py", "run_scraper", site, "--max-jobs", "1"],
-                cwd="/home/null/ifoaSpace/scraperApp",
-                timeout=45,
+                cwd="/home/rajat/Desktop/AeroOps Intel/scraper-standalone",
+                timeout=120,
                 capture_output=True,
                 text=True
             )
         except subprocess.TimeoutExpired:
             print(f"  -> Timeout")
-            _write_report(site, ["Timed out after 45s"])
+            _write_report(site, ["Timed out after 120s"])
             continue
         except Exception as e:
             print(f"  -> Error: {e}")

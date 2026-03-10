@@ -71,16 +71,28 @@ class CathayPacificScraper(BaseScraper):
                             title = await title_el.text_content()
                             title = title.strip()
                             
-                            # Location - search-listing__item__info > span
+                            # Location - let's check the HTML structure
                             loc_el = item.locator('.search-listing__item__info span').first
                             location = await loc_el.text_content() if await loc_el.count() else "Unknown Location"
-                            location = location.strip()
                             
                             # Link
                             link = await item.get_attribute('href')
                             if not link:
                                 continue
                                 
+                            if location == "Unknown Location" or not location:
+                                # Try extracting from the job URL path instead as fallback
+                                try:
+                                    parts = link.split('/')
+                                    if 'jobs' in parts:
+                                        idx = parts.index('jobs')
+                                        if len(parts) > idx + 1:
+                                            location = parts[idx + 1].replace('-', ' ').title()
+                                except:
+                                    pass
+
+                            location = location.strip()
+                            
                             # Ensure full URL
                             if not link.startswith('http'):
                                 link = f"https://careers.cathaypacific.com{link}"

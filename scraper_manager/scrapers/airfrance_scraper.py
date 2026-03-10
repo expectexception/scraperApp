@@ -15,7 +15,7 @@ class AirFranceScraper(BaseScraper):
         self.base_url = self.site_config.get('base_url', 'https://recrutement.airfrance.com')
         # We start by hitting the main job search page or the "All Jobs" endpoint if possible. 
         # For simplicity, we can hit a general search URL that returns all results
-        self.jobs_url = self.site_config.get('jobs_url', 'https://recrutement.airfrance.com/accueil.aspx?LCID=2057')
+        self.jobs_url = self.site_config.get('jobs_url', 'https://recrutement.airfrance.com/offre-de-emploi/liste-offres.aspx?LCID=2057')
         self.company_name = "Air France"
 
     async def fetch_jobs(self) -> list:
@@ -53,9 +53,20 @@ class AirFranceScraper(BaseScraper):
             try:
                 self.logger.info(f"[{self.site_key}] Loading {self.company_name} careers page...")
                 await self.random_delay(1, 2)
-                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=45000)
+                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=60000)
+                await self.random_delay(2, 4)
 
-                await self.random_delay(4, 6)
+                # Handle Cookie Consent (Didomi)
+                try:
+                    agree_button = await page.wait_for_selector('#didomi-notice-agree-button', timeout=10000)
+                    if agree_button:
+                        self.logger.info(f"[{self.site_key}] Clicking cookie consent button...")
+                        await agree_button.click()
+                        await self.random_delay(1, 2)
+                except Exception:
+                    pass
+
+                await self.random_delay(2, 4)
                 await self.simulate_human_behavior(page)
 
                 job_links = await page.evaluate('''() => {

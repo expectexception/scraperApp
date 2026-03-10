@@ -1,0 +1,1428 @@
+
+
+        <script>
+    var cookieList = {
+                "essential": ["login", "cookieRequestSettings"],
+                "statistics": ["owa"],
+                "functionality": ["country", "chatbot"],
+                "marketing": ["linkedin"],
+                "external_media": ["google-maps"],
+                "skip": []
+    };
+    delete cookieList.skip;
+    var cookies = [];
+    $.each(cookieList, function(index, values) {
+        cookies = cookies.concat(values);
+    });
+</script>
+
+<section id="cookieRequestBox" style="display: block;">
+    <div class="inner">
+        <div class="martinCookie hide-on-mobile">
+            <img class="img-responsive" src="/images/martin_cookie.svg" alt="martin is eating a cookie">
+        </div>
+        <div class="text">
+            <div>
+                <h4>Cookie policy</h4>
+                <p>
+                    Our website uses cookies to understand how people use it in order to improve your website experience. By klicking on the "Accept"-button below you consent to our use of cookies as defined in our cookie policy. You have the right of withdrawal at any time. Details about our cookies and the possibility to change the settings can be found via the "Change cookie settings"-button. To read our full data policy please <a href="/en/privacy">click here.</a>
+                </p>
+            </div>
+        </div>
+        <div class="buttons">
+            <button class="primary" id="cookieRequestBox_accept">
+                Accept
+            </button>
+            <div class="halves">
+                <div class="half">
+                    <button id="cookieRequestBox_settings" class="secondary">
+                        Change cookie settings
+                    </button>
+                </div>
+                <div class="half">
+                    <button class="secondary" id="cookieRequestSettings_reject">
+                        Refuse
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="cookieRequestSettingsOverlay" style="display: none">
+    <form id="cookieRequestSettingsForm" name="cookieRequestSettingsForm" novalidate="">
+        <header class="white">
+            <div class="martin"><img class="img-responsive" src="/images/martin_cookie.svg" alt="martin is eating a cookie"></div>
+            <div class="intro">
+                <h4>Cookie Settings</h4>
+                <div class="text">
+                    Find here the overview of all cookies used on this website with detailed information. You can make individual settings for each categorie.
+                </div>
+                <div class="buttons">
+                    <button id="cookieRequestSettings_acceptAll" class="primary">Accept all</button>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div class="cookie-list">
+                                    <div class="cookie-group accordion">
+                        <div class="trigger">
+                            <div>
+                                <h4>Essential / Necessary</h4>
+                                <p>These cookies are necessary in order to enable you to move around the website and use its features, such as setting your privacy preferences, logging in or filling in forms. Without these cookies, services requested through usage of our website cannot be properly provided. They do not require consent from the user.</p>
+                            </div>
+                            <div class="cookie-switch-container">
+                                <span class="cookieStatus">
+                                                                            On
+                                                                    </span>
+                                <label class="switch disabled">
+                                    <input type="checkbox" checked="checked" disabled="disabled" name="essential" class="cookie-switch" value="1" data-parsley-multiple="essential">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="content" style="display: none;">
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch disabled">
+                                                <input type="checkbox" checked="checked" disabled="disabled" name="login" class="cookie-switch" value="1" data-parsley-multiple="login">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            On
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>Login</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>Hahnair</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>This cookie is required to use the functionalities of the logged-in area.</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>PHPSESSID</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch disabled">
+                                                <input type="checkbox" checked="checked" disabled="disabled" name="cookieRequestSettings" class="cookie-switch" value="1" data-parsley-multiple="cookieRequestSettings">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            On
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>Privacy choice</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>Hahnair</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>This cookie saves the settings of your selected cookies.</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>cookieRequestSettings</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                    </div>
+                    </div>
+                                    <div class="cookie-group accordion">
+                        <div class="trigger">
+                            <div>
+                                <h4>Statistics / Performance</h4>
+                                <p>These cookies collect information about how visitors use a website, for instance which pages visitors go to most often, and how visitors move around the site. They help us to improve the user friendliness of a website and therefore enhance the user's experience.</p>
+                            </div>
+                            <div class="cookie-switch-container">
+                                <span class="cookieStatus">
+                                                                            Off
+                                                                    </span>
+                                <label class="switch">
+                                    <input type="checkbox" name="statistics" class="cookie-switch" value="1" data-parsley-multiple="statistics">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="content" style="display: none;">
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch">
+                                                <input type="checkbox" name="owa" class="cookie-switch" value="1" data-parsley-multiple="owa">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            Off
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>Local Analytics</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>Hahnair</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>cookierequest.purpose.owa</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>owa</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                    </div>
+                    </div>
+                                    <div class="cookie-group accordion">
+                        <div class="trigger">
+                            <div>
+                                <h4>Functionality</h4>
+                                <p>These cookies allow the website to remember choices you make or information your enter (such as your username, language or the region you are in) and provide enhanced, more personal features. They are also used to enable requested functions such as playing videos.</p>
+                            </div>
+                            <div class="cookie-switch-container">
+                                <span class="cookieStatus">
+                                                                            Off
+                                                                    </span>
+                                <label class="switch">
+                                    <input type="checkbox" name="functionality" class="cookie-switch" value="1" data-parsley-multiple="functionality">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="content" style="display: none;">
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch">
+                                                <input type="checkbox" name="country" class="cookie-switch" value="1" data-parsley-multiple="country">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            Off
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>Country</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>Hahnair</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>This cookie saves your country settings so that certain website functions can be optimally adjusted to you and your country.</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>existingCountry</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch">
+                                                <input type="checkbox" name="chatbot" class="cookie-switch" value="1" data-parsley-multiple="chatbot">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            Off
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>Chatbot</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>Hahnair</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>This cookie is used to unblock the Chatbot functionality on the Hahnair website so that it can be used as a communication tool.</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>chatbot</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                    </div>
+                    </div>
+                                    <div class="cookie-group accordion">
+                        <div class="trigger">
+                            <div>
+                                <h4>Marketing</h4>
+                                <p>These cookies are used to deliver adverts on third party websites more relevant to you and your interests. They are also used to limit the number of times you see an advertisement as well as help measure the effectiveness of an advertising campaign.</p>
+                            </div>
+                            <div class="cookie-switch-container">
+                                <span class="cookieStatus">
+                                                                            Off
+                                                                    </span>
+                                <label class="switch">
+                                    <input type="checkbox" name="marketing" class="cookie-switch" value="1" data-parsley-multiple="marketing">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="content" style="display: none;">
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch">
+                                                <input type="checkbox" name="linkedin" class="cookie-switch" value="1" data-parsley-multiple="linkedin">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            Off
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>LinkedIn</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>LinkedIn</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>cookierequest.purpose.linkedin</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>linkedin</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                    </div>
+                    </div>
+                                    <div class="cookie-group accordion">
+                        <div class="trigger">
+                            <div>
+                                <h4>External Media</h4>
+                                <p>Content of video and Social Media plattforms on this website are blocked and need to be activated individually. If you accept these cookies no individual acceptance is required anymore.</p>
+                            </div>
+                            <div class="cookie-switch-container">
+                                <span class="cookieStatus">
+                                                                            Off
+                                                                    </span>
+                                <label class="switch">
+                                    <input type="checkbox" name="external_media" class="cookie-switch" value="1" data-parsley-multiple="external_media">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="content" style="display: none;">
+                                                            <div class="tableContainer"><table class="cookieData">
+                                    <tbody><tr>
+                                        <th>Accept</th>
+                                        <td class="cookie-switch-container">
+                                            <label class="switch">
+                                                <input type="checkbox" name="google-maps" class="cookie-switch" value="1" data-parsley-multiple="google-maps">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <span class="cookieStatus">
+                                                                                            Off
+                                                                                    </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td>Google maps</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <td>Google</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose</th>
+                                        <td>This cookie is used to unblock Google Maps content. Read here the data policy: https://policies.google.com/privacy</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cookie name</th>
+                                        <td>google-maps</td>
+                                    </tr>
+                                </tbody></table></div>
+                                                    </div>
+                    </div>
+                            </div>
+            <div class="buttons">
+                <button class="secondary" id="cookieRequestSettings_reject_all">Refuse all</button>
+                <button id="cookieRequestSettings_save" class="secondary">Save</button>
+            </div>
+        </main>
+            </form>
+</section>
+
+        
+        <div class="htmlContainer">
+                
+      <noscript>
+        <section class="noJS">
+            <p>This website makes use of Javascript. Please enable it to make the most of your experience.</p>
+        </section>
+    </noscript>
+    <header>
+        <div id="sticky-wrapper" class="sticky-wrapper" style="height: 60px;"><section class="stickyHeader">
+            <div class="container">
+                <div class="flexRow">
+                    <div class="logoCon hide-on-desktop show-on-tablet">
+                        <div class="logo">
+                            <a class="normalLogo" href="/en">
+                                <img src="/images/logo-only.png" alt="Logo: Hahnair">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="logoCon hide-on-mobile text hide-on-tablet">
+                        <div class="logo">
+                            <a class="text" href="/en">
+                                <img src="/images/logo-hahn-air.svg" alt="Logo: Hahnair">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="leftMenu">
+                                                    <div id="mmTrigger"></div>
+                            <nav>
+                                                                                                                                                                                                                                <ul class="navmenu list-unstyled hoz" aria-labelledby="dropdownMenuLeft">
+                                                                                                                                                                                                        <li class="nav-item dropdown mega">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/439">
+                                                            <span>Products &amp; Services</span>
+    
+                                            </span>
+                                                                                                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLeft1">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft11" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/440">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="fas fa-headset fa-stack-1x"></i>
+    </span>
+        <span>For Travel Agents </span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft11">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft111" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/en/products-travel-agents">
+                                                            <span>Products for Travel Agents</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft111">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/en/hr-169">
+                                                            <span>HR-169</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/h1-air-and-x1-air">
+                                                            <span>H1-Air and X1-Air</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/ndc-solution">
+                                                            <span>NDC Solution: Distriply by Hahnair</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft112" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/en/services-travel-agents">
+                                                            <span>Services for Travel Agents</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft112">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/en/knowledge-centre">
+                                                            <span>Knowledge Centre</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/insolvency-protection-securtix">
+                                                            <span>Securtix®</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/refunds">
+                                                            <span>Refunds</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/490">
+                                                            <span>Validating with HR</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/gds-ticketing-assistant">
+                                                            <span>GDS Ticketing Assistant</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft113" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/441">
+                                                            <span>Benefits of Registration </span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft113">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/en/adm-waiver">
+                                                            <span>ADM-waiver</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/quick-check-history">
+                                                            <span>Quick Check History</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/hr-e-payment">
+                                                            <span>HR e-Payment</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                        </li></ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft12" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/en/airlines">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="fas fa-plane fa-stack-1x"></i>
+    </span>
+        <span>For Airlines</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft12">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/en/global-sales-ticketing">
+                                                            <span>Global Sales &amp; Ticketing </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/outsourced-gds-sales">
+                                                            <span>Outsourced GDS Sales</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link externalLink" href="https://partnerportal.hahnair.com" target="_blank">
+                                                            <span>Partner Portal</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/success-stories">
+                                                            <span>Success Stories</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft13" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/en/companies">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="fas fa-building fa-stack-1x"></i>
+    </span>
+        <span>For Companies</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft13">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/en/hr-shuttle-manager">
+                                                            <span> Simplifying your corporate flights</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft14" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/446">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="fas fa-link fa-stack-1x"></i>
+    </span>
+        <span>Quick Links</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft14">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/553">
+                                                            <span>Support</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/faq">
+                                                            <span>FAQs for Travel Agents</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/faq-passengers">
+                                                            <span>FAQs for Private Passengers</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/travel-details">
+                                                            <span>Travel Details</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/514">
+                                                            <span>Knowledge Centre</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/462">
+                                                            <span>Downloads</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/newsletter">
+                                                            <span>Sign up for our newsletter</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/travel-agents-testimonials">
+                                                            <span>Testimonials</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                        </li></ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item dropdown mega">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/444">
+                                                            <span>About Us </span>
+    
+                                            </span>
+                                                                                                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLeft2">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft21" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/en/who-we-are">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="fah fa-hahnair fa-stack-1x"></i>
+    </span>
+        <span>Who we are </span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft21">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/en/about-hahn-air">
+                                                            <span>Our company</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/innovation">
+                                                            <span>Innovation at Hahnair </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/customer-voices">
+                                                            <span>Customer voices</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/esr">
+                                                            <span>Environmental and Social Responsibility </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/team">
+                                                            <span>Team </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/hahn-air-history">
+                                                            <span>History</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/en/hahn-air-lines/hahn-air-lines">
+                                                            <span>Hahnair Lines</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft22" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/447">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="far fa-handshake fa-stack-1x"></i>
+    </span>
+        <span>Career</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft22">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/450">
+                                                            <span>About Us</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/451">
+                                                            <span>Culture &amp; Benefits</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/453">
+                                                            <span>Job Vacancies</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/452">
+                                                            <span>People at Hahnair</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft23" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/448">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="far fa-newspaper fa-stack-1x"></i>
+    </span>
+        <span>News &amp; Press</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft23">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/454">
+                                                            <span>Press Releases </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/455">
+                                                            <span>In the Press </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/460">
+                                                            <span>Media Centre</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/456">
+                                                            <span>Press Contact </span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <span class="nav-link dropdown-toggle" id="dropdownMenuLeft24" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="/preview/en/public/449">
+                                                            <span class="fa-stack">
+        <i class="fal fa-circle fa-stack-2x"></i>
+        <i class="fas fa-images fa-stack-1x"></i>
+    </span>
+        <span>Gallery</span>
+    
+                                            </span>
+                                                                                                                            <ul class="" aria-labelledby="dropdownMenuLeft24">
+                                                                                                                                                                                                        <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/457">
+                                                            <span>Pictures</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                                                                                                                                                                <li class="nav-item">
+                                            <a class="nav-link " href="/preview/en/public/459">
+                                                            <span>Audio</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                
+                                                                                                                                                        </li></ul>
+                                
+                                                                                                                                                                                                                                                                                            </li><li class="nav-item">
+                                            <a class="nav-link " href="/en/partner-carriers">
+                                                            <span>Partner Carriers</span>
+    
+                                            </a>
+                                            </li>
+                                                                                                            </ul>
+                                                            </nav>
+                                            </div>
+                    <div class="rightMenu text-right">
+                                                    <nav>
+                                <ul class="navmenu list-unstyled hoz">
+                                    <!--li class="nav-item search menuIcon tooltipCon greyBack solid">
+                                        <a class="nav-link expanded srToolTip" href="#">
+                                        <span class="sr-only">
+                                            Search
+                                        </span>
+                                        </a>
+                                    </li-->
+                                    <li class="nav-item language menuIcon tooltipCon greyBack solid dropdown old">
+                                        <a class="nav-link dropdown-toggle  srToolTip" href="#" id="dropdownLanguageMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Language">
+                                            <span class="sr-only">Language</span>
+                                        </a>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownLanguageMenu">
+                                                                                            <li><a class="dropdown-item" href="/de/career/job-vacancies">Deutsch</a></li>
+                                                                                            <li><a class="dropdown-item" href="/en/career/job-vacancies">English</a></li>
+                                                                                            <li><a class="dropdown-item" href="/es/career/job-vacancies">Español</a></li>
+                                                                                            <li><a class="dropdown-item" href="/fr/career/job-vacancies">Français</a></li>
+                                                                                            <li><a class="dropdown-item" href="/ja/career/job-vacancies">日本語</a></li>
+                                                                                            <li><a class="dropdown-item" href="/ko/career/job-vacancies">한국어</a></li>
+                                                                                            <li><a class="dropdown-item" href="/pt/career/job-vacancies">Português</a></li>
+                                                                                            <li><a class="dropdown-item" href="/ru/career/job-vacancies">Русский</a></li>
+                                                                                    </ul>
+                                    </li>
+                                                                            <li class="nav-item login menuIcon tooltipCon greyBack solid">
+                                            <a class="nav-link srToolTip" href="/agent/login" title="Login">
+                                                <span class="sr-only">Login</span>
+                                            </a>
+                                            <div class="loginBox hide popup">
+                                                <div class="topBox">
+                                                    <div class="close"></div>
+                                                    <h2>Login</h2>
+                                                    <form action="/login" novalidate="">
+                                                        <div class="form-line textField textType isTextBox emailType placeHolderProcessed">
+                                                            <div class="line">
+                                                                <label for="loginBoxUser" style="display: none;">Email</label>
+                                                                <input type="email" id="loginBoxUser" class="loginBoxUser" aria-required="true" required="required" placeholder="Email"><span class="clear"></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-line textField textType isTextBox passwordType placeHolderProcessed">
+                                                            <div class="line">
+                                                                <label for="loginBoxPassword" style="display: none;">Password</label>
+                                                                <input type="password" id="loginBoxPassword" class="loginBoxPassword" aria-required="true" required="required" placeholder="Password"><span class="clear"></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-line submitButton">
+                                                            <div class="content">
+                                                                <ul>
+                                                                    <li>
+                                                                        <a href="/forgot-your-password">Forgot your password?</a>
+                                                                    </li>
+                                                                </ul>
+                                                                <button type="submit" class="primary">Login</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="splitLine">
+                                                    <div class="labelText">
+                                                        <h2><span>
+                                                or
+                                            </span></h2>
+                                                    </div>
+                                                </div>
+                                                <div class="bottomBox">
+                                                    <p>Are you not benefiting from many <br>many <a href="/services-travel-agents">extra services</a> yet?</p>
+                                                    <p>
+                                                        <a href="https://agentregistration.hahnair.com" class="externalLink" target="_blank">
+                                                            <button class="secondary">
+                                                                Register for free
+                                                            </button>
+                                                        </a>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                                                        <li class="hide nav-item dropdown myHahnAir menuIcon old">
+                                        <a class="nav-link dropdown-toggle srToolTip" href="#" id="dropdownMyHahnAirMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="MyHahnAir">
+                                            <span class="sr-only">MyHahnAir</span>
+                                        </a>
+                                                                                <ul class="dropdown-menu" aria-labelledby="dropdownMyHahnAirMenu">
+                                                                                            <li class="hide agent"><a class="dropdown-item" href="/en/agents-dashboard/adm-waiver">ADM-waiver</a>
+                                                </li>
+                                                                                            <li class="hide agent"><a class="dropdown-item" href="/en/agents-dashboard/hr-e-payment">HR e-Payment</a>
+                                                </li>
+                                                                                            <li class="hide agent"><a class="dropdown-item" href="/en/agents-dashboard/games">Play and Win</a>
+                                                </li>
+                                                                                            <li class="hide agent"><a class="dropdown-item" href="/en/agents-dashboard/refund-status-tool">Refund Status Tool</a>
+                                                </li>
+                                                                                            <li class="hide agent"><a class="dropdown-item" href="/en/agents-dashboard/settings">Settings</a>
+                                                </li>
+                                                                                            <li class="hide agent"><a class="dropdown-item" href="/en/agents-dashboard/quick-check-history">Quick Check History</a>
+                                                </li>
+                                                                                                                                        <li class="hide airliner"><a class="dropdown-item" href="/en/carrier-portal/booking-list">Booking List</a>
+                                                </li>
+                                                                                            <li class="hide airliner"><a class="dropdown-item" href="/en/carrier-portal/booking-details">Booking Details</a>
+                                                </li>
+                                                                                            <li class="hide airliner"><a class="dropdown-item" href="/en/carrier-portal/flight-number-mapping">Flight Number Mapping</a>
+                                                </li>
+                                            
+                                                                                            <li class="hide onboarding"><a class="dropdown-item" href="/en/welcome">Welcome</a>
+                                                </li>
+                                                                                            <li class="hide onboarding"><a class="dropdown-item" href="/en/welcome/important-information">Important Information</a>
+                                                </li>
+                                                                                            <li class="hide onboarding"><a class="dropdown-item" href="/en/welcome/internal-newsletter">Internal Newsletter</a>
+                                                </li>
+                                                                                            <li class="hide onboarding"><a class="dropdown-item" href="/en/welcome/downloads">Downloads</a>
+                                                </li>
+                                                                                            <li class="hide onboarding"><a class="dropdown-item" href="/en/welcome/any-questions">Any Questions</a>
+                                                </li>
+                                                                                        <li class="newSection"><a class="dropdown-item" href="/logout">Logout</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </nav>
+                                                            <div class="quick-check">
+                                    <a href="/quickcheck">
+                                        <button class="primary" type="button">Quick Check</button>
+                                    </a>
+                                </div>
+                                                                        </div>
+                </div>
+                                    <div class="searchBox" style="display: none;">
+                        <input type="text" class="searchInputBox ui-autocomplete-input" placeholder="Search" autocomplete="off">
+                        <a href="#" class="searchInputBoxTrigger"><i class="fas fa-search" aria-hidden="true"></i></a>
+                    </div>
+                            </div>
+        </section></div>
+            </header>
+    <nav id="mobileMenu"></nav>
+
+                                        <section class="heroImage">
+            <div class="bx-wrapper" style="max-width: 100%;"><div class="bx-viewport" aria-live="polite" style="width: 100%; overflow: hidden; position: relative; height: 470.531px;"><div id="heroImageSlider" class="bxslider" data-bxslider-options="{&quot;touchEnabled&quot;: 0}" style="width: 1215%; position: relative; transition-duration: 0s; transform: translate3d(-1673px, 0px, 0px);"><div class="slide bx-clone" style="float: left; list-style: none; position: relative; width: 1673px;" aria-hidden="true">
+                                                                                                                                                                                                            <img src="https://assets.hahnair.com/images/team_header_1920x540.jpg" class="d-block w-100" alt="">
+                        
+                    </div>
+                                    <div class="slide" style="float: left; list-style: none; position: relative; width: 1673px;" aria-hidden="false">
+                                                                                                                                                                                                            <img src="https://assets.hahnair.com/images/team_header_1920x540.jpg" class="d-block w-100" alt="">
+                        
+                    </div>
+                            <div class="slide bx-clone" style="float: left; list-style: none; position: relative; width: 1673px;" aria-hidden="true">
+                                                                                                                                                                                                            <img src="https://assets.hahnair.com/images/team_header_1920x540.jpg" class="d-block w-100" alt="">
+                        
+                    </div></div></div></div>
+        </section>
+                <div class="greyBox noMargin noPadding">
+            <div class="container">
+                <section class="subheader centred hasMenu hasSectionMenu">
+                    <div class="row">
+                        <div class="col-xs-12 sectionTitle">
+                            <h1>Career</h1>
+                        </div>
+                    </div>
+                    <div class="row hide-on-mobile">
+                        <div class="col-xs-12 sectionTitle">
+                            <nav>
+                                <ul class="list-unstyled hoz">
+                                                                            <li class="nav-item">
+                                            <a class="nav-link " href="/en/career/about-us">About us</a>
+                                        </li>
+                                                                            <li class="nav-item">
+                                            <a class="nav-link " href="/en/career/working-hahn-air">Culture &amp; Benefits</a>
+                                        </li>
+                                                                            <li class="nav-item">
+                                            <a class="nav-link " href="/en/career/people-hahn-air">People at Hahnair</a>
+                                        </li>
+                                                                            <li class="nav-item active">
+                                            <a class="nav-link active" href="/en/career/job-vacancies">Job Vacancies</a>
+                                        </li>
+                                                                    </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    <div class="row hide-on-desktop menu">
+                        <div class="col-xs-12">
+                            <nav>
+                                <select class="gotoValue fullWidth select2-hidden-accessible" data-select2-id="1" tabindex="-1" aria-hidden="true">
+                                                                            <option value="/en/career/about-us">
+                                            About us
+                                        </option>
+                                                                            <option value="/en/career/working-hahn-air">
+                                            Culture &amp; Benefits
+                                        </option>
+                                                                            <option value="/en/career/people-hahn-air">
+                                            People at Hahnair
+                                        </option>
+                                                                            <option selected="selected" value="/en/career/job-vacancies" data-select2-id="3">
+                                            Job Vacancies
+                                        </option>
+                                                                    </select><span class="select2 select2-container select2-container--default" dir="ltr" data-select2-id="2" style="width: 100%;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-disabled="false" aria-labelledby="select2-y4ah-container"><span class="select2-selection__rendered" id="select2-y4ah-container" role="textbox" aria-readonly="true" title="
+                                            Job Vacancies
+                                        ">
+                                            Job Vacancies
+                                        </span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
+                            </nav>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    <section class="mainBody">
+                        
+        <div class="container"><section class="content intro innerFrame"><div class="row"><div class="col-xs-12 col-lg-8 col-lg-push-2"><h1>Job Vacancies</h1><div class="richtext"><p>See below to find all open job vacancies at Hahnair and information on how to apply.</p></div></div></div></section></div>            
+        <div class="container">
+    <div class="row">
+        <div class="col-xs-12 col-md-8">
+                                                        <section class="accordion content innerFrame" id="job2086849">
+                    <div class="trigger">
+                        Unsolicited application: Join our global team!
+                    </div>
+                    <div class="content" style="display: none;">
+                        <h2>Unsolicited application: Join our global team!</h2>
+                        <p><span>permanent</span><span>, full-or-part-time</span></p>
+
+                                                <p class="marginTop"><strong>Ready for something truly new?</strong></p>
+                            Hey,&nbsp;&nbsp;<br>Are you an outside-the-box thinker and do you thrive in a dynamic and diverse work environment? &nbsp;<br><br><strong>Does it sound like you? Then join our team!</strong><br><br><ul><li><span><span>We</span><span>&nbsp;are</span><span>&nbsp;looking for&nbsp;</span></span><span><span>curious</span></span><span><span>&nbsp;and&nbsp;</span></span><span><span><span><strong>o</strong></span></span></span><span><span><strong>pen-minded</strong></span></span><span><span>&nbsp;people</span><span>&nbsp;(all gender)</span><span>&nbsp;who are&nbsp;</span></span><span><span><strong>hands-on</strong></span></span><span><span>&nbsp;and want to see themselves, their colleagues and our business grow in a multicultural environment.</span></span></li><li><span><span>We seek individuals who support our growth, regardless of your background in<strong>&nbsp;</strong></span></span><span><span><strong>IT</strong></span></span><span><span>,&nbsp;</span></span><span><span><strong>S</strong></span><span><strong>ales</strong></span></span><span><span>,&nbsp;</span></span><span><span><strong>A</strong></span><span><strong>irline and&nbsp;</strong></span><span><strong>T</strong></span><span><strong>ravel</strong></span></span><span><span>,&nbsp;</span></span><span><span><strong>F</strong></span><span><strong>inance</strong></span></span><span><span>, or&nbsp;</span></span><span><span><strong>B</strong></span><span><strong>usiness management</strong></span></span><span><span>.</span></span></li><li><span><span>Whether&nbsp;</span><span>you're</span><span>&nbsp;a creative visionary, analytical thinker, or organizational expert, we value your unique talents,&nbsp;</span><span>personality</span><span>&nbsp;and passion.</span></span></li><li><span><span>We offer opportunities ranging from <strong>entry-level positions</strong> to <strong>senior management roles</strong>.</span></span></li></ul>
+                                                <p class="marginTop"><strong>What's in it for You</strong></p>
+                            <ul><li><span><span><strong>Great Employer:</strong></span></span><span><span>&nbsp;</span><span>kununu</span><span>&nbsp;Top Company (4.4 out of 5 stars) for the third year in a row.</span></span></li><li><span><span><strong>Salary Plus:</strong></span></span><span><span>&nbsp;You receive 13 monthly salaries, various allowances (for lunch, savings, pension schemes and childcare) and extra shopping credit. We also offer discounts on brands,&nbsp;</span><span>events</span><span>&nbsp;and private trips.</span></span></li><li><span><span><strong>Development:</strong></span></span><span><span>&nbsp;We build on your strengths and potential and offer regular development talks, training courses, on the job-training and language courses. </span><span>  </span></span></li><li><span><span><strong>Work Life Balance:</strong></span></span><span><span>&nbsp;The&nbsp;</span><span>option</span><span>&nbsp;to combine office with remote work, flexible working hours, 30 vacation days and part-time models are part of the package. We also offer temporary work from abroad and sabbaticals. </span></span></li><li><span><span><strong>Culture:</strong></span></span><span><span>&nbsp;Being a multicultural team, we value openness,&nbsp;</span><span>appreciation</span><span>&nbsp;and respect. Together, we rock our jobs and enjoy spending time at after-work events, team activities and company parties. </span></span></li><li><span><span><strong>Health:</strong></span></span><span><span>&nbsp;Besides preventive health care programs, we offer ergonomic workplaces with modern hardware and software.  </span></span></li><li><span><span><strong>Mobility:</strong></span></span><span><span>&nbsp;You may choose to lease an electric car as part of your compensation package and benefit from free charging stations next to our head office. </span></span></li><li><span><span><strong>Relocation:</strong></span></span><span><span><strong>&nbsp;</strong>If applicable, we offer support with your visa processes. </span></span></li></ul>
+                                                <p class="marginTop"><strong>Curious? Let’s go!</strong></p>
+                            Send us your CV and tell us why you believe we´re a great match and in which roles (or business areas) would be interesting for you. We look forward to discovering more about you and the potential of working together.
+                                                <p class="marginTop"><strong>Welcome to Connecting the World</strong></p>
+                            Every nine seconds a passenger is boarding a plane using a Hahnair ticket at one of 4,000 airports around the globe. For 25 years, our medium-sized company has been successfully connecting the world: Our unique business is linking 350 partner airlines with travel agencies worldwide. And it’s our people who make it happen. We are travel enthusiasts, aviation nerds, hobby gourmets, dancers, parents, runners and musicians. We come from 44 different countries, and we work from all over the world. Our different backgrounds make us complement each other and drive our global business. It is enthusiasm and great work that we value, rather than titles. And together, we make exciting things happen - for our customers and for ourselves. Be part of a team where everybody makes a difference, where innovative ideas are heard and where you’ll make connections that last.&nbsp;<br><strong>Join us in connecting the world together.&nbsp;</strong><br>&nbsp;<br>Hahn Air Lines GmbH &nbsp; An der Trift 65 &nbsp;63303 Dreieich &nbsp;Phone +49-6103-7331-0 &nbsp;<a href="http://www.hahnair.com/" target="_blank" rel="noreferrer noopener">www.hahnair.com</a> LinkedIn #wearehahnair
+                        
+                                                                                                                                            
+                        <div class="margins actions">
+                            <div>
+                                <a href="https://hahnair.jobs.personio.de/job/2086849#apply" target="_blank" class="externalLink">
+                                    <button class="primary">Apply Now</button>
+                                </a>
+                            </div>
+                            <div class="share">
+                                <ul>
+                                    <li class="hoverIcon">
+                                        <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fwww.hahnair.com%2Fen%2Fcareer%2Fjob-vacancies%23job2086849" target="_blank" class="externalLink">
+                                            <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                                        </a>
+                                    </li>
+                                    <li class="hoverIcon">
+                                        <a href="https://twitter.com/home?status=http%3A%2F%2Fwww.hahnair.com%2Fen%2Fcareer%2Fjob-vacancies%23job2086849" target="_blank" class="externalLink">
+                                            <i class="fab fa-twitter" aria-hidden="true"></i>
+                                        </a>
+                                    </li>
+                                    <li class="hoverIcon">
+                                        <a href="https://www.linkedin.com/shareArticle?url=http%3A%2F%2Fwww.hahnair.com%2Fen%2Fcareer%2Fjob-vacancies%23job2086849" target="_blank" class="externalLink">
+                                            <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                                        </a>
+                                    </li>
+                                    <li class="hoverIcon">
+                                        <a href="https://www.xing.com/spi/shares/new?url=http%3A%2F%2Fwww.hahnair.com%2Fen%2Fcareer%2Fjob-vacancies%23job2086849" target="_blank" class="externalLink">
+                                            <i class="fab fa-xing" aria-hidden="true"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                                </div>
+        <div class="col-xs-12 col-md-4 rightCol">
+                    </div>
+    </div>
+</div>
+            
+        <div class="container">
+    <div class="stepsGraphic">
+        <div class="first" title="Are you interested in one of our vacant positions? Applying to Hahnair only takes two minutes. Simply enter your contact details and upload your CV and other documents such as certificates and references. In a cover letter you can briefly explain to us why you are applying for exactly this position and why you are the right candidate for us - but this is optional.If there was no suitable position for you, we would be happy to receive your unsolicited application. Just send us a short letter of motivation and tell us which division you are interested in."></div>
+        <div class="second" title="As soon as we receive your application, it will be reviewed by our recruiting team and by the relevant specialist department. We will endeavour to give you feedback within two weeks. 
+If your profile matches the position you have applied for, we will contact you to get to know you personally. We will first arrange an interview by phone or video, or if possible, in person. Depending on the position, we may also ask you to complete a specific task or a short test."></div>
+        <div class="third" title="In the job interview you can not only show us your strengths, but also get an impression of Hahnair as an employer. Do not hesitate to ask as many questions as you like about the company and your future position. We are looking forward to getting to know you and learning more about your qualifications and expectations. Should you have completed tasks or tests in advance, we will consider the results when making our decision. If we find that we are a good match, there is nothing standing in the way of us welcoming you on board."></div>
+        <img src="/images/hr_application_process.png" alt="1, check-in. 2, Boarding. 3, Take-off!" width="720" height="240">
+    </div>
+</div>            
+        <a id="richtext_1" name="richtext_1"></a>
+<div class="container"><section class="content richtext innerFrame" style="background-color: #FFFFFF"><div class="row"><div class="col-xs-12"><div class="text"><h2>Great opportunities awaiting</h2><div class="richtext"><p>Maybe you will join the Hahnair family soon. We are looking forward to getting to know you!</p></div></div></div></div></section></div>            
+        <div class="container"><section class="content teaserrow innerFrame"><div class="row"><div class="col col-md-4 col-xs-12"><div class="teaser"><div class="page-includes teaser teaser-career-9"><div class="content"><div class="imageCon" style="height: 245px;"><div class="image"><img src="https://www.hahnair.com/!/S-lc0BZABVAAA=-vGltYWdlcy9DYXJlZXIvS3VudW51MjAyNi5wbmc=.png" width="356"></div></div><div class="bottom"><div class="text"><h2 class="title" style="height: 64px;">Workplace Awards</h2><div class="textContent" style="height: 230px;"><p>From 2022 to 2026, we have been awarded a kununu Top Company based on anonymous feedback by our current and former employees. This puts us in the top 5% of all companies featured on kununu. We have also been recognised twice as one of the most outstanding employers in Germany with the Great Place to Work® Award (2016 &amp; 2019).</p><p>&nbsp;</p></div></div><div class="links"><div class="buttonLink"><a class="noBold externalLink" href="https://www.kununu.com/de/hahn-air-lines1" target="_blank"><button class="secondary">Read about us on kununu.com</button></a></div></div></div></div></div></div></div><div class="col col-md-4 col-xs-12"><div class="teaser"><div class="page-includes teaser teaser-career-8"><div class="content"><div class="imageCon" style="height: 245px;"><div class="image"><img src="https://www.hahnair.com/!/S-lc0BZABVAAA=-u2ltYWdlcy9DYXJlZXIvZ3B0d19sb2dvLnBuZw==.png" width="356"></div></div><div class="bottom"><div class="text"><h2 class="title" style="height: 64px;">Great Place to Work® Germany</h2><div class="textContent" style="height: 230px;">In 2016 and 2019&nbsp;Hahnair was awarded with the honor of being one of the "Best Workplaces in Germany“ of that year.</div></div><div class="links"><div class="buttonLink"><a class="noBold" href="/en/career/working-hahn-air" target=""><button class="secondary">Learn about our company culture</button></a></div></div></div></div></div></div></div><div class="col col-md-4 col-xs-12"><div class="teaser"><div class="page-includes teaser teaser-career-7"><div class="content"><div class="imageCon" style="height: 245px;"><div class="image"><img src="https://www.hahnair.com/!/S-lc0BZABVAAA=-v2ltYWdlcy9DYXJlZXIvQ2FyZWVyXzIwMjRfMS5qcGc=.jpg" width="356"></div></div><div class="bottom"><div class="text"><h2 class="title" style="height: 64px;">Questions about working at Hahnair?</h2><div class="textContent" style="height: 230px;"><p>Get in touch with our Human Resources team:</p><p>Phone: +49-6103-7331-0<br>Email: <a href="mailto:jobs@hahnair.com">jobs@hahnair.com</a></p><p>&nbsp;</p></div></div></div></div></div></div></div></div></section></div>            </section>
+
+
+            
+    <footer class="full">
+        <div class="container">
+
+                        <div class="row">
+                <div class="col-md-12 newsletter text-center">
+                    <div class="newsletter-wrapper d-inline-flex align-items-center justify-content-center gap-3">
+                        <span class="newsletter-label mb-0">Subscribe for a (Monthly) Newsletter</span>
+                        <a href="https://agentregistration.hahnair.com/" target="_blank" rel="noopener" class="externalLink">
+                            <button class="primary" type="button">Newsletter sign up</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+                        <div class="row">
+                <div class="col-12 d-flex justify-content-center logo">
+                    <img src="/images/logo-only.png" alt="Hahn Air Logo">
+                </div>
+            </div>
+
+                                        <div class="row menus">
+                                            <div class="col-md-2 col-sm-12 nav-ha-quick">
+                            <div class="content">
+                                <h4 class="toggleMobileClass open" data-target=".menuList1">
+                                    <a href="/en/news-press">
+                                        <span class="normalTitle">News &amp; Press</span>
+                                        <span class="shortTitle">News &amp; Press</span>
+                                    </a>
+                                </h4>
+                                <ul class="list-unstyled menuList1">
+                                                                            <li>
+                                            <a href="/en/press-releases" target="">Press Releases</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/press" target="">In the Press</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/media-centre" target="">Media Centre</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/media-contact" target="">Press Contact</a>
+                                        </li>
+                                                                    </ul>
+                            </div>
+                        </div>
+                                            <div class="col-md-2 col-sm-12 nav-ha-quick">
+                            <div class="content">
+                                <h4 class="toggleMobileClass open" data-target=".menuList2">
+                                    <a href="/en/career/career">
+                                        <span class="normalTitle">Career</span>
+                                        <span class="shortTitle">Career</span>
+                                    </a>
+                                </h4>
+                                <ul class="list-unstyled menuList2">
+                                                                            <li>
+                                            <a href="/en/career/about-us" target="">About us</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/career/working-hahn-air" target="">Culture &amp; Benefits</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/career/people-hahn-air" target="">People at Hahnair</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/career/job-vacancies" target="">Job Vacancies</a>
+                                        </li>
+                                                                    </ul>
+                            </div>
+                        </div>
+                                            <div class="col-md-2 col-sm-12 nav-ha-quick">
+                            <div class="content">
+                                <h4 class="toggleMobileClass open" data-target=".menuList3">
+                                    <a href="/en/gallery">
+                                        <span class="normalTitle">Gallery</span>
+                                        <span class="shortTitle">Gallery</span>
+                                    </a>
+                                </h4>
+                                <ul class="list-unstyled menuList3">
+                                                                            <li>
+                                            <a href="/en/pictures" target="">Pictures</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/videos" target="">Videos</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/audio" target="">Audio</a>
+                                        </li>
+                                                                    </ul>
+                            </div>
+                        </div>
+                                            <div class="col-md-2 col-sm-12 nav-ha-quick">
+                            <div class="content">
+                                <h4 class="toggleMobileClass open" data-target=".menuList4">
+                                    <a href="/en/help-contact">
+                                        <span class="normalTitle">Help &amp; Contact</span>
+                                        <span class="shortTitle">Help &amp; Contact</span>
+                                    </a>
+                                </h4>
+                                <ul class="list-unstyled menuList4">
+                                                                            <li>
+                                            <a href="/en/faq" target="">FAQs for Travel Agents</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/faq-passengers" target="">FAQs for Private Passengers</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/contact" target="">Contact</a>
+                                        </li>
+                                                                            <li>
+                                            <a href="/en/downloads" target="">Downloads</a>
+                                        </li>
+                                                                    </ul>
+                            </div>
+                        </div>
+                    
+                                        <div class="col-md-4 col-sm-12 nav-ha-quick">
+                        <div class="content">
+                            <h4 class="toggleMobileClass open">
+                                <span class="normalTitle">Find us here</span>
+                                <span class="shortTitle">Find us here</span>
+                            </h4>
+
+                            <div class="share">
+                                <ul class="list-inline social-icons">
+                                                                                                                <li class="hoverIcon list-inline-item">
+                                            <a href="https://www.tiktok.com/@hahn_air" target="_blank" class="externalLink">
+                                                <i class="fab fa-tiktok" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
+                                                                            <li class="hoverIcon list-inline-item">
+                                            <a href="https://www.instagram.com/hahn_air" target="_blank" class="externalLink">
+                                                <i class="fab fa-instagram" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
+                                                                            <li class="hoverIcon list-inline-item">
+                                            <a href="https://www.facebook.com/HahnAir" target="_blank" class="externalLink">
+                                                <i class="fab fa-facebook" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
+                                                                            <li class="hoverIcon list-inline-item">
+                                            <a href="https://www.linkedin.com/company/hahn-air" target="_blank" class="externalLink">
+                                                <i class="fab fa-linkedin" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
+                                                                            <li class="hoverIcon list-inline-item">
+                                            <a href="https://www.youtube.com/channel/UCS2EDxUl7zSWdcMGcWdzJcg" target="_blank" class="externalLink">
+                                                <i class="fab fa-youtube" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
+                                                                        <li class="hoverIcon list-inline-item">
+                                        <a href="#wichatQRCode" class="fancybox inline">
+                                            <i class="fab fa-weixin" aria-hidden="true"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <div id="wichatQRCode" class="openOnScroll">
+                                    <h3>Scan our WeChat QR code and follow us  <br> 扫描我们的二维码并关注我们</h3>
+                                    <div>
+                                        <img src="/images/wichat-qrcode.jpg" alt="WeChat QR code">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                        <div class="row nav align-items-center">
+                <div class="col-md-6 col-sm-12 nav-ha-legal">
+                    <ul class="list-unstyled hoz mb-0">
+                                                    <li><a href="/en/imprint">Imprint</a></li>
+                                                    <li><a href="/en/legal-note">Legal Note</a></li>
+                                                    <li><a href="/en/terms-and-conditions-ticketing">Terms &amp; Conditions</a></li>
+                                                    <li><a href="/en/privacy">Privacy</a></li>
+                                            </ul>
+                </div>
+
+                <div class="col-md-6 col-sm-12 text-md-end text-center mt-2 mt-md-0">
+                    © Copyright 2026 Hahn Air Lines GmbH
+                </div>
+            </div>
+
+                                        <hr class="hide-on-mobile">
+                <div class="row icons hide-on-mobile">
+                    <div class="col-md-12">
+                        <ul class="list-unstyled hoz centred partner-logos">
+                                                                                        <li><img src="/images/logos/intelisys.png" alt="intelisys" style="margin-top:-15px;"></li>
+                                                            <li><img src="/images/logos/nbaa.png" alt="nbaa" style=""></li>
+                                                            <li><img src="/images/logos/flight-safety.png" alt="flight safety" style=""></li>
+                                                            <li><img src="/images/logos/sita.png" alt="sita" style=""></li>
+                                                            <li><img src="/images/logos/drv.png" alt="drv" style=""></li>
+                                                            <li><img src="/images/logos/gbta.png" alt="gbta" style=""></li>
+                                                            <li><img src="/images/logos/asata.png" alt="asata" style=""></li>
+                                                            <li><img src="/images/logos/uatp.png" alt="uatp" style="height:37px;opacity:.5;"></li>
+                                                    </ul>
+                    </div>
+                </div>
+            
+        </div>
+    </footer>
+
+        
+        <div id="social_media_icons">
+                    <a href="https://www.tiktok.com/@hahn_air" target="_blank" class="externalLink">
+                <i class="fab fa-tiktok" aria-hidden="true"></i>
+            </a>
+                    <a href="https://www.instagram.com/hahn_air" target="_blank" class="externalLink">
+                <i class="fab fa-instagram" aria-hidden="true"></i>
+            </a>
+                    <a href="https://www.facebook.com/HahnAir" target="_blank" class="externalLink">
+                <i class="fab fa-facebook" aria-hidden="true"></i>
+            </a>
+                    <a href="https://www.linkedin.com/company/hahn-air" target="_blank" class="externalLink">
+                <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+            </a>
+                    <a href="https://www.youtube.com/channel/UCS2EDxUl7zSWdcMGcWdzJcg" target="_blank" class="externalLink">
+                <i class="fab fa-youtube" aria-hidden="true"></i>
+            </a>
+                    <a href="#wichatQRCode" target="_blank" class="fancybox inline">
+                <i class="fab fa-weixin" aria-hidden="true"></i>
+            </a>
+                    <a href="https://www.hahnair.com/newsletter" target="_blank" class="">
+                <i class="fal fa-envelope" aria-hidden="true"></i>
+            </a>
+            </div>
+
+        <script>
+        _linkedin_partner_id="3283681";
+        window._linkedin_data_partner_ids=window._linkedin_data_partner_ids||[];
+        window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+        (function(l){
+            if(!l){window.lintrk=function(a,b){window.lintrk.q.push([a,b])};window.lintrk.q=[]}
+            var s=document.getElementsByTagName("script")[0];
+            var b=document.createElement("script");b.type="text/javascript";b.async=true;
+            b.src="https://snap.licdn.com/li.lms-analytics/insight.min.js";
+            s.parentNode.insertBefore(b,s);
+        })(window.lintrk);
+    </script>
+    <noscript>
+        <img height="1" width="1" style="display:none;" alt=""
+             src="https://px.ads.linkedin.com/collect/?pid=3283681&fmt=gif">
+    </noscript>
+
+<style>
+  /* ──────────────── Newsletter Layout ──────────────── */
+  .newsletter-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .newsletter-label {
+    display: flex;
+    align-items: center;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 768px) {
+    .newsletter-wrapper {
+      flex-direction: column;
+      white-space: normal;
+      gap: 0.5rem;
+    }
+  }
+
+  /* ──────────────── Floating Social Media Bar ──────────────── */
+  #social_media_icons {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    pointer-events: none;
+  }
+
+  #social_media_icons a {
+    height: 50px;
+    width: 50px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #00145c;
+    font-size: 28px;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 992px) {
+    #social_media_icons {
+      display: none;
+    }
+  }
+</style>
+
+        </div>
+
+                <a id="thePageBottom">
+        <style>
+    .hahnairPopUp .fancybox-content {
+        background: rgba(0, 0, 0, 0.0);
+    }
+    .hahnairPopUp .fancybox-slide--html .fancybox-close-small {
+        color: white;
+    }
+</style>
+
+</a><section id="hahnairPopUp" class="" style="display: none"><a id="thePageBottom">
+    <img src="/images/popup/quiz-time.jpg" class="img-responsive" style="width:560px; height:auto;" alt="Quiz Time">
+    </a><div class="button" style="text-align: center; margin-top: 20px;"><a id="thePageBottom">
+        </a><a class="noBold" href="https://www.hahnair.com/de/Newsletter-Quiz-Nov-2025"><!-- target="_blank"-->
+            <button class="primary" style="width: 290px; height: 45px;">Don’t miss the chance!</button>
+        </a>
+    </div>
+</section>
+
+<script>
+    $(function () {
+        if (!readCookie('hahnairPopUpKeepClosed', false)) {
+
+/*
+                                    $.fancybox.open({
+                                        src: '#hahnairPopUp',
+                                        type: 'inline',
+                                        opts: {
+                                            baseClass: 'hahnairPopUp',
+                                            afterClose: function (instance, current) {
+                                                //createCookie('hahnairPopUpKeepClosed', 1, 5);
+                                                //value=1;
+                                                //expires = "; expires=" + moment().utc().add(5, 'day').format('ddd, DD MMM YYYY kk:mm:ss [UTC]');
+                                                //document.cookie = "hahnairPopUpKeepClosed=1;path=/";
+                                            }
+                                        }
+                                    });
+                                    document.cookie = "hahnairPopUpKeepClosed=1;path=/";
+
+*/
+        }
+    });
+</script>        
+        
+<div class="responsive-bootstrap-toolkit"><div class="device-xs visible-xs visible-xs-block"></div><div class="device-sm visible-sm visible-sm-block"></div><div class="device-md visible-md visible-md-block"></div><div class="device-lg visible-lg visible-lg-block"></div></div><div role="log" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div><div role="log" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div><div role="log" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div><div role="log" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div><div role="log" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div><div role="log" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div><ul id="ui-id-1" tabindex="0" class="ui-menu ui-widget ui-widget-content ui-autocomplete ui-autocomplete-highlight-last ui-front" style="display: none;"></ul><div role="status" aria-live="assertive" aria-relevant="additions" class="ui-helper-hidden-accessible"></div>
