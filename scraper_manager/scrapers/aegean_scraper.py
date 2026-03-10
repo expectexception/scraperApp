@@ -167,7 +167,7 @@ class AegeanScraper(BaseScraper):
             await self.simulate_human_behavior(page)
 
             # SuccessFactors typically has .job-location or similar
-            location_selectors = ['span.job-location', 'li.job-location', '.job-location', '[data-location]', '[itemprop="jobLocation"]']
+            location_selectors = ['span.jobLocation', 'span.job-location', 'li.job-location', '.job-location', '[data-location]', '[itemprop="jobLocation"]']
             for selector in location_selectors:
                 try:
                     loc_elem = await page.query_selector(selector)
@@ -178,6 +178,15 @@ class AegeanScraper(BaseScraper):
                             break
                 except Exception:
                     continue
+            
+            if job.get('location', 'Unknown') == 'Unknown':
+                try:
+                    body_text = await page.inner_text('body')
+                    m = re.search(r'Location:\s*([^\n]+)', body_text)
+                    if m:
+                        job['location'] = m.group(1).strip()
+                except Exception:
+                    pass
 
             desc_selectors = ['#jobDescription', '.job-description', '[itemprop="description"]', '.content', 'article', 'main']
             description = ''
@@ -196,7 +205,11 @@ class AegeanScraper(BaseScraper):
                 description = await self.extract_description_from_page(page)
 
             # Extract posted date
-            posted_date = await self.extract_posted_date_from_page(page)
+            posted_date_meta = await page.query_selector('meta[itemprop="datePosted"]')
+            if posted_date_meta:
+                 posted_date = await posted_date_meta.get_attribute('content')
+            else:
+                 posted_date = await self.extract_posted_date_from_page(page)
             if posted_date:
                 job['posted_date'] = posted_date
 

@@ -36,18 +36,34 @@ class AirMaltaScraper(BaseScraper):
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
                 
                 try:
-                    await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
+                    await page.goto(self.base_url, wait_until='domcontentloaded', timeout=45000)
                 except Exception as e:
                     logger.error(f"[{self.site_key}] Navigation failed: {e}")
                     return []
                 
                 await page.wait_for_timeout(3000)
                 
-                # Air Malta links are /careers/Job-Name
+                # KM Malta Links
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.h.includes('/careers/') && a.h !== 'https://kmmaltairlines.com/en/careers')
+                    let results = [];
+                    // Extract from standard cards
+                    let cards = document.querySelectorAll('.block-item');
+                    cards.forEach(card => {
+                        let a = card.querySelector('a.block-item-button');
+                        let title = card.querySelector('.block-item-title');
+                        if (a && title && a.href) {
+                            results.push({t: title.innerText.trim(), h: a.href});
+                        }
+                    });
+                    
+                    // Extract from hero job
+                    let heroLink = document.querySelector('.text-wrapper a.btn-primary');
+                    let heroTitle = document.querySelector('.text-wrapper h1');
+                    if (heroLink && heroTitle && heroLink.href) {
+                        results.push({t: heroTitle.innerText.trim(), h: heroLink.href});
+                    }
+                    
+                    return results;
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
@@ -68,7 +84,7 @@ class AirMaltaScraper(BaseScraper):
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='networkidle', timeout=30000)
+                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=45000)
                         
                         await detail_page.wait_for_timeout(2000)
                         
@@ -91,6 +107,10 @@ class AirMaltaScraper(BaseScraper):
                             description = await self.extract_description_from_page(detail_page)
 
                         location = "Malta" # KM Malta jobs are usually based in Malta
+                        loc_elem = detail_page.locator('section.striped-table tr:nth-child(2) td:last-child')
+                        if await loc_elem.first.is_visible():
+                            loc_text = await loc_elem.first.inner_text()
+                            if loc_text: location = loc_text.strip()
                         
                         posted_date = await self.extract_posted_date_from_page(detail_page)
 

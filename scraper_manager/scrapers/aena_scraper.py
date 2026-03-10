@@ -21,46 +21,55 @@ class AenaScraper(BaseScraper):
         self.company_name = "Aena"
 
     async def fetch_jobs(self) -> list:
-        from curl_cffi import requests
         jobs = []
-        
         try:
-            logger.info(f"[{self.site_key}] Fetching listing using curl_cffi impersonation...")
-            resp = requests.get(self.base_url, impersonate="chrome110", timeout=30)
-            if resp.status_code != 200:
-                logger.error(f"[{self.site_key}] Failed to fetch listing: {resp.status_code}")
-                return []
-            
-            # Fallback regex for ANY recruitment process link
-            matches = re.findall(r'href=[\'"]?([^\'"]*PFSrv[^\'"]*accion=(?:seleccionar|inicio|detallar)[^\'"]*)[\'"]?[^>]*>([^<]+)</a>', resp.text, re.I)
-            logger.info(f"[{self.site_key}] Found {len(matches)} potential recruitment links")
-            
-            for href, title in matches:
-                if self.max_jobs and len(jobs) >= self.max_jobs:
-                    break
-                
-                if not self.is_job_link(title, href):
-                    continue
-                
-                full_url = f"https://empleo.aena.es/empleo/{href}" if 'http' not in href else href
-                
-                # Extract ID from URL if possible, else use title slug
-                match = re.search(r'idProceso=(\d+)', href)
-                jid = match.group(1) if match else re.sub(r'[^a-zA-Z0-9]', '_', title.lower())
-                
-                job = get_job_dict(
-                    job_id=f"aena_{jid}",
-                    title=title.strip(),
-                    company=self.company_name,
-                    location="Spain",
-                    url=full_url,
-                    source_url=self.base_url,
-                    description=f"Aena recruitment process: {title.strip()}",
-                    apply_url=full_url,
-                    posted_date=datetime.now().isoformat(),
-                    source=self.site_key
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=self.headless)
+                context = await browser.new_context(
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
+                    viewport={'width': 1920, 'height': 1080}
                 )
-                jobs.append(job)
+                page = await context.new_page()
+                
+                logger.info(f"[{self.site_key}] Loading Aena careers page...")
+                await page.goto(self.base_url, wait_until='networkidle', timeout=45000)
+                
+                job_headers = await page.locator('div.th').all()
+                logger.info(f"[{self.site_key}] Found {len(job_headers)} potential job rows")
+                
+                for i, header in enumerate(job_headers):
+                    if self.max_jobs and len(jobs) >= self.max_jobs:
+                        break
+                        
+                    title_elem = header.locator('h3').first
+                    if not await title_elem.is_visible():
+                        continue
+                    title = await title_elem.inner_text()
+                    
+                    # Look for the immediate next sibling div.td3 containing a.botonAvisos
+                    link_elem = header.locator('xpath=following-sibling::div[contains(@class, "td3")][1]//a[contains(@class, "botonAvisos")]').first
+                    if await link_elem.is_visible():
+                        href = await link_elem.get_attribute('href')
+                        full_url = f"https://empleo.aena.es/empleo/{href}" if 'http' not in href else href
+                        
+                        match = re.search(r'idProceso=(\d+)', href)
+                        jid = match.group(1) if match else f"{i}"
+                        
+                        job = get_job_dict(
+                            job_id=f"aena_{jid}",
+                            title=title.strip(),
+                            company=self.company_name,
+                            location="Spain",
+                            url=full_url,
+                            source_url=self.base_url,
+                            description=f"Aena recruitment process: {title.strip()}. See documents at the provided URL.",
+                            apply_url=full_url,
+                            posted_date=datetime.now().isoformat(),
+                            source=self.site_key
+                        )
+                        jobs.append(job)
+                        
+                await browser.close()
         except Exception as e:
             logger.error(f"[{self.site_key}] Error: {e}")
             

@@ -44,8 +44,8 @@ class AbsjetsScraper(BaseScraper):
                 await page.wait_for_timeout(3000)
                 
                 # Fetch all job links
-                # The URLs contain "?r=detail&id="
-                links = await page.locator('a[href*="?r=detail&id="]').all()
+                # The actual jobs are listed with 'a.cp-job__link'
+                links = await page.locator('a.cp-job__link').all()
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job rows")
                 
                 seen_urls = set()
@@ -72,13 +72,9 @@ class AbsjetsScraper(BaseScraper):
                         content = await detail_page.inner_text('body')
                         
                         title = ""
-                        title_locs = await detail_page.locator('h1, h2').all()
-                        if title_locs:
-                            for t_loc in title_locs:
-                                t_text = await t_loc.inner_text()
-                                if t_text and len(t_text.strip()) > 3:
-                                    title = t_text
-                                    break
+                        title_loc = detail_page.locator('.cp-detail__header-title h1').first
+                        if await title_loc.is_visible():
+                            title = await title_loc.inner_text()
                         
                         if not title:
                             title = "Unknown Title"
@@ -86,16 +82,20 @@ class AbsjetsScraper(BaseScraper):
                         title = title.strip()
                             
                         description = ""
-                        desc_loc = detail_page.locator('.teamio-detail-content, .job-description, .detail-content, .content, main')
+                        desc_loc = detail_page.locator('.cp-detail__content, .teamio-detail-content, .job-description, .detail-content, .content, main')
                         if await desc_loc.first.is_visible():
                             description = await desc_loc.first.inner_html()
                         else:
                             description = await self.extract_description_from_page(detail_page)
 
                         location = "Unknown Location"
-                        m_loc = re.search(r'(Praha|Bratislava|Brno|Ostrava).*', content, re.IGNORECASE)
-                        if m_loc:
-                            location = m_loc.group(0).strip()
+                        loc_element = detail_page.locator('.cp-info__item--location .cp-info__item-link, .cp-info__item--location').first
+                        if await loc_element.is_visible():
+                            location = await loc_element.inner_text()
+                        else:
+                            m_loc = re.search(r'(Praha|Bratislava|Brno|Ostrava).*', content, re.IGNORECASE)
+                            if m_loc:
+                                location = m_loc.group(0).strip()
                             
                         posted_date = await self.extract_posted_date_from_page(detail_page)
 

@@ -54,7 +54,7 @@ class Job(models.Model):
 
     class Meta:
         db_table = "jobs"
-        managed = False
+        managed = True
 
 
 class CompanyMapping(models.Model):
@@ -78,4 +78,4 @@ class CompanyMapping(models.Model):
 
     class Meta:
         db_table = "company_mapping"
-        managed = False
+        managed = True

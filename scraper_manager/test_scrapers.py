@@ -9,8 +9,7 @@ import sys
 import django
 
 # Setup Django
-sys.path.insert(0, '/home/rajat/Desktop/AeroOps Intel/aeroScrap_backend/backendMain')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backendMain.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'scraper_service.settings')
 django.setup()
 
 from scraper_manager.config import CONFIG
