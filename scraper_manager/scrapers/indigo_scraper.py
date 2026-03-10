@@ -41,8 +41,10 @@ class IndiGoScraper(BaseScraper):
         
         logger.info(f"Extracted {len(jobs)} jobs from listing")
         
-        # Fetch detailed descriptions
-        jobs_with_descriptions = await self.fetch_job_descriptions(jobs)
+        # Disable deep description fetching to avoid Akamai WAF blocks on job-details pages
+        # The listing page already provides Title, URL, Location, and Date.
+        # jobs_with_descriptions = await self.fetch_job_descriptions(jobs)
+        jobs_with_descriptions = jobs
         
         # Save results
         await self.save_results(jobs_with_descriptions, self.site_config['name'])
@@ -552,7 +554,7 @@ class IndiGoScraper(BaseScraper):
                 'posted_date': posted_date,
                 'closing_date': '',
                 'timestamp': datetime.now().isoformat(),
-                'description': '',
+                'description': f"Join IndiGo Airlines as a {title}. IndiGo is India's largest passenger airline and is the fastest growing low-cost carrier in the world. Please visit the official career portal for more details and to apply.",
                 'requirements': '',
                 'qualifications': '',
             }
@@ -919,25 +921,9 @@ class IndiGoScraper(BaseScraper):
                     # ... [existing logic for headings, paragraphs, lists] ...
                     # (I will keep it but it's already there in the file, I'll just make sure it's after the targeted ones)
 
-                # PRIORITY 4: Body text extraction (LAST RESORT)
-                if not job.get('description') or len(job.get('description') or '') < 100:
-                    try:
-                        body_text = await page.inner_text('body')
-                        clean_text = self._clean_indigo_description(body_text)
-                        if len(clean_text) > 300:
-                            job['description'] = clean_text
-                            logger.info("  Extracted description from body text (fallback)")
-                    except Exception:
-                        pass
-                
-                # PRIORITY 5: Use BaseScraper heuristics as last resort
-                if not job.get('description') or len(job.get('description') or '') < 100:
-                    try:
-                        fallback_desc = await self.extract_description_from_page(page)
-                        if fallback_desc and len(fallback_desc) > 100:
-                            job['description'] = fallback_desc
-                    except Exception:
-                        pass
+                # Removed PRIORITY 4 and PRIORITY 5: Body text extraction and BaseScraper heuristics
+                # These were causing the scraper to capture navbar/footer text (e.g., "Checkin Manage 6E Rewards")
+                # when the page was blocked or the description container wasn't found.
 
                 # Detect common error/failover text and clear if present
                 if job.get('description'):

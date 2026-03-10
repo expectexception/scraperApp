@@ -17,7 +17,7 @@ class CarpatairScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='carpatair', db_manager=db_manager)
-        self.base_url = "https://www.carpatair.com/careers/"
+        self.base_url = "https://www.carpatair.com/career/"
         self.company_name = "Carpatair"
 
     async def fetch_jobs(self) -> list:

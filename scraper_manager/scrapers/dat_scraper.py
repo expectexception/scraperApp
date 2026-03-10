@@ -63,12 +63,19 @@ class DATScraper(BaseScraper):
                         await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
                         await detail_page.wait_for_timeout(2000)
                         
-                        real_title = title
-                        h1 = detail_page.locator('h1').first
-                        if await h1.is_visible():
-                            extracted = await h1.inner_text()
-                            if len(extracted) > 5:
-                                real_title = extracted
+                        slug = url.split('/')[-1] if not url.endswith('/') else url.split('/')[-2]
+                        slug_title = slug.replace('-', ' ').title()
+                        
+                        real_title = title if title.lower() != "learn more" else slug_title
+                        
+                        try:
+                            h1 = detail_page.locator('h1').first
+                            if await h1.is_visible(timeout=2000):
+                                extracted = await h1.inner_text()
+                                if len(extracted) > 5:
+                                    real_title = extracted
+                        except Exception:
+                            pass
 
                         description = ""
                         desc_loc = detail_page.locator('main, article, .job-description, .content')

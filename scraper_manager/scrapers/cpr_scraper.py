@@ -104,9 +104,17 @@ class CPRScraper(BaseScraper):
                             description = await self.extract_description_from_page(detail_page)
                             
                             # Location/Company/Date
-                            location = "Unknown"
-                            # Try standard selectors or regex from body
-                            
+                            location = "Canada" # Default for CPR
+                            loc_el = await detail_page.query_selector('.jobGeoLocation, .location, span:has-text("Location") + span')
+                            if loc_el:
+                                location = (await loc_el.inner_text()).strip()
+                            else:
+                                # Try regex in body
+                                body_text = await detail_page.inner_text()
+                                loc_match = re.search(r'Location:\s*([^\n,]+)', body_text)
+                                if loc_match:
+                                    location = loc_match.group(1).strip()
+
                             company = "CPKC"
                             
                             # Apply Link

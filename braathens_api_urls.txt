@@ -1,0 +1,4 @@
+API URLs:
+https://www.braathens.com/scripts/talentech-positionlist/talentech-positionlist.js?v=-HDI0NcqTXsuEwArXsWiZwkxO7f6QqIGYPOvjCiPSKM
+https://recruiter-api.hr-manager.net/jobportal.svc/braathens/positionlist/json/?mediaid=4615&take=20&sortby=Created&sortasc=0
+https://www.google-analytics.com/g/collect?v=2&tid=G-0MPXN7J7L1&gtm=45je6361v9202565208z89198755625za20gzb9198755625zd9198755625&_p=1773121083932&gcs=G111&gcd=13r3r3r3r5l1&npa=0&dma=0&gdid=dMWZhNz&cid=294603684.1773121086&ul=en-us&sr=1706x783&uaa=arm&uab=64&uafvl=HeadlessChrome%3B143.0.7499.4%7CChromium%3B143.0.7499.4%7CNot%2520A(Brand%3B24.0.0.0&uamb=0&uam=&uap=iOS&uapv=18_3&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~115938466~115938469~116024733~117484252~117625640~117625641&dl=https%3A%2F%2Fwww.braathens.com%2Fcareer%2F&sid=1773121086&sct=1&seg=0&dt=Career%20-%20Come%20fly%20with%20us&_tu=CA&en=page_view&_fv=1&_nsi=1&_ss=1&ep.redacted_query=&ep.website_language=en&tfd=2490

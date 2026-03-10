@@ -15,7 +15,7 @@ class AirIndiaScraper(BaseScraper):
     """Scraper for Air India Careers (SuccessFactors)"""
 
     def __init__(self, config, db_manager=None):
-        super().__init__(config, 'Air India', db_manager=db_manager)
+        super().__init__(config, 'airindia', db_manager=db_manager)
         self.site_config = config.get('sites', {}).get('airindia', {})
         self.base_url = self.site_config.get('base_url', 'https://careers.airindia.com')
         self.jobs_url = self.site_config.get('jobs_url', 'https://careers.airindia.com/sfcareer/jobreqcareer?jobPipeline=AirIndia')

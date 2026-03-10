@@ -15,7 +15,7 @@ class EgyptairScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='egyptair', db_manager=db_manager)
-        self.base_url = "https://hr.egyptair.com"
+        self.base_url = "https://www.egyptair.com/en/about-egyptair/Pages/careers.aspx"
         self.company_name = "Egyptair"
 
     async def fetch_jobs(self) -> list:
@@ -29,6 +29,17 @@ class EgyptairScraper(BaseScraper):
             try:
                 await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
                 await self.simulate_human_behavior(page)
+                
+                # Cloudflare Turnstile Bypass
+                try:
+                    cf_frame = page.frame_locator('iframe[title*="widget containing a Cloudflare security challenge"]').first
+                    checkbox = cf_frame.locator('input[type="checkbox"]')
+                    if await checkbox.is_visible(timeout=10000):
+                        logger.info(f"[{self.site_key}] Clicking Cloudflare Turnstile checkbox...")
+                        await checkbox.click()
+                        await page.wait_for_timeout(8000)
+                except Exception as e:
+                    logger.debug(f"[{self.site_key}] Cloudflare challenge not found or already verified: {e}")
                 
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a'))

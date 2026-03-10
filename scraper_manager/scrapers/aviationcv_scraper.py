@@ -60,72 +60,74 @@ class AviationCVScraper(BaseScraper):
                     if not cards:
                         break
                     
-                    # Iterate through cards
+                    page_jobs = []
+                    # First pass: Extract titles and URLs for pre-filtering
                     for card in cards:
+                        try:
+                            title_el = await card.query_selector('.jcl-job-teaser-title a')
+                            if not title_el: continue
+                            
+                            title = (await title_el.inner_text()).strip()
+                            url_suffix = await title_el.get_attribute('href')
+                            url = self.base_url + url_suffix if url_suffix and not url_suffix.startswith('http') else url_suffix
+                            
+                            company_el = await card.query_selector('.jcl-job-teaser-company')
+                            company = (await company_el.inner_text()).strip() if company_el else "Unknown"
+                            
+                            location_el = await card.query_selector('.jcl-job-teaser-location span.popoverlist-no-list-item')
+                            location = (await location_el.inner_text()).strip() if location_el else "Multiple Locations"
+                            
+                            date_el = await card.query_selector('.jobTeaser_jobTeaserDate__aNE0m')
+                            date_posted = date_el.inner_text() if date_el else None
+                            if date_posted: date_posted = (await date_posted).replace('Published:', '').strip()
+                            
+                            page_jobs.append({
+                                'title': title,
+                                'url': url,
+                                'company': company,
+                                'location': location,
+                                'date_posted': date_posted,
+                                'card_el': card # Keep reference for some consistency if needed, though we use URL for details
+                            })
+                        except Exception:
+                            continue
+
+                    print(f"Applying pre-filter to {len(page_jobs)} jobs on page {page_num}...")
+                    matched_page_jobs, _, _ = self.apply_title_filter(page_jobs)
+                    print(f"{len(matched_page_jobs)} jobs passed pre-filtering. Fetching details...")
+
+                    # Second pass: Fetch details only for matched jobs
+                    for job_meta in matched_page_jobs:
                         if job_count >= self.max_jobs:
                             break
                             
                         try:
-                            # Extract basic info from card
-                            title_el = await card.query_selector('.jcl-job-teaser-title a')
-                            if not title_el:
-                                continue
-                                
-                            title = await title_el.inner_text()
-                            url_suffix = await title_el.get_attribute('href')
-                            if url_suffix and not url_suffix.startswith('http'):
-                                url = self.base_url + url_suffix
-                            else:
-                                url = url_suffix
-                                
-                            company_el = await card.query_selector('.jcl-job-teaser-company')
-                            company = await company_el.inner_text() if company_el else "Unknown"
+                            title = job_meta['title']
+                            url = job_meta['url']
                             
-                            location_el = await card.query_selector('.jcl-job-teaser-location span.popoverlist-no-list-item')
-                            location = await location_el.inner_text() if location_el else "Multiple Locations"
-                            
-                            # Date parsing (simplified for now)
-                            date_posted = None
-                            date_el = await card.query_selector('.jobTeaser_jobTeaserDate__aNE0m')
-                            if date_el:
-                                date_text = await date_el.inner_text()
-                                # Try to parse relative dates if needed, or just keep raw string for verify
-                                date_posted = date_text.replace('Published:', '').strip()
-                            
-                            # Create initial job object
-                            # self._create_basic_job is not in BaseScraper, need to create manually or generic helper
-                            # BaseScraper doesn't have create_basic_job? Let's check. 
-                            # It doesn't seem to have valid one in the viewed file.
-                            # I will manually construct it.
-                            job = {
-                                'title': title,
-                                'company': company,
-                                'location': location,
-                                'url': url,
-                                'posted_date': date_posted,
-                                'scrape_date': datetime.now().isoformat(),
-                                'source': 'aviationcv',
-                                'job_id': f"aviationcv-{job_count}-{datetime.now().timestamp()}"
-                            }
-                            
-                            
-                            # now fetch full description
                             print(f"  Fetching details for: {title}")
-                            
-                            # Open new page for details to avoid navigating main page away
-                            # But wait, we are iterating elements handles. Navigating main page breaks them.
-                            # MUST open new page.
                             detail_page = await context.new_page()
                             try:
                                 await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
-                                job['description'] = await self.extract_description_from_page(detail_page)
+                                description = await self.extract_description_from_page(detail_page)
+                                
+                                job = {
+                                    'title': title,
+                                    'company': job_meta['company'],
+                                    'location': job_meta['location'],
+                                    'url': url,
+                                    'posted_date': job_meta['date_posted'],
+                                    'scrape_date': datetime.now().isoformat(),
+                                    'source': 'aviationcv',
+                                    'job_id': f"aviationcv-{job_count}-{datetime.now().timestamp()}",
+                                    'description': description
+                                }
+                                self.jobs.append(job)
+                                job_count += 1
                             except Exception as e:
                                 print(f"Error loading detail page: {e}")
                             finally:
                                 await detail_page.close()
-                            
-                            self.jobs.append(job)
-                            job_count += 1
                             
                         except Exception as e:
                             print(f"Error processing card: {e}")

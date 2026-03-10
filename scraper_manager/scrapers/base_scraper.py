@@ -19,9 +19,18 @@ from curl_cffi import requests as curl_requests
 
 # Import filter manager
 try:
-    from filter_manager import JobFilterManager
-except ImportError:
-    JobFilterManager = None
+    # Try relative import first (works when run as package)
+    from ..filter_manager import JobFilterManager
+except (ImportError, ValueError):
+    try:
+        # Try absolute import (works when scraper_manager is in path)
+        from scraper_manager.filter_manager import JobFilterManager
+    except ImportError:
+        try:
+            # Try direct import (works when in scraper_manager dir)
+            from filter_manager import JobFilterManager
+        except ImportError:
+            JobFilterManager = None
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -86,16 +95,19 @@ class BaseScraper:
         except Exception:
             self.ua = None
         
-        # Filter settings
-        self.use_filter = scraper_settings.get('use_filter', False)
+        # Filter settings - ALWAYS ENABLED
+        self.use_filter = True
         self.filter_manager = None
-        if self.use_filter and JobFilterManager:
+        
+        if JobFilterManager:
             filter_file = scraper_settings.get('filter_file', 'filter_title.json')
             try:
                 self.filter_manager = JobFilterManager(filter_file)
                 logger.info(f"[{site_key}] Loaded filter with {len(self.filter_manager.all_keywords)} keywords")
             except Exception as e:
-                logger.warning(f"[{site_key}] Failed to load filter: {e}")
+                logger.error(f"[{site_key}] CRITICAL: Failed to load filter: {e}")
+        else:
+            logger.error(f"[{site_key}] CRITICAL: JobFilterManager could not be imported. Filtering DISABLED.")
         
     async def is_url_already_scraped(self, url: str) -> bool:
         """Check if URL was already scraped (using database if available)"""
@@ -136,6 +148,18 @@ class BaseScraper:
     
     async def save_results(self, jobs: List[Dict], filename: Optional[str] = None):
         """Save results to database only (no file generation)"""
+        
+        # 1. Apply Filtering BEFORE saving
+        matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
+        
+        if self.use_filter and self.filter_manager:
+            logger.info(f"[{self.site_key}] Filter results: matched={len(matched_jobs)}, rejected={len(rejected_jobs)}")
+            if rejected_jobs:
+                print(f"    - Filtered out: {len(rejected_jobs)} irrelevant jobs")
+                logger.debug(f"[{self.site_key}] Rejected titles: {', '.join([j.get('title') for j in rejected_jobs[:5]])}")
+        
+        # Use only matched jobs from here on
+        jobs = matched_jobs
         
         # Calculate duration
         duration = 0
@@ -750,6 +774,10 @@ class BaseScraper:
         if u.endswith('/') and len(path.strip('/')) < 4:
              return False
 
+        path_without_query = u.split('?')[0]
+        if any(path_without_query.endswith(ext) for ext in ['.pdf', '.doc', '.docx', '.zip', '.jpg', '.png']):
+            return False
+
         # Mandatory exclusions
         skip_words = [
             'privacy', 'policy', 'cookies', 'legal', 'terms', 'condition', 
@@ -759,8 +787,8 @@ class BaseScraper:
             'support', 'feedback', 'blog', 'press', 'media', 'investor',
             'compagnie', 'fleet', 'services', 'network', 'destinations',
             'newsletter', 'sitemap', 'accessibility', 'flight', 'booking', 
-            'check-in', 'status', 'manage', 'travel', 'trip', 'plan', 'reserve',
-            'hotel', 'car', 'offer', 'destination', 'luggage', 'baggage'
+            'check-in', 'status', 'travel', 'trip', 'reserve',
+            'hotel', 'destination', 'luggage', 'baggage'
         ]
         
         if any(sw in t for sw in skip_words) or any(sw in u for sw in skip_words):

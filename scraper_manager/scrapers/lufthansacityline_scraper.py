@@ -16,7 +16,7 @@ class LufthansaCityLineScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='lufthansacityline', db_manager=db_manager)
-        self.base_url = "https://www.lufthansagroup.careers/en/lufthansa-cityline"
+        self.base_url = "https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_division[]=5985&language=2"
         self.company_name = "Lufthansa CityLine"
 
     async def fetch_jobs(self) -> list:
@@ -29,45 +29,62 @@ class LufthansaCityLineScraper(BaseScraper):
             
             try:
                 try:
-                    await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
+                    await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
                 except Exception as e:
                     logger.error(f"[{self.site_key}] Navigation failed: {e}")
                     return []
                 
                 # Handling cookie consent
                 try:
-                    cookie_btn = page.locator('text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
+                    cookie_btn = page.locator('text="Select all", text="Accept all", [data-hook="cc-ccc-btn-confirm-all"], #ensAcceptAll').first
                     if await cookie_btn.is_visible():
-                        await cookie_btn.click()
-                        await page.wait_for_timeout(1000)
+                        await cookie_btn.click(force=True)
+                        await page.wait_for_timeout(2000)
                 except:
                     pass
                 
+                # Wait for results to load
+                try:
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=45000)
+                except:
+                    logger.warning(f"[{self.site_key}] No job links found after wait.")
+
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && (a.h.includes('job') || a.h.includes('career') || a.h.includes('vacanc')))
+                    return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
+                        .map(a => ({t: a.title || a.innerText.trim(), h: a.href}))
+                        .filter(a => a.h && a.h.includes('job'))
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                job_urls = []
+                initial_jobs = []
                 for link in links:
                     href = link['h']
                     title = link['t']
                     if href and href not in seen_urls and self.is_job_link(title, href):
                         seen_urls.add(href)
-                        job_urls.append((href, title))
+                        initial_jobs.append({'title': title, 'url': href})
                 
-                for i, (url, title) in enumerate(job_urls):
+                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles (like HR) completely
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+
+                for i, j_initial in enumerate(matched_initial):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         
+                    url = j_initial['url']
+                    title = j_initial['title']
+                    
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                        # Increased timeout to 60s for stability
+                        await detail_page.goto(url, wait_until='load', timeout=60000)
                         await detail_page.wait_for_timeout(1500)
                         
                         real_title = title

@@ -15,7 +15,7 @@ class KLMScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='klm', db_manager=db_manager)
-        self.base_url = "https://careers.klm.com/en/jobs/"
+        self.base_url = "https://careers.klm.com/en/jobs/?page=1"
         self.company_name = "KLM Royal Dutch Airlines"
 
     async def fetch_jobs(self) -> list:
@@ -23,38 +23,72 @@ class KLMScraper(BaseScraper):
         jobs = []
         
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=self.headless)
+            browser = await p.chromium.launch(
+                headless=self.headless,
+                args=['--disable-http2', '--disable-blink-features=AutomationControlled']
+            )
             page, context = await self.setup_stealth_page(browser)
             
             try:
-                await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
+                # Use a longer timeout and wait for content
+                await page.goto(self.base_url, wait_until='domcontentloaded', timeout=90000)
+                await self.random_delay(5, 8) # Give it time to render the SPA
                 await self.simulate_human_behavior(page)
                 
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
-                        .filter(a => a.h && (a.h.includes('job') || a.h.includes('vacancy') || a.h.includes('career')))
+                # KLM jobs follow the pattern: https://careers.klm.com/en/jobs/[slug]/[id]/
+                links = await page.evaluate(r'''() => {
+                    const jobLinks = [];
+                    // The subagent found: a[href^="/en/jobs/"] span
+                    document.querySelectorAll('a[href*="/en/jobs/"]').forEach(a => {
+                        const href = a.href;
+                        // Titles are often in a span inside the link
+                        const span = a.querySelector('span');
+                        const text = (span ? span.innerText : a.innerText || '').trim();
+                        
+                        // Pattern: includes /en/jobs/ and ends with a numeric ID segment
+                        if (href && href.match(/\/jobs\/[^\/]+\/\d+\/?$/)) {
+                             jobLinks.push({t: text, h: href});
+                        }
+                    });
+                    return jobLinks;
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                job_urls = []
+                initial_jobs = []
                 for link in links:
                     href = link['h']
                     title = link['t']
-                    if href and href not in seen_urls and self.is_job_link(title, href):
+                    
+                    if href and href not in seen_urls and title and self.is_job_link(title, href):
+                        # Filter out common false positives
+                        forbidden_titles = {'jobs', 'careers', 'home', 'search', 'login', 'apply', 'view all'}
+                        if title.lower() in forbidden_titles:
+                            continue
+                            
                         seen_urls.add(href)
-                        job_urls.append((href, title))
+                        initial_jobs.append({'title': title, 'url': href})
                 
-                for i, (url, title) in enumerate(job_urls):
+                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+
+                for i, j_initial in enumerate(matched_initial):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
+                    
+                    url = j_initial['url']
+                    title = j_initial['title']
                     
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                        # Increased timeout for stability
+                        await detail_page.goto(url, wait_until='load', timeout=60000)
                         await self.random_delay(1, 2)
                         
                         description = await self.extract_description_from_page(detail_page)

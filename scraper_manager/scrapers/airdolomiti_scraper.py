@@ -17,7 +17,7 @@ class AirDolomitiScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='airdolomiti', db_manager=db_manager)
-        self.base_url = "https://airdolomiti.altamiraweb.com/"
+        self.base_url = "https://airdolomiti.altamiraweb.com/default"
         self.company_name = "Air Dolomiti"
 
     async def fetch_jobs(self) -> list:
@@ -37,33 +37,43 @@ class AirDolomitiScraper(BaseScraper):
                 
                 # Fetch job links
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
+                    return Array.from(document.querySelectorAll('a.GRID_DAT_COMMAND'))
                         .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && (a.h.includes('CompanyID') || a.h.includes('/job/')))
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                job_urls = []
+                initial_jobs = []
                 for link in links:
                     href = link['h']
                     title = link['t']
                     if href and href not in seen_urls and self.is_job_link(title, href):
                         skip_words = ['home', 'news', 'faq', 'cookie', 'login', 'impressum', 'privacy', 'about', 'search', 'results']
-                        if any(kw == title.lower() for kw in skip_words) or title.lower() in skip_words or "CompanyID" not in href:
+                        if any(kw == title.lower() for kw in skip_words) or title.lower() in skip_words:
                             continue
                         seen_urls.add(href)
-                        job_urls.append((href, title))
+                        initial_jobs.append({'title': title, 'url': href})
                 
-                for i, (url, title) in enumerate(job_urls):
+                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+
+                for i, j_initial in enumerate(matched_initial):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
+                        
+                    url = j_initial['url']
+                    title = j_initial['title']
                         
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                        # Increased timeout for stability
+                        await detail_page.goto(url, wait_until='load', timeout=60000)
                         await detail_page.wait_for_timeout(2000)
                         
                         real_title = title
@@ -94,7 +104,7 @@ class AirDolomitiScraper(BaseScraper):
                         posted_date = await self.extract_posted_date_from_page(detail_page)
                         
                         job_id = f"airdolomiti_{i+1}"
-                        match = re.search(r'CompanyID=([^&]+)', url)
+                        match = re.search(r'-(\d+)\.htm', url)
                         if match and match.group(1):
                             job_id = f"airdolomiti_{match.group(1)}"
 

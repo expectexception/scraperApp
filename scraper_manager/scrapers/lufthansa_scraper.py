@@ -113,92 +113,74 @@ class LufthansaScraper(BaseScraper):
                 
                 logger.info(f"[{self.site_key}] Extracting data from {len(job_cards)} job cards...")
                 
+                initial_jobs = []
                 for i, card in enumerate(job_cards):
-                    if self.max_jobs and len(jobs) >= self.max_jobs:
+                    if self.max_jobs and len(initial_jobs) >= self.max_jobs:
                         break
                         
                     try:
-                        # Re-locate element to avoid stale reference if possible, or just try access
-                        # Since we re-query `job_cards` in loop, the references *might* be stale if page re-rendered
-                        # But usually growing lists append. Let's try direct access.
-                        
                         title_el = card.locator('h2')
-                        if not await title_el.count():
-                            continue
+                        if not await title_el.count(): continue
                             
                         title = await title_el.text_content()
                         title = title.strip() if title else "Unknown Title"
                         
-                        # Company
                         company_el = card.locator('.company-name')
                         company = await company_el.text_content() if await company_el.count() else self.company_name
                         company = company.strip()
                         
-                        # Location (2nd span in jobad-meta-item)
-                        # Locator strategy might need to be specific
                         location_el = card.locator('.jobad-meta-item').first.locator('span').nth(1)
                         location = await location_el.text_content() if await location_el.count() else "Unknown Location"
                         location = location.strip()
                         
                         link = await card.get_attribute('href')
-                        if not link:
-                            continue
-                            
-                        # Ensure full URL
+                        if not link: continue
                         if not link.startswith('http'):
-                            # Base is apply.lufthansagroup.careers
-                            link = f"https://apply.lufthansagroup.careers/{link}" if link.startswith('/') else f"https://apply.lufthansagroup.careers/index.php{link}" # Verify link format
+                            link = f"https://apply.lufthansagroup.careers/{link}" if link.startswith('/') else f"https://apply.lufthansagroup.careers/index.php{link}"
                         
-                        # It seems the link in href is usually a full relative path or absolute.
-                        # Analysis showed href on `a.jobad-link-wrapper`
-                        
-                        job = {
+                        initial_jobs.append({
                             'company': company,
                             'title': title,
                             'location': location,
                             'url': link,
                             'source_url': link,
-                            'apply_url': link, # Placeholder
+                            'apply_url': link,
                             'is_active': True,
                             'description': ''
-                        }
-                        
-                        jobs.append(job)
-                        
+                        })
                     except Exception as e:
                         logger.warning(f"[{self.site_key}] Error extracting job card {i}: {e}")
-                        continue
-                
-                # Now fetch descriptions for collected jobs
-                for job in jobs:
+
+                # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
+                logger.info(f"[{self.site_key}] {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+
+                # Now fetch descriptions only for MATCHED jobs
+                for job in matched_initial:
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {job['title']}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(job['url'], wait_until='domcontentloaded', timeout=30000)
+                        # Increased timeout for stability
+                        await detail_page.goto(job['url'], wait_until='load', timeout=60000)
                         
-                        # Description
-                        # Try to find main content. 
-                        # Analysis: sections "AUFGABEN", "PROFIL" etc.
-                        # Often wrapper class like .content-wrapper or similar.
-                        # Using broad content extraction for now.
-                        description_el = detail_page.locator('div.jobad-content') # Guessing common class
+                        description_el = detail_page.locator('div.jobad-content')
                         if not await description_el.count():
-                            # Fallback
                             description = await detail_page.content()
                         else:
                             description = await description_el.first.inner_html()
                             
                         job['description'] = description
                         
-                        # Apply Link
                         apply_btn = detail_page.locator('.js-button-apply')
                         if await apply_btn.count():
                             apply_href = await apply_btn.get_attribute('href')
                             if apply_href:
                                 job['apply_url'] = apply_href if apply_href.startswith('http') else f"https://apply.lufthansagroup.careers/{apply_href}"
                         
+                        jobs.append(job) # ADDED THIS LINE: Actually add to final results
                         await detail_page.close()
-                        await asyncio.sleep(0.5) # Politeness
+                        await asyncio.sleep(0.5)
                         
                     except Exception as e:
                         logger.warning(f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}")

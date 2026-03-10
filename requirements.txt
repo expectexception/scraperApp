@@ -8,3 +8,5 @@ beautifulsoup4>=4.12
 lxml>=5.3
 requests>=2.32
 psycopg2-binary>=2.9
+django-celery-beat>=2.5.0
+fake-useragent>=1.5.1

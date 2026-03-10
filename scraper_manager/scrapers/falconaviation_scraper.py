@@ -52,14 +52,11 @@ class FalconAviationScraper(BaseScraper):
         if duplicate_count > 0:
             logger.info(f"Filtered out {duplicate_count} duplicate jobs")
 
-        # Fetch detailed descriptions
-        jobs_with_descriptions = await self.fetch_job_descriptions(jobs)
+        # Save results (descriptions already extracted from accordion)
+        await self.save_results(jobs)
+        self.print_sample(jobs)
 
-        # Save results
-        await self.save_results(jobs_with_descriptions)
-        self.print_sample(jobs_with_descriptions)
-
-        return jobs_with_descriptions
+        return jobs
 
     async def fetch_jobs_from_listing(self):
         """Fetch jobs from Falcon Aviation listing page"""
@@ -148,6 +145,16 @@ class FalconAviationScraper(BaseScraper):
                             'requirements': '',
                             'qualifications': '',
                         }
+
+                        # Try to extract the description from the accordion body
+                        try:
+                            parent = await link.evaluate_handle('el => el.closest(".accordion-item")')
+                            if parent:
+                                body = await parent.query_selector('.accordion-body')
+                                if body:
+                                    job_data['description'] = (await body.inner_text()).strip()
+                        except Exception as e:
+                            logger.error(f"Error extracting accordion description: {e}")
 
                         jobs.append(job_data)
                         added_urls.add(job_url)

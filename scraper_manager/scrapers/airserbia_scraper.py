@@ -17,7 +17,7 @@ class AirSerbiaScraper(BaseScraper):
         self.site_config = config.get('sites', {}).get('airserbia', {})
         self.base_url = self.site_config.get('base_url', 'https://career.airserbia.com')
         # General search endpoint
-        self.jobs_url = self.base_url + '/search/?q=&sortColumn=referencedate&sortDirection=desc'
+        self.jobs_url = 'https://career.airserbia.com/go/View-all-jobs/9196455/'
         self.company_name = "Air Serbia"
 
     async def fetch_jobs(self) -> list:
@@ -50,7 +50,12 @@ class AirSerbiaScraper(BaseScraper):
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
-            page, context = await self.setup_stealth_page(browser)
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            )
+            page = await context.new_page()
 
             try:
                 print(f"Loading {self.company_name} careers page...")
@@ -61,26 +66,33 @@ class AirSerbiaScraper(BaseScraper):
                 await self.simulate_human_behavior(page)
 
                 job_links = await page.evaluate('''() => {
-                    let links = Array.from(document.querySelectorAll('a'));
-                    return links.filter(a => a.href.includes('/job/') && a.innerText.trim().length > 3).map(a => ({
-                        href: a.href,
-                        title: a.innerText.trim()
-                    }));
+                    let links = Array.from(document.querySelectorAll('a.jobTitle-link'));
+                    return links.map(a => {
+                        let row = a.closest('tr');
+                        let loc = row ? row.querySelector('span.jobLocation') : null;
+                        return {
+                            href: a.href,
+                            title: a.innerText.trim(),
+                            location: loc ? loc.innerText.trim() : 'Belgrade/Serbia'
+                        };
+                    });
                 }''')
                 
                 unique_links = {}
                 for l in job_links:
                     if l['href'] not in unique_links:
-                        unique_links[l['href']] = l['title']
+                        unique_links[l['href']] = l
 
                 print(f"✓ Found {len(unique_links)} jobs")
 
                 if not unique_links:
                     return jobs
 
-                for href, title in list(unique_links.items())[:self.max_jobs] if self.max_jobs else unique_links.items():
+                for href, l in list(unique_links.items())[:self.max_jobs] if self.max_jobs else unique_links.items():
                     try:
                         job_url = href if href.startswith('http') else f"{self.base_url}{href}"
+                        title = l.get('title', '')
+                        location = l.get('location', 'Belgrade/Serbia')
                         
                         job_id = None
                         match = re.search(r'/(\d+)/?$', job_url)
@@ -96,7 +108,7 @@ class AirSerbiaScraper(BaseScraper):
                             'source': self.site_key,
                             'url': job_url,
                             'apply_url': job_url,
-                            'location': 'Belgrade/Serbia',
+                            'location': location,
                             'timestamp': datetime.now().isoformat(),
                         }
                         jobs.append(job_data)
@@ -138,13 +150,18 @@ class AirSerbiaScraper(BaseScraper):
 
     async def _extract_description(self, browser, job):
         try:
-            page, context = await self.setup_stealth_page(browser)
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            )
+            page = await context.new_page()
             await self.random_delay(1, 2)
-            await page.goto(job['url'], wait_until='load', timeout=30000)
+            await page.goto(job['url'], wait_until='domcontentloaded', timeout=45000)
             await self.random_delay(2, 4)
             await self.simulate_human_behavior(page)
 
-            location_selectors = ['span.job-location', 'li.job-location', '.job-location', '[data-location]', '[itemprop="jobLocation"]']
+            location_selectors = ['#job-location', 'span[data-careersite-propertyid="location"]', 'span.job-location', '.job-location']
             for selector in location_selectors:
                 try:
                     loc_elem = await page.query_selector(selector)
@@ -156,7 +173,7 @@ class AirSerbiaScraper(BaseScraper):
                 except Exception:
                     continue
 
-            desc_selectors = ['#jobDescription', '.job-description', '[itemprop="description"]', '.content', 'article', 'main']
+            desc_selectors = ['.jobdescription', '#jobDescription', '[itemprop="description"]']
             description = ''
             for selector in desc_selectors:
                 try:

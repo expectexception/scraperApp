@@ -1,0 +1,547 @@
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WDXQMJ8"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+<div id="site-content">
+<div id="cm-placement-header" class="cm-grid__item cm-placement-header width100">
+<div class="header-skip-links-wrapper">
+<a class="skip-link" href="#navigation">Skip to navigation</a>
+<a class="skip-link" href="#main-content">Skip to content</a>
+</div>
+<header class="header" data-elastic-exclude="">
+<div class="header__container">
+<div class="header__top body-max-width">
+<div class="left">
+<a class="header__logo finnair svg-image" href="/en" title="Finnair company">
+<object type="image/svg+xml" data="/resource/crblob/2749610/a77ca5a8105238880699e42eeb3e7798/finnair-company-svg-data.svg" title="Finnair company" tabindex="-1">
+<img src="/resource/image/2749608/landscape_ratio4x1/172/43/8f05dd0ab043f3d62a9d56a09f8bd861/3F70C66B670B1174026FD21EAC6A3FA5/finnair-company-logo.png" alt="Finnair company" title="Finnair company" width="100%" height="auto">
+</object> </a>
+<a class="header__logo oneworld svg-image" href="https://www.oneworld.com/" target="_blank" rel="noopener" title="Oneworld (Opens in a new tab)">
+<object type="image/svg+xml" data="/resource/crblob/439128/c1d7889026a7d141f96c6c5b3a894f39/oneworld-svg-data.svg" title="Oneworld (Opens in a new tab)" tabindex="-1">
+<img src="/resource/image/435626/landscape_ratio4x1/172/43/dccf71f7500765c47a575e008672f7b9/E84379F4664C658C211D3B5C266A7DF3/oneworld-png.png" alt="Oneworld (Opens in a new tab)" title="Oneworld (Opens in a new tab)" width="100%" height="auto">
+</object> </a>
+</div>
+<div class="right">
+<ul class="lang-selection">
+<li class="header-links__item notranslate " aria-label="Language selector">
+<a class="header-links__link " href="https://company.finnair.com/fi/toihin-finnairille" title="Suomi" aria-label="Suomi">
+<span class="hide-med hide-small">Suomi</span>
+<span class="hide-large">FI</span>
+</a>
+</li>
+<li class="header-links__item notranslate is-hidden" aria-label="Language selector">
+<a class="header-links__link selected" href="" title="English" aria-label="English">
+<span class="hide-med hide-small">English</span>
+<span class="hide-large">EN</span>
+</a>
+</li>
+</ul> </div>
+</div>
+<div class="main-navigation js-nav">
+<nav id="navigation" class="nav js-nav-trigger" role="navigation" tabindex="-1" aria-labelledby="navigation-menu">
+<button class="nav--mobile-trigger__btn menu" aria-controls="navigation-menu" aria-expanded="false" aria-label="Mobile Navigation Button">
+<i class="icon icon-menu" aria-hidden="true"></i>
+<span class="menu-text">
+<span class="is-vishidden">Open </span>
+Menu
+</span>
+<span class="back-text is-vishidden is-hidden">Close menu</span>
+</button>
+<ul class="nav-list nav--mobile">
+<li class="search search--mobile">
+<form class="search-form">
+<label for="q" class="search-label">
+<span class="search-label__text">Search</span>
+<input class="search-input header-link__search" type="search" id="q" name="q" placeholder="">
+</label>
+<button class="elastic-btn search__button" type="submit" data-search-slug="search" data-elastic-locale="en">
+<i class="icon icon-search-blue" aria-hidden="true"></i>
+<span class="is-vishidden">Search</span>
+</button>
+</form>
+</li>
+<li class="nav-list__item">
+<a class="nav-list__link" href="/en/about">Finnair company</a>
+</li>
+<li class="nav-list__item">
+<a class="nav-list__link" href="https://investors.finnair.com/en">Investor relations</a>
+</li>
+<li class="nav-list__item">
+<a class="nav-list__link" href="/en/sustainability">Sustainability</a>
+</li>
+<li class="nav-list__item">
+<a class="nav-list__link" href="/en/media-centre">Media centre</a>
+</li>
+<li class="nav-list__item">
+<a class="nav-list__link active" href="/en/careers" aria-current="page">Careers</a>
+</li>
+<li class="nav-list__item">
+<a class="nav-list__link" href="/en/company-contacts">Contact Finnair</a>
+</li>
+</ul>
+<div class="search search--desktop">
+<button class="search__button search__button--trigger">
+<i class="icon icon-search" aria-hidden="true"></i>
+<span class="search__button-text is-vishidden">Search</span>
+</button>
+</div>
+</nav>
+<div class="search-bar grid-max-width">
+<form class="search-form">
+<label for="q" class="search-label">
+<span class="search-label__text">Search</span>
+<input class="search-input header-link__search" type="search" id="q" name="q" placeholder="">
+</label>
+<button class="elastic-btn search__button" type="submit" data-search-slug="search" data-elastic-locale="en">
+<i class="icon icon-search-blue" aria-hidden="true"></i>
+<span class="is-vishidden">Search</span>
+</button>
+</form>
+</div>
+</div> </div>
+</header></div><div id="cm-placement-main" class="cm-grid__item cm-placement-main width100">
+<main id="main-content" tabindex="-1" role="main">
+<ul class="cm-breadcrumb breadcrumb grid-max-width">
+<li class="breadcrumb__item">
+<span aria-hidden="true" class="breadcrumb__separator">/</span>
+<span class="breadcrumb__title"><a class="" href="/en">Home</a></span>
+</li>
+<li class="breadcrumb__item active">
+<span aria-hidden="true" class="breadcrumb__separator">/</span>
+<span class="breadcrumb__title">Careers</span>
+</li>
+</ul>
+<section class="grid-col-12 grid-max-width article hero">
+<h1 class="hero__title">Working at Finnair</h1>
+<div class="md-col-1-4">
+<nav class="sidebar js-sidebar">
+<button class="sidebar__toggle sidebar__toggle--hide" data-container="sidebar-2712348" aria-controls="sidebar-navigation" aria-expanded="false">
+<span class="title">Working at Finnair</span>
+<i class="icon icon-arrow-down" aria-hidden="true"></i>
+</button>
+<ul id="sidebar-2712348" class="sidebar__list" aria-labelledby="sidebar-navigation">
+<li class="sidebar__list-item parent hide-mobile">
+<a class="sidebar__list-link active" href="/en/careers" aria-current="page">
+Working at Finnair
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/cabin-crew">
+Cabin crew
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/digital-services">
+Digital services
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/finnair-business-services">
+Finnair Business Services
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/kitchen">
+Finnair Kitchen
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/pilots">
+Pilots
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/technical-operations">
+Technical operations
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="/en/careers/takeoff---finnair-trainee-program">
+Takeoff – Finnair Trainee Program
+</a>
+</li>
+<li class="sidebar__list-item">
+<a class="sidebar__list-link child" href="https://company.finnair.com/en/careers#open-positions">
+Open positions
+</a>
+</li>
+</ul>
+</nav> </div>
+<div class="content__container">
+<img class="content__image show-tablet" src="/resource/image/2783174/landscape_ratio16x9/1000/563/4356b4b201cf94940490b9fccb936a05/A41922306A1A172DA6D5EE14BA5DCF6C/careers-hero-image.jpg" alt="">
+<img class="content__image show-mobile" src="/resource/image/2783174/landscape_ratio3x2/600/400/b179a57bbde185ae48431d5e083ee86c/6FAC6B5C612005D34033F1CE656370F1/careers-hero-image.jpg" alt="">
+<div class="content__wrapper">
+<div class="content__texts">
+<h2>A job on top of the world</h2><p>Our goal is to be an international winning team, ensuring Finnair’s successful future. Our values – commitment to care, simplicity, courage and working together – guide our actions.</p><p>As an employer, Finnair is unique and future-oriented. We handle new possibilities in an unprejudiced manner and strive always to develop. We have fun at work. We care about each other, help each other and respect each other.</p> </div>
+<section class="grid-col-12 grid-row">
+<figure class="image__wrapper grid-third cms-image" title="">
+<img class="image show-tablet" src="/resource/image/3421258/cms-image/320/164/fe946647dbbad320ee7ddfd0eff430ca/EC9F02A6DA24848D7EB7F5240223D23E/finnair-badge-1-2024.png" alt="">
+<img class="image show-mobile" src="/resource/image/3421258/cms-image/320/164/fe946647dbbad320ee7ddfd0eff430ca/EC9F02A6DA24848D7EB7F5240223D23E/finnair-badge-1-2024.png" alt="">
+</figure><figure class="image__wrapper grid-third cms-image" title="">
+<img class="image show-tablet" src="/resource/image/3421260/cms-image/320/164/a2b1ece35f937e07f29f1b94df9152f3/85EDE5FE5DE53F8A75088D0C6BEB2F39/finnair-badge-2-2024.png" alt="">
+<img class="image show-mobile" src="/resource/image/3421260/cms-image/320/164/a2b1ece35f937e07f29f1b94df9152f3/85EDE5FE5DE53F8A75088D0C6BEB2F39/finnair-badge-2-2024.png" alt="">
+</figure></section> </div>
+</div></section><section class="mosaic body-max-width blue video ">
+<div class="video-player-still mosaic__image" style="background-image:url(/resource/image/3078982/landscape_ratio16x9/480/270/3b147bc2f98cfe84fd233643c7354829/DB8CB10090154943F61E1343A3B9B5C3/video---cabin-crew-in-flight-experience-image.png);display:flex;">
+<a href="//www.youtube.com/watch?v=xe95z_-S4hs" class="video__link" data-cm-video-popup="{&quot;url&quot;:&quot;//www.youtube.com/watch?v=xe95z_-S4hs&quot;,&quot;title&quot;:&quot;-&quot;,&quot;autoplay&quot;:true,&quot;hideControls&quot;:false,&quot;muted&quot;:false,&quot;loop&quot;:false,&quot;closeText&quot;:&quot;Close (Esc)&quot;}">
+<i class="icon icon-play">
+<span class="is-vishidden"><p>Play video -</p></span>
+</i>
+</a>
+</div> <div class="mosaic__texts-wrapper">
+<div class="mosaic__texts center">
+<blockquote><h2>Join a tour of in-flight experience with Finnair cabin crew</h2></blockquote> </div>
+</div>
+</section><section id="open-positions" class="grid-col-12 grid-max-width article">
+<div class="md-col-1-4">
+<h2 class="article__heading">Open positions</h2>
+</div>
+<div class="content__container">
+<div class="content__wrapper">
+<div class="content__texts">
+<p>Are you ready to take off for new challenges? Fasten your seatbelt and prepare for a fast-changing working environment. You will face new challenges every day and have plenty of opportunities to learn new skills. If you have what it takes, only the sky's the limit.</p><p>See the open positions below to find out what kind of talents we’re looking for. You can review your active applications on your Candidate Home page by signing in <a href="https://finnair.wd103.myworkdayjobs.com/en-US/finnair" target="_blank" rel="noopener noreferrer">here</a>. Unfortunately, we are not hiring interns at the moment.</p><p>Please note that the aviation safety and security regulations prevent us from offering TET internship at Finnair.</p> </div>
+<section id="jobs" class="jobs">
+<div class="loader is-hidden">
+<span class="text is-vishidden">Please wait</span>
+<div class="bounce-container">
+<div class="bounce bounce1"></div>
+<div class="bounce bounce2"></div>
+<div class="bounce bounce3"></div>
+</div>
+</div>
+<ul class="news-jobs-list unstyled" id="jobs-list" data-feed-id="79" data-vacancy-place="">
+<li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/Vantaa/Sourcing-Manager--Aircraft-Maintenance_R265750" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Sourcing Manager, Aircraft Maintenance</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Vantaa, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li><li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/Other-Location/Regional-Manager--UK---Ireland_R265757-1" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Regional Manager, UK &amp; Ireland</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Finnair, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li><li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/HOTT/Tyterveyshoitaja_R265792-1" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Työterveyshoitaja</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Vantaa, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li><li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/Vantaa/Technical-Training---Compliance-Engineer_R265796-1" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Technical Training &amp; Compliance Engineer</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Vantaa, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li><li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/Vantaa/Component-Mechanic--Hydrauliikkakorjaamo_R265800-1" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Component Mechanic, Hydrauliikkakorjaamo</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Vantaa, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li><li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/Vantaa/Safety---Compliance-Advisor_R265819-1" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Safety &amp; Compliance Advisor</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Vantaa, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li><li class="news-jobs-list__item ">
+      <a href="https://finnair.wd103.myworkdayjobs.com/finnair/job/Vantaa/Revenue-Analyst--Fixed-term-_R265820-1" class="news-jobs-list__link grid-col-12 job--finnair" target="_blank">
+        <span class="news-jobs-list__heading">Revenue Analyst (Fixed-term)</span>
+        <span class="news-jobs-list__texts">
+          <span class="news-jobs-list__company">Vantaa, Finland</span>
+          <i class="icon icon-union-blue" aria-hidden="true"></i>
+        </span>
+      </a>
+    </li></ul>
+</section> </div>
+</div></section><section class="cms-fill-image body-max-width blue-bg ">
+<div class="teasers__wrapper">
+<div class="grid-col-12 teasers__row">
+<div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/2783856/landscape_ratio16x9/600/338/dbcea07e2c21daf394edc2dbaa530f46/9EBC19E88BB539DF46DD99B5CCB17C8C/cabin-crew-hero-image.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/2783856/landscape_ratio3x2/600/400/8d2900d0181ab477fd362ee8e51b750c/A95ABDED3A3797260760A980F64952B7/cabin-crew-hero-image.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/cabin-crew" role="button">
+<span class="text">Cabin crew</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div><div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/2793624/landscape_ratio16x9/600/338/663aace6a4ea56545170399be3812d24/1A9E6DD08327B9974454D1C784C14EA9/digital-services-hero-image.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/2793624/landscape_ratio3x2/600/400/f95d74223002c62dcfe308fd2d3066ea/68A47882F78C40A0AE253EF2FEA397E0/digital-services-hero-image.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/digital-services" role="button">
+<span class="text">Digital services</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div><div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/2801630/landscape_ratio16x9/600/338/2bb42900b09354063d6e31899ee1dd68/8BE359DBC99213801635468CFA711BCD/finnair-business-services-hero-image.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/2801630/landscape_ratio3x2/600/400/ec20c30e85df1289c07f46148131be32/271685906D4E9042131B57B3B90D0874/finnair-business-services-hero-image.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/finnair-business-services" role="button">
+<span class="text">Finnair Business Services</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div><div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/2783860/landscape_ratio16x9/600/338/1ede7249cf72845899d1eb6dfbca7ee8/A030EFB5C0C4FB8B9080508870C7FCB5/finnair-kitchen-hero-image.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/2783860/landscape_ratio3x2/600/400/79285a1eef0697cee955ce48d381dc49/904C1E17178EDBE788E088DA31B0D49D/finnair-kitchen-hero-image.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/kitchen" role="button">
+<span class="text">Finnair Kitchen</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div><div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/2783812/landscape_ratio16x9/600/338/bb7be18437dc23eabfcbd1d78568930c/2FCF52570A440E3CB0958420C8EB98B4/pilots-hero-image.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/2783812/landscape_ratio3x2/600/400/8cd151db7d5bb1022e0af023df6d88ea/B42BFEFCE392160D5B0B5BC87E13997E/pilots-hero-image.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/pilots" role="button">
+<span class="text">Pilots</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div><div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/2730462/landscape_ratio16x9/600/338/27b7122c6cadbac1bead9bc7692717fa/531CE07C1C2953429CAF4439AC436884/technical-operations-hero-image.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/2730462/landscape_ratio3x2/600/400/ec98e1c061154ba4325f16fda63c2ec5/5651E538EDAF04AE2E7E005160BCB266/technical-operations-hero-image.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/technical-operations" role="button">
+<span class="text">Technical operations</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div><div class="teaser grid-fourth">
+<img class="teaser__image show-tablet" src="/resource/image/3657458/landscape_ratio16x9/600/338/c1be15466508799c1edb68ab0bd56028/6B39D4BD7B1092894B848CA2E5216BD1/finnair-16102024-203-retv2.jpg" alt="">
+<img class="teaser__image show-mobile" src="/resource/image/3657458/landscape_ratio3x2/600/400/64f0603d6a46d6e28f700f97342a885d/B350D4138784E761E2050A9748AB3F31/finnair-16102024-203-retv2.jpg" alt="">
+<a class="teaser__link title" href="/en/careers/takeoff---finnair-trainee-program" role="button">
+<span class="text">Takeoff – Finnair Trainee Program</span>
+<i class="icon icon-union" aria-hidden="true"></i>
+</a>
+</div> </div>
+</div>
+</section><section class="grid-col-12 grid-max-width article">
+<div class="md-col-1-4">
+<h2 class="article__heading">Why Finnair?</h2>
+</div>
+<div class="content__container">
+<div class="content__wrapper">
+<div class="content__texts">
+<p>We at Finnair are a team of dedicated and ambitious professionals from around the globe. Hybrid work has been part of our culture for a long time. We serve a challenging global market and take pride in our operational excellence and high-quality products.</p><p>How do you know if we are a good fit for you? In the recruitment process, we highlight professional expertise and relevant education as well as individual attributes such as the ability to take initiative, the capabilities to develop and collaborate as well as the motivation for the applied job.</p><p>In addition to job-specific competencies, we want to hire people who share our values and are committed to our vision of offering a unique Nordic experience to our customers.</p> </div>
+<section class="grid-col-12 grid-row">
+<section class="cms-section-narrow">
+<div class="cms-section-narrow__texts">
+<h3 class="cms-section-narrow__title">Variety</h3>
+<p>Do you think you need to be a pilot to join Finnair? Even though pilots and cabin crew members are an essential part of our daily operations and success, it takes many other roles to build a successful airline business. For example, we have professionals designing the customer experience, digital services and products, mechanics and maintenance personnel taking care of our fleet and our expert teams working with cargo, HR, finance and communications.</p> </div>
+</section><section class="cms-section-narrow">
+<div class="cms-section-narrow__texts">
+<h3 class="cms-section-narrow__title">Interesting industry</h3>
+<p>The airline business is unique because it requires seamless teamwork from several fields of competence to offer safe and comfortable journeys for all our passengers. Therefore, it is the perfect working place for those who are ready to learn the difference between this and other industry fields and constantly develop our business in the ever-changing global environment.</p> </div>
+</section><section class="cms-section-narrow">
+<div class="cms-section-narrow__texts">
+<h3 class="cms-section-narrow__title">Developing leadership</h3>
+<p>We believe in coaching and empowering leadership and that leaders should constantly develop throughout their careers. That is why we pay extra attention to providing our leaders with opportunities to improve their leadership and support their growth in leading not only people and the business but also themselves.</p> </div>
+</section><section class="cms-section-narrow">
+<div class="cms-section-narrow__texts">
+<h3 class="cms-section-narrow__title">Supporting competence development and growth</h3>
+<p>Our people’s experience is extremely important to us. We want to help our employees to develop themselves at work, to grow in the direction that will support their passion and strengths and encourage everyone to give their best every day. </p><p></p><p>In practice, for example, we link performance and competencies in our personal development discussions, encourage people to give and receive feedback and highlight development as a key part of leadership competencies. Additionally, in the next couple of years we will focus even more on developing our competences in customer experience and digitalisation. </p> </div>
+</section></section> </div>
+</div></section><section class="grid-col-12 grid-max-width article">
+<div class="md-col-1-4">
+<h2 class="article__heading">Contact our career team</h2>
+</div>
+<div class="content__container">
+<div class="content__wrapper">
+<div class="content__texts">
+<p>If you have any questions, you can contact us by sending an email. Please note that <strong>we don’t take open applications at the moment</strong>.</p></div><div class="contact-item">
+<h4 class="contact-item__heading">Email</h4>
+<div class="contact-item__wrapper">
+<i class="icon icon-email" aria-hidden="true"></i>
+<div class="contact-item__texts">
+<a href="mailto:jobs@finnair.com">jobs@finnair.com</a>
+</div>
+</div>
+</div><div class="content__texts">
+<h3 class="title">Privacy and personal information</h3>
+<p>For more details on how we handle your data, read our Recruitment Privacy Statement. If you are a former employee or have been part of our recruitment process before, you can request access to the personal data we have processed concerning you.</p></div><a class="article-link" href="/resource/blob/2783082/aae271a7c7ac3062fd118d961b7538a2/recruitment-privacy-statement-data.pdf" target="_blank" rel="noopener norefferer">
+<span class="button__text">Read our Recruitement Privacy Statement (PDF)</span>
+<span class="is-vishidden">(Opens in a new tab)</span>
+<i class="icon icon-external-blue" aria-hidden="true"></i>
+</a><a class="article-link" href="/en/careers/former-employee-or-recruitment-candidate-data-request">
+<span class="button__text">Make a personal data request</span>
+<i class="icon icon-union-blue" aria-hidden="true"></i>
+</a> </div>
+</div></section> </main>
+</div><div id="cm-placement-footer" class="cm-grid__item cm-placement-footer width100">
+<footer id="site-footer" class="footer" data-elastic-exclude="">
+<div class="footer__container body-max-width">
+<div class="footer__logo">
+<object type="image/svg+xml" data="/resource/crblob/2788336/d46febe49f10be7bc676835c4da68ed2/finnair-emblem-logo-rgb-data.svg" title="Finnair company" tabindex="-1">
+<img src="/resource/image/2788334/landscape_ratio4x1/172/43/3aaaf7c2a557086715bc2f2a31d1ea83/C2D36C1465E0103ADCA3AC9A3EDEE92E/finnair-emblem.png" alt="Finnair company" title="Finnair company" width="100%" height="auto">
+</object> </div>
+<div class="footer__wrapper">
+<div class="footer__left">
+<div class="footer__left-top">
+<ul class="footer__list--row">
+<li class="footer__list-item">
+<a class="footer__list-link" href="/en/company-contacts">Contact Finnair</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/customer-care-and-contact-information" target="_blank" rel="noopener">Contact customer service</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/frequently-asked-questions" target="_blank" rel="noopener">FAQ</a>
+</li> </ul>
+</div><div class="footer__left-bottom">
+<div class="footer__list-section">
+<div class="footer__list-heading">
+Follow us
+</div>
+<ul class="footer__list">
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.facebook.com/Finnair" target="_blank" rel="noopener">Facebook</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.instagram.com/feelfinnair/" target="_blank" rel="noopener">Instagram</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://twitter.com/finnair" target="_blank" rel="noopener">X (Twitter)</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/bluewings" target="_blank" rel="noopener">Blue Wings stories</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.youtube.com/user/finnair" target="_blank" rel="noopener">YouTube</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/frequently-asked-questions/customer-service/how-can-i-subscribe-or-unsubscribe-to-finnair-newsletter--1890184" target="_blank" rel="noopener">Newsletter</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/finnair-app" target="_blank" rel="noopener">Mobile app</a>
+</li> </ul>
+</div>
+<div class="footer__list-section">
+<div class="footer__list-heading">
+Other sites
+</div>
+<ul class="footer__list">
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en" target="_blank" rel="noopener">Finnair.com</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://cargo.finnair.com/en" target="_blank" rel="noopener">Finnair Cargo</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://easy.finnair.com/en" target="_blank" rel="noopener nofollow">Finnair Easy for travel agencies</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnairflightacademy.com/en" target="_blank" rel="noopener">Finnair Flight Academy</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://businessservices.finnair.com/en" target="_blank" rel="noopener">Finnair Business Services</a>
+</li> </ul>
+</div>
+</div></div><div class="footer__right">
+<div class="footer__copyright">© Finnair 2026</div>
+<ul class="footer__list">
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/info/browser-compatibility" target="_blank" rel="noopener">Browser compatibility</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/info/accessibility-statements-for-finnair-digital-services" target="_blank" rel="noopener">Accessibility of Finnair digital services</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="/en/terms-of-use">Terms of use</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/info/finnair-privacy-policy" target="_blank" rel="noopener">Privacy policy</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="/resource/blob/3711502/85d326875cd985ccc065ad9916881f40/transparency-register-privacy-notice-pdf-data.pdf">Transparency register privacy notice</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://www.finnair.com/en/info/finnair-cookie-policy" target="_blank" rel="noopener">Cookie policy</a>
+</li>
+<li class="footer__list-item">
+<a class="footer__list-link" href="https://privacy.finnair.com/cookie-consent" target="_blank" rel="noopener">Cookie preferences</a>
+</li>
+</ul>
+</div> </div>
+</div>
+</footer><section class="cookie-consent-modal" data-cm-cookie-consent-modal="{&quot;url&quot;:&quot;https://privacy.finnair.com/snippet.js?locale=&quot;,&quot;allow&quot;:&quot;js-allow&quot;,&quot;manage&quot;:&quot;js-manage&quot;,&quot;reject&quot;:&quot;js-reject&quot;,&quot;preferences&quot;:&quot;js-allow-selection&quot;,&quot;allowAll&quot;:&quot;js-allow-all&quot;}">
+<div class="cookie-consent-wrapper init" tabindex="0" role="dialog">
+<div class="cookie-consent">
+<div class="cookie-consent__text">
+<div class="cookie-consent__title">Before you step on board this Finnair site</div>
+<p><strong>We use cookies to offer you a better experience using this site</strong>.&nbsp;Cookies help us analyse our site traffic, understand how you interact with our services, improve them and show relevant advertising. <a href="https://www.finnair.com/fi-en/info/finnair-cookie-policy" target="_blank" rel="noopener noreferrer">Finnair cookie policy</a></p> </div>
+<div class="cookie-consent__buttons">
+<button class="button-blue js-allow" type="button" aria-label="Allow all cookies" role="button">
+Allow all cookies
+</button>
+<button class="button js-manage" type="button" aria-label="Manage cookies" role="button">
+Manage cookies
+</button>
+<button class="button js-reject" type="button" aria-label="Use only necessary" role="button">
+Use only necessary
+</button>
+</div>
+<div class="cookie-consent__change-disclaimer">
+<i class="icon icon-info" aria-hidden="true"></i>
+<span class="text">You can change your preferences at anytime via the link at the bottom of the page.</span>
+</div>
+</div>
+</div>
+<div class="cookie-consent-wrapper manage" tabindex="0" role="dialog">
+<form class="cookie-consent" action="javascript:void(0);">
+<div class="cookie-consent__text">
+<div class="cookie-consent__title center">Manage cookies</div>
+<p>Cookies are small data files stored by your browser when you visit a site. We use them too, and while the cookies required for this website to work correctly are always on, you can manage the rest. Please note that rejecting certain cookies may affect your experience of our site and the available features.&nbsp;<a href="https://www.finnair.com/fi-en/info/finnair-cookie-policy" target="_blank" rel="noopener noreferrer">Finnair cookie policy</a>.</p> </div>
+<div class="cookie-consent__inputs"><input class="input-hidden" type="checkbox" name="consent" id="not-real-consentValue" checked="" disabled="">
+    <label class="cookie-consent__label" name="consent-label" for="not-real-consentValue">
+      <span class="content"><p><strong>Necessary cookies</strong> are always automatically on, as they are essential for the website to function properly.</p></span>
+      <div class="switch selected">
+        <input class="switch__input" role="switch" type="checkbox" name="not-real-consentValue" checked="" disabled="">
+        <span class="slider"></span>
+      </div>
+    </label><input class="input-hidden" type="checkbox" name="consent" id="f-cookies-analytics">
+    <label class="cookie-consent__label" name="consent-label" for="f-cookies-analytics">
+      <span class="content"><p><strong>Website performance cookies</strong> help us measure traffic, identify returning customers, and understand how our customers use our website.</p></span>
+      <div class="switch">
+        <input class="switch__input" role="switch" type="checkbox" name="f-cookies-analytics">
+        <span class="slider"></span>
+      </div>
+    </label><input class="input-hidden" type="checkbox" name="consent" id="f-cookies-personalization">
+    <label class="cookie-consent__label" name="consent-label" for="f-cookies-personalization">
+      <span class="content"><p><strong>Content personalisation cookies</strong> help us show you relevant content, including offers, based on your use of our website and other Finnair's digital services.</p></span>
+      <div class="switch">
+        <input class="switch__input" role="switch" type="checkbox" name="f-cookies-personalization">
+        <span class="slider"></span>
+      </div>
+    </label><input class="input-hidden" type="checkbox" name="consent" id="f-cookies-advertising">
+    <label class="cookie-consent__label" name="consent-label" for="f-cookies-advertising">
+      <span class="content"><p><strong>Advertising cookies</strong> help us place targeted content on other websites and services through our trusted partners.</p></span>
+      <div class="switch">
+        <input class="switch__input" role="switch" type="checkbox" name="f-cookies-advertising">
+        <span class="slider"></span>
+      </div>
+    </label></div>
+<div class="cookie-consent__buttons">
+<button class="button-blue js-allow-selection" type="submit" aria-label="Allow my selection" role="button">
+Allow my selection
+</button>
+<button class="button js-allow-all" type="submit" aria-label="Allow all" role="button">
+Allow all
+</button>
+</div>
+<div class="cookie-consent__change-disclaimer">
+<i class="icon icon-info" aria-hidden="true"></i>
+<span class="text">You can change your preferences at anytime via the link at the bottom of the page.</span>
+</div>
+</form>
+</div>
+</section></div> </div>
+<script src="/resource/themes/fcommon/js/commons-2733390-10.js"></script><script src="/resource/themes/fcommon/js/fcommon-2733392-26.js"></script><script type="text/javascript" nonce="8bd9724caeb80c46309e3baaf0a080b3" src="/cY_P/qvzO/Cg/eCvg/i4DA/1mw1Jk9cL5S7Nm/c2dx/dTgdYQ/1lQToB"></script>
+<script async="" src="https://privacy.finnair.com/snippet.js?locale=en"></script>

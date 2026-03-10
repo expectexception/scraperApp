@@ -71,38 +71,28 @@ class EmiratesScraper(BaseScraper):
                 job_elements = await page.query_selector_all('section.job-card')
                 logger.info(f"[{self.site_key}] Found {len(job_elements)} jobs on the list")
                 
-                potential_jobs = []
+                initial_jobs = []
                 for el in job_elements:
                     job_id = await el.get_attribute('id')
-                    # Update selector based on inspection: h4.job-title
-                    title_el = await el.query_selector('h4.job-title')
-                    if not title_el:
-                         title_el = await el.query_selector('.job-card__title')
-                         
+                    title_el = await el.query_selector('h4.job-title') or await el.query_selector('.job-card__title')
                     title = await title_el.text_content() if title_el else "Unknown"
                     title = title.strip()
                     
-                    # Filter by search queries
-                    is_match = False
-                    search_queries = self.config.get('scrapers', {}).get('emirates', {}).get('search_queries', [])
-                    if not search_queries:
-                        is_match = True # no filter
-                    else:
-                        for query in search_queries:
-                            if query.lower() in title.lower():
-                                is_match = True
-                                break
-                    
-                    if is_match and job_id:
-                        potential_jobs.append({
-                            'id': job_id,
-                            'title': title
-                        })
+                    if job_id:
+                        initial_jobs.append({'id': job_id, 'title': title})
                 
-                logger.info(f"[{self.site_key}] Filtered down to {len(potential_jobs)} potential jobs matching queries")
+                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                
+                # PRE-FILTER: Filter by title first to skip irrelevant roles (like Sales, Helpdesk) COMPLETELY
+                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                
+                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
                 
                 # 4. Visit detail pages for filtered jobs
-                for job_meta in potential_jobs[:self.max_jobs]:
+                for job_meta in matched_initial:
+                    if self.max_jobs and len(jobs) >= self.max_jobs:
+                        break
+                        
                     job_id = job_meta['id']
                     detail_url = f"{self.base_url}/search-and-apply/{job_id}"
                     

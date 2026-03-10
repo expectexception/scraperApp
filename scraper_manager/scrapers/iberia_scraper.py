@@ -15,7 +15,7 @@ class IberiaScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='iberia', db_manager=db_manager)
-        self.base_url = "https://www.iberia.com/gb/careers/"
+        self.base_url = "https://trabajaconnosotros.iberia.es/"
         self.company_name = "Iberia"
 
     async def fetch_jobs(self) -> list:
@@ -31,12 +31,11 @@ class IberiaScraper(BaseScraper):
                 await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
                 await self.simulate_human_behavior(page)
                 
-                # Iberia often uses a specific portal or redirects. 
-                # This logic is a general purpose Playwright extraction for their typical landing.
+                # Use specific selector for SAP SuccessFactors
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
+                    return Array.from(document.querySelectorAll('a.jobTitle-link'))
                         .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
-                        .filter(a => a.h && (a.h.includes('job') || a.h.includes('vacancy') || a.h.includes('career')))
+                        .filter(a => a.h)
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")

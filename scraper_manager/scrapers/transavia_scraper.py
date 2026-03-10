@@ -15,7 +15,7 @@ class TransaviaScraper(BaseScraper):
     
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key='transavia', db_manager=db_manager)
-        self.base_url = "https://careers.klm.com/en/subsidiary/transavia/"
+        self.base_url = "https://werkenbijtransavia.com/l/en/vacatures"
         self.company_name = "Transavia"
 
     async def fetch_jobs(self) -> list:
@@ -27,13 +27,14 @@ class TransaviaScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             
             try:
-                await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
+                await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
                 await self.simulate_human_behavior(page)
                 
+                # Look for vacancy links
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a'))
                         .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
-                        .filter(a => a.h && (a.h.includes('job') || a.h.includes('vacancy') || a.h.includes('career')))
+                        .filter(a => a.h && (a.h.includes('vacancy') || a.h.includes('job') || a.h.includes('offer')))
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")

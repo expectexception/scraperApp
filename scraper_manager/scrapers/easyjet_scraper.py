@@ -22,42 +22,58 @@ class EasyJetScraper(BaseScraper):
 
     async def fetch_jobs(self) -> list:
         jobs = []
+        apply_now_url = "https://careers.easyjet.com/en/apply-now"
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
             page, context = await self.setup_stealth_page(browser)
             
             try:
-                logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
+                base_taleo_url = "https://easyjet.taleo.net/careersection/2/jobsearch.ftl"
+                logger.info(f"[{self.site_key}] Navigating to {base_taleo_url}...")
+                await page.goto(base_taleo_url, wait_until='domcontentloaded', timeout=60000)
+                await page.wait_for_timeout(3000)
                 
+                # Click 'View All Jobs'
                 try:
-                    await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
+                    clear_btn = page.locator('#clearButton').first
+                    if await clear_btn.is_visible():
+                        await clear_btn.click()
+                        await page.wait_for_timeout(3000)
                 except Exception as e:
-                    logger.error(f"[{self.site_key}] Navigation failed: {e}")
-                    return []
+                    logger.warning(f"[{self.site_key}] Could not click clearButton: {e}")
                 
-                # easyJet career site has custom structure, collect a tags that look like job posts
+                # Wait for job list
+                try:
+                    await page.wait_for_selector('a[href*="jobdetail.ftl"]', timeout=15000)
+                except:
+                    logger.error(f"[{self.site_key}] No jobs loaded on Taleo portal.")
+                    return []
+
+                # Extract job links
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
+                    return Array.from(document.querySelectorAll('a[href*="jobdetail.ftl"]'))
                         .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && a.h.includes('/en/') && (a.h.includes('job') || a.h.includes('role') || a.h.includes('career')))
+                        .filter(a => a.t && a.t.length > 3)
                 }''')
                 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
+                logger.info(f"[{self.site_key}] Found {len(links)} job links")
                 
-                seen_urls = set()
-                job_urls = []
+                seen_job_urls = set()
                 for link in links:
-                    href = link['h']
-                    title = link['t']
-                    if href and href not in seen_urls and self.is_job_link(title, href):
-                        seen_urls.add(href)
-                        job_urls.append((href, title))
-                
-                for i, (url, title) in enumerate(job_urls):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         
+                    url = link['h']
+                    title = link['t']
+                    
+                    if url in seen_job_urls:
+                        continue
+                    seen_job_urls.add(url)
+                    
+                    if not self.is_job_link(title, url):
+                        continue
+
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
@@ -71,22 +87,25 @@ class EasyJetScraper(BaseScraper):
                             if len(extracted) > 5:
                                 real_title = extracted
 
-                        description = ""
-                        desc_loc = detail_page.locator('main, article, .job-description, .job-details, .content')
-                        for loc in ['main', 'article', '.job-description', '.job-details', '.content']:
-                            elem = detail_page.locator(loc).first
-                            if await elem.is_visible():
-                                description = await elem.inner_html()
-                                break
-                                
-                        if not description:
-                            description = await self.extract_description_from_page(detail_page)
-
+                        description = await self.extract_description_from_page(detail_page)
                         location = "Europe"
+                        
+                        loc_text = await detail_page.evaluate('''() => {
+                            let fields = Array.from(document.querySelectorAll('.editableschematicfield label'));
+                            for(let f of fields) {
+                                if(f.innerText.includes('Location')) {
+                                    return f.nextElementSibling ? f.nextElementSibling.innerText.trim() : "";
+                                }
+                            }
+                            return "";
+                        }''')
+                        if loc_text:
+                            location = loc_text
+
                         posted_date = await self.extract_posted_date_from_page(detail_page)
                         
-                        job_id = f"easyjet_{i+1}"
-                        match = re.search(r'job/(\d+)', url)
+                        job_id = f"easyjet_{hash(url)}"
+                        match = re.search(r'job=([^&]+)', url)
                         if match:
                             job_id = f"easyjet_{match.group(1)}"
 
@@ -96,7 +115,7 @@ class EasyJetScraper(BaseScraper):
                             company=self.company_name,
                             location=location,
                             url=url,
-                            source_url=url,
+                            source_url=base_taleo_url,
                             description=description,
                             apply_url=url,
                             posted_date=posted_date,
@@ -107,7 +126,7 @@ class EasyJetScraper(BaseScraper):
                         await detail_page.close()
                         
                     except Exception as e:
-                        logger.error(f"[{self.site_key}] Error parsing job {i} ({url}): {e}")
+                        logger.error(f"[{self.site_key}] Error parsing job detail ({url}): {e}")
                         continue
                         
             except Exception as e:

@@ -35,9 +35,9 @@ class SASScraper(BaseScraper):
                     return []
                 
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && a.h.includes('/job/'))
+                    return Array.from(document.querySelectorAll('a.jobTitle-link'))
+                        .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
+                        .filter(a => a.h)
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
