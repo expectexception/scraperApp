@@ -34,12 +34,20 @@ class EgyptairScraper(BaseScraper):
                 try:
                     cf_frame = page.frame_locator('iframe[title*="widget containing a Cloudflare security challenge"]').first
                     checkbox = cf_frame.locator('input[type="checkbox"]')
-                    if await checkbox.is_visible(timeout=10000):
-                        logger.info(f"[{self.site_key}] Clicking Cloudflare Turnstile checkbox...")
+                    await checkbox.wait_for(state='visible', timeout=10000)
+                    logger.info(f"[{self.site_key}] Hovering over Cloudflare Turnstile checkbox...")
+                    await checkbox.hover()
+                    await page.wait_for_timeout(500)
+                    logger.info(f"[{self.site_key}] Clicking Cloudflare Turnstile checkbox...")
+                    box = await checkbox.bounding_box()
+                    if box:
+                        await page.mouse.click(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+                    else:
                         await checkbox.click()
-                        await page.wait_for_timeout(8000)
+                    await page.wait_for_timeout(8000)
                 except Exception as e:
                     logger.debug(f"[{self.site_key}] Cloudflare challenge not found or already verified: {e}")
+                    await page.screenshot(path='egyptair_debug.png')
                 
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a'))
@@ -63,6 +71,12 @@ class EgyptairScraper(BaseScraper):
                         break
                     
                     try:
+                        if not self.should_process_job(title):
+                            continue
+
+                        if await self.is_url_already_scraped(url):
+                            continue
+
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
                         await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
@@ -98,5 +112,45 @@ class EgyptairScraper(BaseScraper):
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs
+
+    async def setup_stealth_page(self, browser):
+        """Create a stealthy page context to bypass Cloudflare Turnstile"""
+        context = await browser.new_context(
+            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            viewport={'width': 1920, 'height': 1080},
+            ignore_https_errors=True
+        )
+        
+        await context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            window.chrome = { runtime: {}, loadTimes: function() {}, csi: function() {}, app: {} };
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                Promise.resolve({ state: 'denied' }) : originalQuery(parameters)
+            );
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+        """)
+
+        page = await context.new_page()
+
+        try:
+            cdp = await context.new_cdp_session(page)
+            await cdp.send("Network.setUserAgentOverride", {
+                "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                "platform": "Win32",
+                "acceptLanguage": "en-US,en;q=0.9",
+            })
+        except Exception as e:
+            logger.warning(f"CDP Stealth Error: {e}")
+
+        return page, context

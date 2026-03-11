@@ -54,6 +54,12 @@ class IberiaExpressScraper(BaseScraper):
                         break
                     
                     try:
+                        if not self.should_process_job(title):
+                            continue
+
+                        if await self.is_url_already_scraped(url):
+                            continue
+
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
                         await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
@@ -89,5 +95,11 @@ class IberiaExpressScraper(BaseScraper):
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

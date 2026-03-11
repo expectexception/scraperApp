@@ -154,10 +154,13 @@ class AmericanAirlinesScraper(BaseScraper):
                     if not job.get('url'):
                         continue
                         
-                    if not self.should_scrape_job(job.get('title')):
+                    if not self.should_process_job(job.get('title')):
                         continue
                         
                     try:
+                        if await self.is_url_already_scraped(job['url']):
+                            continue
+
                         detail_page = await context.new_page()
                         await detail_page.goto(job['url'], wait_until='networkidle', timeout=60000)
                         
@@ -229,5 +232,11 @@ class AmericanAirlinesScraper(BaseScraper):
         jobs = await self.fetch_jobs()
         # Filter out any None values
         jobs = [j for j in jobs if j is not None]
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

@@ -128,7 +128,7 @@ class WizzAirScraper(BaseScraper):
                             url = item['url']
                             title = item['title']
                             
-                            if not self.should_scrape_job(title):
+                            if not self.should_process_job(title):
                                 continue
                                 
                             if await self.is_url_already_scraped(url):
@@ -257,5 +257,11 @@ class WizzAirScraper(BaseScraper):
         """Main entry point"""
         self.print_header()
         jobs = await self.fetch_jobs()
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

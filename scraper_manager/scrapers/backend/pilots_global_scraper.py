@@ -115,7 +115,7 @@ class PilotsGlobalScraper(BaseScraper):
                                 if not title:
                                     continue
                                     
-                                if not self.should_scrape_job(title):
+                                if not self.should_process_job(title):
                                     continue
                                 
                                 job = {
@@ -200,6 +200,11 @@ class PilotsGlobalScraper(BaseScraper):
         # Save to database
         if jobs:
             logger.info(f"[{self.site_key}] Saving {len(jobs)} jobs to database...")
+            if self.use_filter and self.filter_manager and jobs:
+                logger.info(f"[{self.site_key}] Applying final filter check...")
+                jobs, _, filter_stats = self.apply_title_filter(jobs)
+                self.filter_manager.print_filter_stats(filter_stats)
+
             await self.save_results(jobs)
             logger.info(f"[{self.site_key}] Successfully saved {len(jobs)} jobs")
         else:

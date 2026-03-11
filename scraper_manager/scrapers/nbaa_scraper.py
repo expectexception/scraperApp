@@ -165,5 +165,11 @@ class NBAAScraper(BaseScraper):
         """Main entry point"""
         self.print_header()
         jobs = await self.fetch_jobs()
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

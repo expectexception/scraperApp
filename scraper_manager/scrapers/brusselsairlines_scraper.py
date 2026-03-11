@@ -73,7 +73,12 @@ class BrusselsAirlinesScraper(BaseScraper):
                 logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
                 
                 # PRE-FILTER: Filter by title first to skip irrelevant roles (like HR) completely
-                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
+                matched_initial, rejected_initial, stats = self.apply_title_filter(initial_jobs)
+                
+                # Debug print for rejected jobs
+                for r in rejected_initial:
+                    logger.info(f"[{self.site_key}] Pre-filter rejected: {r.get('title')} (Reason: {r.get('rejection_reason')})")
+
                 
                 logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
 
@@ -85,6 +90,12 @@ class BrusselsAirlinesScraper(BaseScraper):
                     title = j_initial['title']
                     
                     try:
+                        if not self.should_process_job(title):
+                            continue
+
+                        if await self.is_url_already_scraped(url):
+                            continue
+
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
                         # Increased timeout for stability
@@ -151,5 +162,11 @@ class BrusselsAirlinesScraper(BaseScraper):
         self.print_header()
         jobs = await self.fetch_jobs()
         jobs = [j for j in jobs if j is not None]
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

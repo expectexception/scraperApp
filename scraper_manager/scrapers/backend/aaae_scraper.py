@@ -81,7 +81,7 @@ class AAAEScraper(BaseScraper):
                             title = await title_el.inner_text()
                             title = title.strip()
                             
-                            if not self.should_scrape_job(title):
+                            if not self.should_process_job(title):
                                 continue
                             
                             # Company

@@ -164,6 +164,9 @@ class IataScraper(BaseScraper):
                             
                             if await self.is_url_already_scraped(url):
                                 continue
+
+                            if not self.should_process_job(title):
+                                continue
                                 
                             logger.info(f"[{self.site_key}] Processing: {title}")
                             
@@ -274,6 +277,12 @@ class IataScraper(BaseScraper):
         """Main entry point"""
         self.print_header()
         jobs = await self.fetch_jobs()
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs
 

@@ -46,6 +46,11 @@ class IndiGoScraper(BaseScraper):
         # jobs_with_descriptions = await self.fetch_job_descriptions(jobs)
         jobs_with_descriptions = jobs
         
+        if self.use_filter and self.filter_manager and jobs_with_descriptions:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs_with_descriptions, _, filter_stats = self.apply_title_filter(jobs_with_descriptions)
+            self.filter_manager.print_filter_stats(filter_stats)
+        
         # Save results
         await self.save_results(jobs_with_descriptions, self.site_config['name'])
         self.print_sample(jobs_with_descriptions)
@@ -209,56 +214,34 @@ class IndiGoScraper(BaseScraper):
                 # Try to click the search button to trigger job loading (Critical for Indigo's SPA)
                 logger.info("Clicking Search Button (required for job loading)...")
                 try:
-                     search_btn = await page.query_selector('button.skyplus-button, button:has-text("Search"), .search-btn')
+                     # button.btn is common in the new interface
+                     search_btn = await page.query_selector('button.btn, button.skyplus-button, button:has-text("Search"), .search-btn')
                      if search_btn:
                          await self.random_mouse_move_to_element(page, search_btn) # Simulate moving to button
                          await search_btn.click()
                          logger.info("  Clicked Search Button")
-                         await self.random_delay(6, 10) # Wait for SPA fetch
+                         # Wait for jobs to appear
+                         await page.wait_for_selector('.search-result__job-cards--card', timeout=20000)
+                         await self.random_delay(2, 4)
                      else:
                          logger.warning("  Search button not found")
                 except Exception as e:
-                     logger.warning(f"  Search click error: {e}")
+                     logger.warning(f"  Search click / wait error: {e}")
 
-                # Wait for dynamic content to load with longer delay
-                logger.info("Waiting for job listings to load...")
-                await self.random_delay(8, 12)
+                # Wait for dynamic content to load
                 await self.simulate_human_behavior(page)
+                await self.random_delay(2, 4)
 
-                # Try to wait for the job cards container specifically
-                try:
-                    await page.wait_for_selector('.search-result__job-cards, [class*="search-result"]', timeout=10000)
-                    logger.info("  Job cards container detected")
-                except Exception:
-                    logger.warning("  Job cards container not detected, continuing anyway...")
-
-                # Save HTML for debugging
-                html_content = await page.content()
-                html_len = len(html_content)
-                logger.info(f"  Page HTML size: {html_len} bytes")
-
-                # Detect common blocking / failover pages (Akamai, CDN blocks)
-                blocked_page = False
-                if html_len < 2000 or 'Something went wrong' in html_content or 'akamfailoverpage' in html_content.lower():
-                    blocked_page = True
-                    logger.warning("Detected an error / CDN failover page from IndiGo (site may be blocking automated requests)")
-                    print("  - HTML appears minimal or contains failover text. Will attempt broader fallbacks (anchors & JSON-LD) before giving up.")
-
-                logger.info("Page loaded, extracting jobs...")
-
-                # Try multiple selectors in order of specificity FIRST (since HTML is already rendered)
+                # Try multiple selectors in order of specificity
                 selectors_to_try = [
                     ('div.search-result__job-cards--card', 'Exact div with class'),
                     ('.search-result__job-cards--card', 'Class selector'),
-                    ('div[class*="job-cards--card"]', 'Div containing class'),
-                    ('.search-result__job-cards > div', 'Direct child divs'),
-                    ('[class*="card-head"]', 'Elements with card-head'),
+                    ('.jobitem', 'Alternative job item class'),
                 ]
 
                 job_elements = []
                 for selector, desc in selectors_to_try:
                     elements = await page.query_selector_all(selector)
-                    logger.info(f"  Trying {desc} ({selector}): {len(elements)} elements")
                     if elements and len(elements) >= 3:
                         logger.info(f"Found {len(elements)} jobs using: {desc}")
                         job_elements = elements
@@ -272,7 +255,7 @@ class IndiGoScraper(BaseScraper):
                         try:
                             job_data = await self._extract_job_from_card(element, idx)
                             if job_data:
-                                if self.should_scrape_job(job_data['title']):
+                                if self.should_process_job(job_data['title']):
                                     jobs.append(job_data)
                         except Exception as e:
                             logger.error(f"Error extracting job {idx + 1}: {e}")
@@ -312,8 +295,9 @@ class IndiGoScraper(BaseScraper):
                                 job_data['description'] = jd
                                 if item.get('datePosted'):
                                     job_data['posted_date'] = item.get('datePosted')
-                                jobs.append(job_data)
-                                found_json_jobs += 1
+                                if self.should_process_job(job_data['title']):
+                                    jobs.append(job_data)
+                                    found_json_jobs += 1
                     except Exception:
                         continue
 
@@ -323,32 +307,7 @@ class IndiGoScraper(BaseScraper):
                     await browser.close()
                     return jobs
 
-                # Fallback to anchors
-                anchors = await page.query_selector_all('a')
-                candidate_links = []
-                for a in anchors:
-                    try:
-                        href = await a.get_attribute('href')
-                        text = (await a.inner_text() or '').strip()
-                        if not href or not text or len(text) < 6:
-                            continue
-                        href_low = href.lower()
-                        if any(k in href_low for k in ['/job', '/career', 'careers', 'apply', '/vacancies', '/vacancy', '/openings', 'job-search']):
-                            candidate_links.append((href, text))
-                    except Exception:
-                        continue
-
-                # Deduplicate and create jobs
-                seen = set()
-                for href, text in candidate_links:
-                    if self.max_jobs and len(jobs) >= self.max_jobs:
-                        break
-                    key = (href, text)
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    job_data = self._create_basic_job(href, text, len(jobs))
-                    jobs.append(job_data)
+                # REMOVED broad anchor fallback that was picking up navigation links
 
                 if jobs:
                     logger.info(f"Extracted {len(jobs)} jobs from anchor fallbacks")
@@ -682,7 +641,7 @@ class IndiGoScraper(BaseScraper):
                         parsed = self.parse_posted_date(posted)
                         job['posted_date'] = parsed if parsed else posted
                     
-                    if self.should_scrape_job(job['title']):
+                    if self.should_process_job(job['title']):
                         jobs.append(job)
 
                 if jobs:

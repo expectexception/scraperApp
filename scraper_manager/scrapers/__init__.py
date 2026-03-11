@@ -10,7 +10,6 @@ from .airmalta_scraper import AirMaltaScraper
 from .airserbia_scraper import AirSerbiaScraper
 from .aena_scraper import AenaScraper
 from .airfrancehop_scraper import AirFranceHopScraper
-from .aireuropaexpress_scraper import AirEuropaExpressScraper
 from .alsieexpress_scraper import AlsieExpressScraper
 from .amapolaflyg_scraper import AmapolaFlygScraper
 from .aslairlinesbelgium_scraper import ASLAirlinesBelgiumScraper
@@ -23,24 +22,12 @@ from .buraqair_scraper import BuraqAirScraper
 from .buzz_scraper import BuzzScraper
 from .cabotaviation_scraper import CabotAviationScraper
 from .signature_aviation import SignatureAviationScraper
-from .flygosh_scraper import FlygoshScraper
-from .aviationindeed_scraper import AviationIndeedScraper
-from .aap_aviation_scraper import AAPAviationScraper
 from .indigo_scraper import IndiGoScraper
-from .aviationjobsearch_scraper import AviationJobSearchScraper
-from .goose_scraper import GooseRecruitmentScraper
-from .linkdin_scraper import LinkedInScraper
 from .peopleclick_scraper import CargoluxPeopleClickScraper
 from .airindia_scraper import AirIndiaScraper
-from .aviationcv_scraper import AviationCVScraper
-from .jsfirm_scraper import JSFirmScraper
-from .allflyingjobs_scraper import AllFlyingJobsScraper
 from .emirates_scraper import EmiratesScraper
 from .boeing_scraper import BoeingScraper
 from .airbus_scraper import AirbusScraper
-from .pilots_global_scraper import PilotsGlobalScraper
-from .zenon_scraper import ZenonScraper
-from .aaae_scraper import AAAEScraper
 from .aisats_scraper import AISATSScraper
 from .capitalairlines_scraper import CapitalAirlinesScraper
 from .carpatair_scraper import CarpatairScraper
@@ -58,7 +45,6 @@ from .iberiaexpress_scraper import IberiaExpressScraper
 from .icelandair_scraper import IcelandairScraper
 from .itaairways_scraper import ITAScraper
 from .klm_scraper import KLMScraper
-from .lot_scraper import LOTScraper
 from .lufthansacityline_scraper import LufthansaCityLineScraper
 from .norwegian_scraper import NorwegianScraper
 from .olympicair_scraper import OlympicAirScraper
@@ -97,6 +83,21 @@ from .easternairways_scraper import EasternAirwaysScraper
 from .easyjet_scraper import EasyJetScraper
 from .abudhabiaviation_scraper import AbuDhabiAviationScraper
 from .falconaviation_scraper import FalconAviationScraper
+from .aap_aviation_scraper import AAPAviationScraper
+from .jetfly_scraper import JetflyScraper
+from .spirit_scraper import SpiritScraper
+from .mesa_airlines_scraper import MesaAirlinesScraper
+from .delta_scraper import DeltaScraper
+from .sun_country_scraper import SunCountryScraper
+from .mountain_air_cargo_scraper import MountainAirCargoScraper
+from .air_wisconsin_scraper import AirWisconsinScraper
+from .atsg_scraper import ATSGScraper
+from .nac_scraper import NACScraper
+from .omni_air_scraper import OmniAirScraper
+from .kalitta_holdings_scraper import KalittaHoldingsScraper
+from .jet_aviation_scraper import JetAviationScraper
+from .riyadh_air_scraper import RiyadhAirScraper
+from .global_jet_scraper import GlobalJetScraper
 
 
 # Available scrapers
@@ -106,7 +107,6 @@ SCRAPERS = {
     'airfrance': AirFranceScraper,
     'airfrancehop': AirFranceHopScraper,
     'aena': AenaScraper,
-    'aireuropaexpress': AirEuropaExpressScraper,
     'airmalta': AirMaltaScraper,
     'airserbia': AirSerbiaScraper,
     'alsieexpress': AlsieExpressScraper,
@@ -121,24 +121,13 @@ SCRAPERS = {
     'buzz': BuzzScraper,
     'cabotaviation': CabotAviationScraper,
     'signature': SignatureAviationScraper,
-    'flygosh': FlygoshScraper,
-    'aviationindeed': AviationIndeedScraper,
     'aap': AAPAviationScraper,
     'indigo': IndiGoScraper,
-    'aviationjobsearch': AviationJobSearchScraper,
-    'goose': GooseRecruitmentScraper,
-    'linkedin': LinkedInScraper,
     'cargolux': CargoluxPeopleClickScraper,
     'airindia': AirIndiaScraper,
-    'jsfirm': JSFirmScraper,
-    'allflyingjobs': AllFlyingJobsScraper,
     'emirates': EmiratesScraper,
     'boeing': BoeingScraper,
     'airbus': AirbusScraper,
-    'pilots_global': PilotsGlobalScraper,
-    'aviationcv': AviationCVScraper,
-    'zenon': ZenonScraper,
-    'aaae': AAAEScraper,
     'aisats': AISATSScraper,
     'jmc': JMCScraper,
     'iata': IataScraper,
@@ -166,7 +155,6 @@ SCRAPERS = {
     'icelandair': IcelandairScraper,
     'itaairways': ITAScraper,
     'klm': KLMScraper,
-    'lot': LOTScraper,
     'lufthansacityline': LufthansaCityLineScraper,
     'norwegian': NorwegianScraper,
     'olympicair': OlympicAirScraper,
@@ -195,6 +183,20 @@ SCRAPERS = {
     'dubairaw': DubaiRawScraper,
     'abudhabiaviation': AbuDhabiAviationScraper,
     'falconaviation': FalconAviationScraper,
+    'jetfly': JetflyScraper,
+    'spirit': SpiritScraper,
+    'mesa': MesaAirlinesScraper,
+    'delta': DeltaScraper,
+    'sun_country': SunCountryScraper,
+    'mountain_air_cargo': MountainAirCargoScraper,
+    'air_wisconsin': AirWisconsinScraper,
+    'atsg': ATSGScraper,
+    'nac': NACScraper,
+    'omni_air': OmniAirScraper,
+    'kalitta_holdings': KalittaHoldingsScraper,
+    'jet_aviation': JetAviationScraper,
+    'riyadh_air': RiyadhAirScraper,
+    'global_jet': GlobalJetScraper,
 }
 
 

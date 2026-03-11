@@ -113,7 +113,6 @@ SCRAPER_SETTINGS = {
         'absjets': 'medium',
         'aegean': 'medium',
         'aena': 'medium',
-        'aireuropaexpress': 'medium',
         'airfrance': 'medium',
         'airfrancehop': 'medium',
         'airmalta': 'medium',
@@ -147,7 +146,6 @@ SCRAPER_SETTINGS = {
         'icelandair': 'medium',
         'itaairways': 'medium',
         'klm': 'medium',
-        'lot': 'medium',
         'lufthansacityline': 'medium',
         'norwegian': 'medium',
         'olympicair': 'medium',
@@ -164,24 +162,41 @@ SCRAPER_SETTINGS = {
         'airdolomiti': 'medium',
         'airnostrum': 'medium',
         'signature': 'high',          # Always run - reliable source
-        'linkedin': 'low',           # Large job database
-        'aviationjobsearch': 'high',  # Specialized aviation jobs
-        'flygosh': 'medium',
         'aap': 'medium',
-        'goose': 'medium',
         'cargolux': 'medium',         # Airline-specific
         'airindia': 'medium',         # Airline-specific
         'indigo': 'medium',           # Airline-specific (fixed recently)
         'aisats': 'medium',           # Ground handling
-        'aviationindeed': 'high',      # Currently disabled
         'etihad': 'medium',
+        'flyadeal': 'medium',
+        'flynas': 'medium',
+        'gulfair': 'medium',
+        'jetfly': 'medium',
+        'kuwaitairways': 'medium',
+        'nesma': 'medium',
+        'omanair': 'medium',
+        'salamair': 'medium',
+        'saudia': 'medium',
+        'wmd': 'medium',
         'flydubai': 'medium',
         'airarabia': 'medium',
         'airarabia_auh': 'medium',
         'royaljet': 'medium',
         'dubairaw': 'low',
-        'abudhabiaviation': 'medium',
         'falconaviation': 'medium',
+        'spirit': 'high',
+        'mesa': 'medium',
+        'delta': 'high',
+        'sun_country': 'medium',
+        'mountain_air_cargo': 'medium',
+        'air_wisconsin': 'medium',
+        'atsg': 'medium',
+        'nac': 'medium',
+        'omni_air': 'medium',
+        'kalitta_holdings': 'medium',
+        'jet_aviation': 'medium',
+        'riyadh_air': 'medium',
+        'global_jet': 'medium',
     }
 }
 
@@ -194,9 +209,6 @@ SCRAPERS = {
         'max_jobs': 50,
     },
     'aena': {
-        'max_jobs': 50,
-    },
-    'aireuropaexpress': {
         'max_jobs': 50,
     },
     'airfrance': {
@@ -305,9 +317,6 @@ SCRAPERS = {
         'max_jobs': 50,
         'headless': False,
     },
-    'lot': {
-        'max_jobs': 50,
-    },
     'lufthansacityline': {
         'max_jobs': 50,
     },
@@ -359,32 +368,8 @@ SCRAPERS = {
         'max_jobs': 50,  # None = extract all jobs
   # None = no page limit
     },
-    'flygosh': {
-        'max_jobs': 50,   # Set to 50 to limit to 50 jobs
-  # Not applicable for listing-based scrapers
-    },
-    'aviationindeed': {
-        'max_jobs': 50,   # Limit for testing
-
-    },
     'aap': {
         'max_jobs': 50,   # Limit for testing
-
-    },
-    'indigo': {
-        'max_jobs': 40,   # Limit for testing
-
-    },
-    'aviationjobsearch': {
-        'max_jobs': 50,   # Increased to find matching jobs
-
-    },
-    'goose': {
-        'max_jobs': 50,   # Limit for testing
-
-    },
-    'linkedin': {
-        'max_jobs': 50,   # Limit for LinkedIn scraping
 
     },
     'cargolux': {
@@ -394,14 +379,6 @@ SCRAPERS = {
     'airindia': {
         'max_jobs': 50,
 
-    },
-    'jsfirm': {
-        'max_jobs': 50,
-        'search_locations': ['Singapore','Australia','Brazil','United Kingdom','Germany','France','Canada']
-    },
-    'allflyingjobs': {
-        'max_jobs': 50,
-        'search_queries': ['Dispatcher','Operations','Manager']
     },
     'emirates': {
         'max_jobs': 50,
@@ -415,18 +392,6 @@ SCRAPERS = {
     'airbus': {
         'max_jobs': 50,
         'search_queries': ['Dispatch' ,'Operations','Manager']
-    },
-    'pilots_global': {
-        'max_jobs': 50
-    },
-    'aviationcv': {
-        'max_jobs': 50,
-    },
-    'zenon': {
-        'max_jobs': 50,
-    },
-    'aaae': {
-        'max_jobs': 50,
     },
     'aisats': {
         'max_jobs': 5,
@@ -501,6 +466,75 @@ SCRAPERS = {
     'falconaviation': {
         'max_jobs': 50,
     },
+    'wmd': {
+        'max_jobs': 50,
+    },
+    'jetfly': {
+        'max_jobs': 50,
+    },
+    'kuwaitairways': {
+        'max_jobs': 50,
+    },
+    'flyadeal': {
+        'max_jobs': 50,
+    },
+    'flynas': {
+        'max_jobs': 50,
+    },
+    'saudia': {
+        'max_jobs': 50,
+    },
+    'nesma': {
+        'max_jobs': 50,
+    },
+    'gulfair': {
+        'max_jobs': 50,
+    },
+    'omanair': {
+        'max_jobs': 50,
+    },
+    'salamair': {
+        'max_jobs': 50,
+    },
+    'spirit': {
+        'max_jobs': 50,
+    },
+    'mesa': {
+        'max_jobs': 50,
+    },
+    'delta': {
+        'max_jobs': 50,
+    },
+    'sun_country': {
+        'max_jobs': 50,
+    },
+    'mountain_air_cargo': {
+        'max_jobs': 50,
+    },
+    'air_wisconsin': {
+        'max_jobs': 50,
+    },
+    'atsg': {
+        'max_jobs': 50,
+    },
+    'nac': {
+        'max_jobs': 50,
+    },
+    'omni_air': {
+        'max_jobs': 50,
+    },
+    'kalitta_holdings': {
+        'max_jobs': 50,
+    },
+    'jet_aviation': {
+        'max_jobs': 50,
+    },
+    'riyadh_air': {
+        'max_jobs': 50,
+    },
+    'global_jet': {
+        'max_jobs': 50,
+    },
 }
 
 # Site Configurations
@@ -525,13 +559,6 @@ SITES = {
         'base_url': 'https://empleo.aena.es',
         'jobs_url': 'https://empleo.aena.es/empleo/SessSrv?accion=seleccionar&leng=EN&SEDE=0',
         'description': 'Aena careers',
-    },
-    'aireuropaexpress': {
-        'name': 'Air Europa Express',
-        'enabled': False,
-        'base_url': 'https://www.airlinestaffrates.com',
-        'jobs_url': 'https://www.airlinestaffrates.com/air-europa-express-is-hiring-flight-attendants-with-cabin-crew-certification-for/',
-        'description': 'Air Europa Express proxy careers',
     },
     'airfrance': {
         'name': 'Air France',
@@ -673,6 +700,25 @@ SITES = {
         'jobs_url': 'https://www.easternairways.com/careers',
         'description': 'Eastern Airways careers fallback',
     },
+    'wmd': {
+        'class': 'WmdScraper',
+        'module': 'scraper_manager.scrapers.wmd_scraper',
+        'enabled': True
+    },
+    'royaljet': {
+        'class': 'RoyalJetScraper',
+        'module': 'scraper_manager.scrapers.royaljet_scraper',
+        'enabled': True
+    },
+    'jetfly': {
+        'name': 'Jetfly',
+        'enabled': True,
+        'base_url': 'https://jetfly.com',
+        'jobs_url': 'https://jetfly.com/apply-for-a-job',
+        'description': 'Jetfly careers page',
+        'class': 'JetflyScraper',
+        'module': 'scraper_manager.scrapers.jetfly_scraper',
+    },
     'easyjet': {
         'name': 'easyJet',
         'enabled': True,
@@ -739,9 +785,36 @@ SITES = {
     'iberia': {
         'name': 'Iberia',
         'enabled': True,
-        'base_url': 'https://www.iberia.com/gb/careers/',
-        'jobs_url': 'https://trabajaconnosotros.iberia.es/',
-        'description': 'Iberia careers (SAP SuccessFactors)',
+        'base_url': 'https://www.iberia.com',
+        'jobs_url': 'https://portal.iberia.es/portal/site/Iberia/menuitem.944252622416f0ce3f0ce310f2108a0c/',
+        'description': 'Iberia careers',
+    },
+    'spirit': {
+        'name': 'Spirit Airlines',
+        'enabled': True,
+        'base_url': 'https://careers.spirit.com',
+        'jobs_url': 'https://careers.spirit.com/careers-home/jobs',
+        'description': 'Spirit Airlines careers (API)',
+        'class': 'SpiritScraper',
+        'module': 'scraper_manager.scrapers.spirit_scraper',
+    },
+    'mesa': {
+        'name': 'Mesa Airlines',
+        'enabled': True,
+        'base_url': 'https://myjobs.adp.com',
+        'jobs_url': 'https://myjobs.adp.com/mesaexternal/cx/job-listing',
+        'description': 'Mesa Airlines careers (ADP)',
+        'class': 'MesaAirlinesScraper',
+        'module': 'scraper_manager.scrapers.mesa_airlines_scraper',
+    },
+    'delta': {
+        'name': 'Delta Airlines',
+        'enabled': True,
+        'base_url': 'https://delta.avature.net',
+        'jobs_url': 'https://delta.avature.net/en_US/careers/SearchJobs/?listFilterMode=1#/',
+        'description': 'Delta Airlines careers (Avature)',
+        'class': 'DeltaScraper',
+        'module': 'scraper_manager.scrapers.delta_scraper',
     },
     'iberiaexpress': {
         'name': 'Iberia Express',
@@ -770,13 +843,6 @@ SITES = {
         'base_url': 'https://careers.klm.com/en/jobs/',
         'jobs_url': 'https://careers.klm.com/en/jobs/',
         'description': 'KLM careers (Fallback, WAF protected)',
-    },
-    'lot': {
-        'name': 'LOT Polish Airlines',
-        'enabled': True,
-        'base_url': 'https://www.lot.com/',
-        'jobs_url': 'https://www.lot.com/pl/pl/kariera',
-        'description': 'LOT Polish Airlines careers',
     },
     'lufthansacityline': {
         'name': 'Lufthansa CityLine',
@@ -876,13 +942,6 @@ SITES = {
         'jobs_url': 'https://jobs.airnostrum.es/?locale=en_US',
         'description': 'Air Nostrum careers',
     },
-    'aaae': {
-        'name': 'AAAE Career Center',
-        'enabled': True,
-        'base_url': 'https://careercenter.aaae.org',
-        'jobs_url': 'https://careercenter.aaae.org/jobs',
-        'description': 'American Association of Airport Executives - Career Center',
-    },
     'signature': {
         'name': 'Signature Aviation',
         'enabled': True,
@@ -891,17 +950,10 @@ SITES = {
         'base_url': 'https://jobs.signatureaviation.com',
         'description': 'Oracle Cloud HCM-based job board',
     },
-    'flygosh': {
-        'name': 'Flygosh Jobs',
-        'enabled': True,
-        'base_url': 'https://flygoshjobs.com',
-        'jobs_url': 'https://flygoshjobs.com/jobs/all/all-region/',
-        'description': 'Aviation jobs listing page',
-    },
     # NOT WORKING YET - CEIPAL iframe requires special handling 
     'aviationindeed': {
         'name': 'Aviation Indeed',
-        'enabled': True, # Site has loading issues - needs investigation
+        'enabled': False, # Site has loading issues - needs investigation
         'base_url': 'https://www.aviationindeed.com',
         'ceipal_url': 'https://www.aviationindeed.com/ceipal/',
         'description': 'CEIPAL iframe-based job board',
@@ -920,32 +972,6 @@ SITES = {
         'jobs_url': 'https://www.goindigo.in/careers/job-search.html?type=&location=&department=',
         'description': 'IndiGo Airlines careers page (currently under development)',
     },
-    'aviationjobsearch': {
-        'name': 'Aviation Job Search',
-        'enabled': True,
-        'base_url': 'https://www.aviationjobsearch.com',
-        'jobs_url': 'https://www.aviationjobsearch.com/en-GB/jobs',
-        'description': 'Aviation Job Search - comprehensive aviation job listings',
-    },
-    'goose': {
-        'name': 'GOOSE Recruitment',
-        'enabled': True,
-        'base_url': 'https://www.goose-recruitment.com',
-        'jobs_url': 'https://www.goose-recruitment.com/jobs',
-        'description': 'GOOSE Recruitment - aviation and aerospace jobs',
-    },
-    # NOT WORKING YET - LinkedIn requires special handling and Ligin -- Have to configure scraper again to handle login credintials and cookies
-    'linkedin': {
-        'name': 'LinkedIn Jobs',
-        'enabled': False,
-        'base_url': 'https://www.linkedin.com',
-        'search_url': 'https://www.linkedin.com/jobs/search/',
-        # Multiple search terms and locations supported
-        'default_post': ['flight dispatcher'],  # Can be string or list
-        'default_location': ['Singapore','Australia','Brazil','United Kingdom','Germany','France','Canada'], # "'United States', 'United Arab Emirates', 'Qatar', 'Japan',"Top aviation hubs only - add more as needed
-        'max_jobs_total': 100,  # Total jobs across all search combinations (optional)
-        'description': 'LinkedIn job search - comprehensive job listings with multiple search terms',
-    },
     'cargolux': {
         'name': 'Cargolux Careers (PeopleClick)',
         'enabled': True,
@@ -959,27 +985,6 @@ SITES = {
         'base_url': 'https://careers.airindia.com',
         'jobs_url': 'https://careers.airindia.com/sfcareer/search',
         'description': 'Air India careers site (SuccessFactors implementation)',
-    },
-    'jsfirm': {
-        'name': 'JSFirm',
-        'enabled': True,
-        'base_url': 'https://www.jsfirm.com/',
-        'jobs_url': 'https://www.jsfirm.com/jobs', # Assuming a jobs URL
-        'description': 'JSFirm - Aviation jobs board',
-    },
-    'allflyingjobs': {
-        'name': 'AllFlyingJobs',
-        'enabled': True,
-        'base_url': 'https://www.allflyingjobs.com',
-        'jobs_url': 'https://www.allflyingjobs.com', 
-        'description': 'AllFlyingJobs - Global aviation jobs search',
-    },
-    'aviationcv': {
-        'name': 'AviationCV',
-        'enabled': True,
-        'base_url': 'https://www.aviationcv.com',
-        'jobs_url': 'https://www.aviationcv.com/jobs',
-        'description': 'AviationCV - Global aviation job board',
     },
     'emirates': {
         'name': 'Emirates Group Careers',
@@ -999,12 +1004,6 @@ SITES = {
         'base_url': 'https://ag.wd3.myworkdayjobs.com/Airbus',
         'api_url': 'https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/jobs',
         'description': 'Airbus Workday Career Site'
-    },
-    'pilots_global': {
-        'name': 'PilotsGlobal',
-        'enabled': True,
-        'base_url': 'https://pilotsglobal.com',
-        'description': 'PilotsGlobal Job Board'
     },
     'aisats': {
         'name': 'AISATS (Air India SATS)',
@@ -1097,7 +1096,7 @@ SITES = {
     },
     'aa': {
         'name': 'American Airlines',
-        'enabled': False,  # Blocked by WAF
+        'enabled': True,  # Blocked by WAF
         'base_url': 'https://jobs.aa.com',
         'jobs_url': 'https://jobs.aa.com/search/',
         'description': 'American Airlines careers (Blocked by WAF)',
@@ -1167,12 +1166,91 @@ SITES = {
         'jobs_url': 'https://werkenbijtransavia.com/l/en/vacatures',
         'description': 'Transavia vacancy portal',
     },
-    'zenon': {
-        'name': 'Zenon Aviation Recruitment',
+    'sun_country': {
+        'name': 'Sun Country Airlines',
         'enabled': True,
-        'base_url': 'https://www.zenon.aero',
-        'jobs_url': 'https://www.zenon.aero/candidates/',
-        'description': 'Zenon Aviation agency jobs',
+        'base_url': 'https://recruiting2.ultipro.com/SUN1000SUNCO/JobBoard/5882c1c5-18e3-8740-5e61-37d8f7574d64/',
+        'description': 'Sun Country Airlines careers (UKG Pro)',
+        'class': 'SunCountryScraper',
+        'module': 'scraper_manager.scrapers.sun_country_scraper',
+    },
+    'mountain_air_cargo': {
+        'name': 'Mountain Air Cargo',
+        'enabled': True,
+        'base_url': 'https://mountainaircargo.hrmdirect.com',
+        'jobs_url': 'https://mountainaircargo.hrmdirect.com/employment/job-openings.php?search=true&&cust_sort1=170262',
+        'description': 'Mountain Air Cargo careers (hrmdirect)',
+        'class': 'MountainAirCargoScraper',
+        'module': 'scraper_manager.scrapers.mountain_air_cargo_scraper',
+    },
+    'air_wisconsin': {
+        'name': 'Air Wisconsin',
+        'enabled': True,
+        'base_url': 'https://recruiting2.ultipro.com/AIR1002AIRWI/JobBoard/74c69cd1-e0aa-4364-8c31-c93dc910998d/',
+        'description': 'Air Wisconsin careers (UKG Pro)',
+        'class': 'AirWisconsinScraper',
+        'module': 'scraper_manager.scrapers.air_wisconsin_scraper',
+    },
+    'atsg': {
+        'name': 'Air Transport Services Group (ATSG)',
+        'enabled': True,
+        'base_url': 'https://recruiting.ultipro.com/AIR1013ATSG/JobBoard/7f7953dc-22ab-4b56-ad7a-2fe1ad00de22/',
+        'description': 'ATSG careers (UKG Pro)',
+        'class': 'ATSGScraper',
+        'module': 'scraper_manager.scrapers.atsg_scraper',
+    },
+    'nac': {
+        'name': 'Northern Air Cargo',
+        'enabled': True,
+        'base_url': 'https://recruiting.ultipro.com/NOR1020NAIRC/JobBoard/be7c5458-8e9f-482c-b6a2-37175c50020d/',
+        'description': 'Northern Air Cargo careers (UKG Pro)',
+        'class': 'NACScraper',
+        'module': 'scraper_manager.scrapers.nac_scraper',
+    },
+    'omni_air': {
+        'name': 'Omni Air International',
+        'enabled': True,
+        'base_url': 'https://workforcenow.adp.com',
+        'jobs_url': 'https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=a7828c0b-d30d-40a2-a3ee-61c80628985c&ccId=19000101_000001&lang=en_US&selectedMenuKey=CurrentOpenings',
+        'description': 'Omni Air International careers (ADP)',
+        'class': 'OmniAirScraper',
+        'module': 'scraper_manager.scrapers.omni_air_scraper',
+    },
+    'kalitta_holdings': {
+        'name': 'Kalitta Holdings',
+        'enabled': True,
+        'base_url': 'https://recruiting.paylocity.com',
+        'jobs_url': 'https://recruiting.paylocity.com/recruiting/jobs/All/a34be4ee-9763-456a-beb1-0a06243c36f2/Doug-Kalitta-Holdings',
+        'description': 'Kalitta Holdings careers (Paylocity)',
+        'class': 'KalittaHoldingsScraper',
+        'module': 'scraper_manager.scrapers.kalitta_holdings_scraper',
+    },
+    'jet_aviation': {
+        'name': 'Jet Aviation',
+        'enabled': True,
+        'base_url': 'https://jobs.jetaviation.com',
+        'jobs_url': 'https://jobs.jetaviation.com/go/Europe/8766702/?q=&q2=&alertId=&title=dispatch&location=&facility=&date=#searchresults',
+        'description': 'Jet Aviation careers (SuccessFactors)',
+        'class': 'JetAviationScraper',
+        'module': 'scraper_manager.scrapers.jet_aviation_scraper',
+    },
+    'riyadh_air': {
+        'name': 'Riyadh Air',
+        'enabled': True,
+        'base_url': 'https://globalcareerhub-riyadhair.icims.com',
+        'jobs_url': 'https://globalcareerhub-riyadhair.icims.com/jobs/search?hashed=-625885971&mobile=false&width=1492&height=500&bga=true&needsRedirect=false&jan1offset=330&jun1offset=330',
+        'description': 'Riyadh Air careers (iCIMS)',
+        'class': 'RiyadhAirScraper',
+        'module': 'scraper_manager.scrapers.riyadh_air_scraper',
+    },
+    'global_jet': {
+        'name': 'Global Jet',
+        'enabled': True,
+        'base_url': 'https://globaljet.aero',
+        'jobs_url': 'https://globaljet.aero/en/careers',
+        'description': 'Global Jet careers (Custom SPA)',
+        'class': 'GlobalJetScraper',
+        'module': 'scraper_manager.scrapers.global_jet_scraper',
     },
 }
 

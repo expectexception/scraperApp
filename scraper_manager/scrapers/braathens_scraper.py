@@ -46,6 +46,12 @@ class BraathensScraper(BaseScraper):
                 if not self.is_job_link(title, url):
                     continue
 
+                if not self.should_process_job(title):
+                    continue
+
+                if await self.is_url_already_scraped(url):
+                    continue
+
                 logger.info(f"[{self.site_key}] Fetching details for: {url}")
                 
                 try:

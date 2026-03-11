@@ -29,12 +29,14 @@ class ITAScraper(BaseScraper):
             try:
                 # Direct navigation to search results
                 await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
+                # Wait for job listings to load
+                await page.wait_for_selector('a.jobCardTitle', timeout=30000)
                 await self.simulate_human_behavior(page)
                 
-                # Double check for the link selector
+                # Extract job links using the correct selector
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a.jobTitle-link'))
-                        .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
+                    return Array.from(document.querySelectorAll('a.jobCardTitle'))
+                        .map(a => ({t: (a.innerText || '').trim(), h: a.getAttribute('href')}))
                         .filter(a => a.h)
                 }''')
                 
@@ -42,8 +44,16 @@ class ITAScraper(BaseScraper):
                 
                 seen_urls = set()
                 initial_jobs = []
+                base_site_url = "https://career.ita-airways.com"
+                
                 for link in links:
                     href = link['h']
+                    # Convert relative URL to absolute
+                    if href.startswith('/'):
+                        href = base_site_url + href
+                    elif not href.startswith('http'):
+                        href = base_site_url + '/' + href
+                        
                     title = link['t']
                     if href and href not in seen_urls and title:
                         seen_urls.add(href)
@@ -64,6 +74,12 @@ class ITAScraper(BaseScraper):
                     title = j_initial['title']
                     
                     try:
+                        if not self.should_process_job(title):
+                            continue
+
+                        if await self.is_url_already_scraped(url):
+                            continue
+
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
                         await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
@@ -99,5 +115,11 @@ class ITAScraper(BaseScraper):
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

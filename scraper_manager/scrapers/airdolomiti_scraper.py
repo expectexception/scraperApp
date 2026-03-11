@@ -70,6 +70,12 @@ class AirDolomitiScraper(BaseScraper):
                     title = j_initial['title']
                         
                     try:
+                        if not self.should_process_job(title):
+                            continue
+
+                        if await self.is_url_already_scraped(url):
+                            continue
+
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
                         # Increased timeout for stability
@@ -140,5 +146,11 @@ class AirDolomitiScraper(BaseScraper):
         self.print_header()
         jobs = await self.fetch_jobs()
         jobs = [j for j in jobs if j is not None]
+        
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+
         await self.save_results(jobs)
         return jobs

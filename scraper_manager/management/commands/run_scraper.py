@@ -55,7 +55,8 @@ class Command(BaseCommand):
         if not scraper_name:
             self.stdout.write(self.style.ERROR('Please specify a scraper name or --list'))
             self.stdout.write('Usage: python manage.py run_scraper [scraper_name]')
-            self.stdout.write(f'Available: {", ".join(list_scrapers())}, all')
+            enabled_scrapers = [s for s in list_scrapers() if CONFIG['sites'].get(s, {}).get('enabled', False)]
+            self.stdout.write(f'Enabled: {", ".join(enabled_scrapers)}, all')
             return
         
         logger.info(f"Starting scraper command: {scraper_name}")
