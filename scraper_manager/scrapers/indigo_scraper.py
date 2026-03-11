@@ -272,7 +272,8 @@ class IndiGoScraper(BaseScraper):
                         try:
                             job_data = await self._extract_job_from_card(element, idx)
                             if job_data:
-                                jobs.append(job_data)
+                                if self.should_scrape_job(job_data['title']):
+                                    jobs.append(job_data)
                         except Exception as e:
                             logger.error(f"Error extracting job {idx + 1}: {e}")
                     
@@ -680,7 +681,9 @@ class IndiGoScraper(BaseScraper):
                     if isinstance(posted, str):
                         parsed = self.parse_posted_date(posted)
                         job['posted_date'] = parsed if parsed else posted
-                    jobs.append(job)
+                    
+                    if self.should_scrape_job(job['title']):
+                        jobs.append(job)
 
                 if jobs:
                     return jobs

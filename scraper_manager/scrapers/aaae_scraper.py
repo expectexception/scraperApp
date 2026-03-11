@@ -81,6 +81,9 @@ class AAAEScraper(BaseScraper):
                             title = await title_el.inner_text()
                             title = title.strip()
                             
+                            if not self.should_scrape_job(title):
+                                continue
+                            
                             # Company
                             # Selector: .card-subtitle
                             company_el = await card.query_selector(".card-subtitle")

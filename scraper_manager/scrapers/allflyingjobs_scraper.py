@@ -96,6 +96,10 @@ class AllFlyingJobsScraper(BaseScraper):
                         
                     title = await title_el.inner_text()
                     title = title.strip()
+                    
+                    if not self.should_scrape_job(title):
+                        continue
+                        
                     url = await title_el.get_attribute('href')
                     if url and not url.startswith('http'):
                         url = self.base_url + url

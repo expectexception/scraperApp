@@ -32,24 +32,32 @@ ROOT_URLCONF = "scraper_service.urls"
 TEMPLATES = []
 WSGI_APPLICATION = "scraper_service.wsgi.application"
 
-# Database Configuration - PostgreSQL ONLY
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'aeroops_db'),
-        'USER': os.environ.get('DB_USER', 'aeroops_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c statement_timeout=30000',  # 30 seconds
-        },
-        'CONN_MAX_AGE': 600,  # Connection pooling: 10 minutes
-        'ATOMIC_REQUESTS': True,  # Wrap each request in a transaction
-        'DISABLE_SERVER_SIDE_CURSORS': True,  # Better for connection pooling
+# Database Configuration - PostgreSQL with SQLite fallback
+if os.environ.get('DB_HOST'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'aeroops_db'),
+            'USER': os.environ.get('DB_USER', 'aeroops_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'OPTIONS': {
+                'connect_timeout': 10,
+                'options': '-c statement_timeout=30000',  # 30 seconds
+            },
+            'CONN_MAX_AGE': 600,  # Connection pooling: 10 minutes
+            'ATOMIC_REQUESTS': True,  # Wrap each request in a transaction
+            'DISABLE_SERVER_SIDE_CURSORS': True,  # Better for connection pooling
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.environ.get("DJANGO_TIME_ZONE", "Asia/Kolkata")

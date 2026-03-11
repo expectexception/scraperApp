@@ -94,6 +94,10 @@ class AirSerbiaScraper(BaseScraper):
                         title = l.get('title', '')
                         location = l.get('location', 'Belgrade/Serbia')
                         
+                        # Pre-scrape title filtering
+                        if not self.should_process_job(title):
+                            continue
+                            
                         job_id = None
                         match = re.search(r'/(\d+)/?$', job_url)
                         if match:

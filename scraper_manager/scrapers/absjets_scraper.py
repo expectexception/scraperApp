@@ -80,6 +80,10 @@ class AbsjetsScraper(BaseScraper):
                             title = "Unknown Title"
                             
                         title = title.strip()
+                        
+                        if not self.should_scrape_job(title):
+                            await detail_page.close()
+                            continue
                             
                         description = ""
                         desc_loc = detail_page.locator('.cp-detail__content, .teamio-detail-content, .job-description, .detail-content, .content, main')

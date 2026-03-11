@@ -43,22 +43,18 @@ class AustrianAirlinesScraper(BaseScraper):
                 
                 # Handling cookie consent
                 try:
-                    cookie_btn = page.locator('text="Select all", text="Accept all", [data-hook="cc-ccc-btn-confirm-all"], #ensAcceptAll').first
+                    cookie_btn = page.locator('text=Select all, text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
                     if await cookie_btn.is_visible():
-                        await cookie_btn.click(force=True)
-                        await page.wait_for_timeout(2000)
+                        await cookie_btn.click()
+                        await page.wait_for_timeout(1000)
                 except:
                     pass
 
-                # Wait for results to load - results are loaded dynamically
+                # Wait for results to load
                 try:
-                    # The container is 'div.jobboard-datatable'
-                    # We wait for the spinner to disappear or just wait for the links
-                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=45000)
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=25000)
                 except:
-                    # Take screenshot if failure
-                    await page.screenshot(path="austrian_failure_no_links.png")
-                    logger.warning(f"[{self.site_key}] No job links found after wait. Saved screenshot.")
+                    logger.warning(f"[{self.site_key}] No job links found after wait.")
 
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
@@ -69,36 +65,29 @@ class AustrianAirlinesScraper(BaseScraper):
                         .filter(a => a.h && a.h.includes('job'))
                 }''')
                 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links after dynamic wait")
+                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
                 
                 seen_urls = set()
-                initial_jobs = []
+                job_urls = []
                 for link in links:
                     href = link['h']
                     title = link['t']
                     if href and href not in seen_urls and self.is_job_link(title, href):
+                        if not self.should_process_job(title):
+                            continue
                         seen_urls.add(href)
-                        initial_jobs.append({'title': title, 'url': href})
+                        job_urls.append((href, title))
                 
-                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
-                
-                # PRE-FILTER: Filter by title first to skip irrelevant roles (like HR) completely
-                matched_initial, _, _ = self.apply_title_filter(initial_jobs)
-                
-                logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
+                logger.info(f"[{self.site_key}] {len(job_urls)} jobs passed filtering")
 
-                for i, j_initial in enumerate(matched_initial):
+                for i, (url, title) in enumerate(job_urls):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         
-                    url = j_initial['url']
-                    title = j_initial['title']
-                    
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        # Increased timeout to 60s and switched to 'load' for more stability
-                        await detail_page.goto(url, wait_until='load', timeout=60000)
+                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
                         await detail_page.wait_for_timeout(2000)
                         
                         real_title = title

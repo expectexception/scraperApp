@@ -142,6 +142,9 @@ class CathayPacificScraper(BaseScraper):
                     if not job['url']:
                         continue
                         
+                    if not self.should_scrape_job(job['title']):
+                        continue
+                        
                     try:
                         detail_page = await context.new_page()
                         await detail_page.goto(job['url'], wait_until='domcontentloaded', timeout=30000)

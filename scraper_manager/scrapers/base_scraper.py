@@ -95,19 +95,33 @@ class BaseScraper:
         except Exception:
             self.ua = None
         
-        # Filter settings - ALWAYS ENABLED
-        self.use_filter = True
+        # Filter settings - ALWAYS ENABLED (Default to True unless explicitly disabled)
+        self.use_filter = scraper_settings.get('use_filter', True)
         self.filter_manager = None
         
-        if JobFilterManager:
+        if self.use_filter and JobFilterManager:
             filter_file = scraper_settings.get('filter_file', 'filter_title.json')
             try:
-                self.filter_manager = JobFilterManager(filter_file)
+                # Find the filter file relative to the package structure
+                # base_scraper.py is in scraper_manager/scrapers/
+                # filter_title.json is in scraper_manager/
+                # So we go up one level from current_dir
+                import os
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                filter_path = os.path.join(os.path.dirname(current_dir), filter_file)
+                
+                # Check if it exists at this path, if not fallback to just filename
+                if not os.path.exists(filter_path):
+                    # Try current directory too just in case
+                    filter_path = os.path.join(current_dir, filter_file)
+                if not os.path.exists(filter_path):
+                    # Fallback to direct filename and let Path resolution handle it
+                    filter_path = filter_file
+
+                self.filter_manager = JobFilterManager(filter_path)
                 logger.info(f"[{site_key}] Loaded filter with {len(self.filter_manager.all_keywords)} keywords")
             except Exception as e:
-                logger.error(f"[{site_key}] CRITICAL: Failed to load filter: {e}")
-        else:
-            logger.error(f"[{site_key}] CRITICAL: JobFilterManager could not be imported. Filtering DISABLED.")
+                logger.error(f"[{site_key}] Failed to load filter: {e}")
         
     async def is_url_already_scraped(self, url: str) -> bool:
         """Check if URL was already scraped (using database if available)"""
@@ -145,21 +159,29 @@ class BaseScraper:
             return jobs, [], {'total': len(jobs), 'matched': len(jobs), 'rejected': 0, 'by_category': {}}
         
         return self.filter_manager.filter_jobs(jobs)
+
+    def should_process_job(self, title: str) -> bool:
+        """
+        Check if a job title matches the filter criteria before fetching details.
+        
+        Args:
+            title: The job title to check
+            
+        Returns:
+            True if the job matches and should be processed, False otherwise
+        """
+        if not self.use_filter or not self.filter_manager:
+            return True
+            
+        matches, categories, score, details = self.filter_manager.matches_filter(title)
+        if not matches:
+            logger.info(f"[{self.site_key}] Skipping job: '{title}' (Title doesn't match filter)")
+            return False
+            
+        return True
     
     async def save_results(self, jobs: List[Dict], filename: Optional[str] = None):
         """Save results to database only (no file generation)"""
-        
-        # 1. Apply Filtering BEFORE saving
-        matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
-        
-        if self.use_filter and self.filter_manager:
-            logger.info(f"[{self.site_key}] Filter results: matched={len(matched_jobs)}, rejected={len(rejected_jobs)}")
-            if rejected_jobs:
-                print(f"    - Filtered out: {len(rejected_jobs)} irrelevant jobs")
-                logger.debug(f"[{self.site_key}] Rejected titles: {', '.join([j.get('title') for j in rejected_jobs[:5]])}")
-        
-        # Use only matched jobs from here on
-        jobs = matched_jobs
         
         # Calculate duration
         duration = 0
@@ -774,10 +796,6 @@ class BaseScraper:
         if u.endswith('/') and len(path.strip('/')) < 4:
              return False
 
-        path_without_query = u.split('?')[0]
-        if any(path_without_query.endswith(ext) for ext in ['.pdf', '.doc', '.docx', '.zip', '.jpg', '.png']):
-            return False
-
         # Mandatory exclusions
         skip_words = [
             'privacy', 'policy', 'cookies', 'legal', 'terms', 'condition', 
@@ -787,8 +805,8 @@ class BaseScraper:
             'support', 'feedback', 'blog', 'press', 'media', 'investor',
             'compagnie', 'fleet', 'services', 'network', 'destinations',
             'newsletter', 'sitemap', 'accessibility', 'flight', 'booking', 
-            'check-in', 'status', 'travel', 'trip', 'reserve',
-            'hotel', 'destination', 'luggage', 'baggage'
+            'check-in', 'status', 'manage', 'travel', 'trip', 'plan', 'reserve',
+            'hotel', 'car', 'offer', 'destination', 'luggage', 'baggage'
         ]
         
         if any(sw in t for sw in skip_words) or any(sw in u for sw in skip_words):

@@ -126,6 +126,11 @@ class WizzAirScraper(BaseScraper):
                                 break
                             
                             url = item['url']
+                            title = item['title']
+                            
+                            if not self.should_scrape_job(title):
+                                continue
+                                
                             if await self.is_url_already_scraped(url):
                                 continue
                                 

@@ -81,6 +81,10 @@ class AlsieExpressScraper(BaseScraper):
 
                 for l in job_links[:self.max_jobs] if self.max_jobs else job_links:
                     try:
+                        title = l['title']
+                        if not self.should_process_job(title):
+                            continue
+                            
                         href = l['href']
                         job_url = href if href.startswith('http') else f"https://candidate.hr-manager.net/vacancies/{href.lstrip('/')}"
                         

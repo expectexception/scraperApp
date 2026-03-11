@@ -74,10 +74,12 @@ class AirMaltaScraper(BaseScraper):
                     href = link['h']
                     title = link['t']
                     if href and href not in seen_urls and self.is_job_link(title, href):
+                        if not self.should_process_job(title):
+                            continue
                         seen_urls.add(href)
-                        job_urls.append(href)
+                        job_urls.append((href, title))
                 
-                for i, url in enumerate(job_urls):
+                for i, (url, title) in enumerate(job_urls):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         

@@ -114,6 +114,9 @@ class PilotsGlobalScraper(BaseScraper):
                                 
                                 if not title:
                                     continue
+                                    
+                                if not self.should_scrape_job(title):
+                                    continue
                                 
                                 job = {
                                     'company': company,

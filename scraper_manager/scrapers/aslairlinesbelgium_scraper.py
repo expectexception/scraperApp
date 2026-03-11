@@ -85,6 +85,8 @@ class ASLAirlinesBelgiumScraper(BaseScraper):
                     title = link['t']
                     loc = link.get('loc', '')
                     if href and href not in seen_urls and ('Belgium' in loc or 'Hollogne' in loc or 'Liege' in loc or 'Brussels' in loc):
+                        if not self.should_process_job(title):
+                            continue
                         seen_urls.add(href)
                         job_urls.append((href, title))
                 

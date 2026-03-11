@@ -81,6 +81,9 @@ class FinnairScraper(BaseScraper):
                         break
                         
                     title = item.get('title', '')
+                    if not self.should_scrape_job(title):
+                        continue
+                        
                     externalPath = item.get('externalPath', '')
                     url = f"https://finnair.wd103.myworkdayjobs.com/en-US/finnair{externalPath}"
                     

@@ -154,6 +154,9 @@ class AmericanAirlinesScraper(BaseScraper):
                     if not job.get('url'):
                         continue
                         
+                    if not self.should_scrape_job(job.get('title')):
+                        continue
+                        
                     try:
                         detail_page = await context.new_page()
                         await detail_page.goto(job['url'], wait_until='networkidle', timeout=60000)

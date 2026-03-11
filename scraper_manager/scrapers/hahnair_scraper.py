@@ -55,6 +55,8 @@ class HahnAirScraper(BaseScraper):
                 if not title_match:
                     continue
                 title = (title_match.group(1) or title_match.group(2) or "").strip()
+                if not self.should_scrape_job(title):
+                    continue
                 
                 # Extract job ID
                 id_match = re.search(r'<id>(.*?)</id>', pos_xml)

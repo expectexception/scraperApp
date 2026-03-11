@@ -15,25 +15,13 @@ class AirFranceScraper(BaseScraper):
         self.base_url = self.site_config.get('base_url', 'https://recrutement.airfrance.com')
         # We start by hitting the main job search page or the "All Jobs" endpoint if possible. 
         # For simplicity, we can hit a general search URL that returns all results
-        self.jobs_url = self.site_config.get('jobs_url', 'https://recrutement.airfrance.com/offre-de-emploi/liste-offres.aspx?LCID=2057')
+        self.jobs_url = self.site_config.get('jobs_url', 'https://recrutement.airfrance.com/accueil.aspx?LCID=2057')
         self.company_name = "Air France"
 
     async def fetch_jobs(self) -> list:
         self.logger.info(f"[{self.site_key}] Fetching jobs from listing...")
         jobs_raw = await self._fetch_jobs_listing()
-        
-        # Convert to list of dicts for filtering
-        initial_jobs = jobs_raw
-        
-        self.logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
-        
-        # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
-        matched_initial, _, _ = self.apply_title_filter(initial_jobs)
-        
-        self.logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching descriptions...")
-
-        # Convert matched results to job dicts
-        jobs = [get_job_dict(**job) for job in matched_initial]
+        jobs = [get_job_dict(**job) for job in jobs_raw]
 
         if not jobs:
             return []
@@ -45,8 +33,11 @@ class AirFranceScraper(BaseScraper):
         self.print_header()
         jobs = await self.fetch_jobs()
         
-        # Filter handled in fetch_jobs now
-        
+        if self.use_filter and self.filter_manager:
+            matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
+            jobs = matched_jobs
+
         jobs, duplicate_count = await self.filter_new_jobs(jobs)
         await self.save_results(jobs)
         self.print_sample(jobs)
@@ -62,20 +53,9 @@ class AirFranceScraper(BaseScraper):
             try:
                 self.logger.info(f"[{self.site_key}] Loading {self.company_name} careers page...")
                 await self.random_delay(1, 2)
-                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=60000)
-                await self.random_delay(2, 4)
+                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=45000)
 
-                # Handle Cookie Consent (Didomi)
-                try:
-                    agree_button = await page.wait_for_selector('#didomi-notice-agree-button', timeout=10000)
-                    if agree_button:
-                        self.logger.info(f"[{self.site_key}] Clicking cookie consent button...")
-                        await agree_button.click()
-                        await self.random_delay(1, 2)
-                except Exception:
-                    pass
-
-                await self.random_delay(2, 4)
+                await self.random_delay(4, 6)
                 await self.simulate_human_behavior(page)
 
                 job_links = await page.evaluate('''() => {
@@ -121,6 +101,10 @@ class AirFranceScraper(BaseScraper):
                         title = l.get('title', '')
                         location = l.get('location', 'Unknown')
                         
+                        # Pre-scrape title filtering
+                        if not self.should_process_job(title):
+                            continue
+                            
                         job_id = None
                         match = re.search(r'_(\d+)\.aspx', job_url)
                         if match:
