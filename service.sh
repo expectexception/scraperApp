@@ -36,7 +36,7 @@ activate_env() {
 }
 
 start() {
-    echo -e "${BLUE}Starting AeroOps Services...${NC}"
+    echo -e "${BLUE}Starting Services...${NC}"
     activate_env
     
     # 1. Start Django via Gunicorn
@@ -68,11 +68,11 @@ start() {
         echo -e "${GREEN}DONE${NC}"
     fi
 
-    echo -e "${GREEN}AeroOps Engine is now operational.${NC}"
+    echo -e "${GREEN}Services are now operational.${NC}"
 }
 
 stop() {
-    echo -e "${BLUE}Stopping AeroOps Services...${NC}"
+    echo -e "${BLUE}Stopping Services...${NC}"
     
     if [ -f "$DJANGO_PID" ]; then
         PID=$(cat "$DJANGO_PID")

@@ -10,6 +10,13 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "scraper-service-dev-key")
 DEBUG = os.environ.get("DEBUG", "1") == "1"
 ALLOWED_HOSTS = ["*"]
 
+DASHBOARD_USERNAME = os.environ.get("DASHBOARD_USERNAME", "admin")
+DASHBOARD_PASSWORD = (
+    os.environ.get("DASHBOARD_PASSWORD")
+    or os.environ.get("ADMIN_PASSWORD")
+    or os.environ.get("AEROOPS_PASSWORD")
+    or "takla"
+)
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",

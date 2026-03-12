@@ -15,6 +15,7 @@ from scraper_manager.models import ScraperJob, ScraperConfig
 from scraper_manager.config import CONFIG
 from scraper_manager.db_manager import DjangoDBManager
 from scraper_manager.scrapers import get_scraper, list_scrapers
+from scraper_manager.webhook_notify import dispatch_event
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -239,6 +240,14 @@ class Command(BaseCommand):
             self.stdout.write(f'  Jobs new: {scraper_job.jobs_new}')
             self.stdout.write(f'  Jobs updated: {scraper_job.jobs_updated}')
             self.stdout.write(f'  Duration: {scraper_job.execution_time:.1f}s')
+
+            # Fire completion webhook
+            dispatch_event('completed', {
+                'scraper_name': scraper_name,
+                'jobs_found': scraper_job.jobs_found,
+                'jobs_new': scraper_job.jobs_new,
+                'execution_time': scraper_job.execution_time or 0,
+            })
             return 0
             
         except Exception as e:
@@ -268,6 +277,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'\n✗ Scraper failed: {e}'))
             import traceback
             traceback.print_exc()
+
+            # Fire failure webhook
+            dispatch_event('failed', {
+                'scraper_name': scraper_name,
+                'error_message': str(e),
+            })
             return 1
     
     async def run_all_scrapers(self, options: dict):

@@ -208,3 +208,31 @@ class ScrapedURL(models.Model):
     
     def __str__(self):
         return f"{self.source}: {self.title[:50]}"
+
+
+class WebhookConfig(models.Model):
+    """Alert webhook configuration for scraper events"""
+
+    EVENT_CHOICES = [
+        ('completed', 'Scraper Completed'),
+        ('failed',    'Scraper Failed'),
+        ('all',       'All Events'),
+    ]
+    PROVIDER_CHOICES = [
+        ('ntfy',  'Ntfy.sh'),
+        ('slack', 'Slack Webhook'),
+        ('custom', 'Custom HTTP POST'),
+    ]
+
+    name       = models.CharField(max_length=100, unique=True)
+    provider   = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default='ntfy')
+    url        = models.URLField(max_length=500, help_text='Webhook or ntfy topic URL')
+    on_event   = models.CharField(max_length=20, choices=EVENT_CHOICES, default='all')
+    is_active  = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.provider}) → {self.on_event}"
