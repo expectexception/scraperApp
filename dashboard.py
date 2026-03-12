@@ -40,11 +40,43 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- Session State Management ---
-if 'active_processes' not in st.session_state:
-    st.session_state.active_processes = {}
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
+if 'active_processes' not in st.session_state:
+    st.session_state.active_processes = {}
+
+def sync_active_processes():
+    """Recover active processes from DB and verify they are still running"""
+    active_jobs = ScraperJob.objects.filter(status='running').order_by('-started_at')
+    current_active = {}
+    
+    for job in active_jobs:
+        if job.pid:
+            try:
+                p = psutil.Process(job.pid)
+                if p.is_running() and "python" in p.name().lower():
+                    # Process is still alive
+                    log_file = os.path.join("scraper_logs", f"{job.scraper_name}.log")
+                    current_active[job.scraper_name] = {
+                        "pid": job.pid,
+                        "start": job.started_at,
+                        "log": log_file,
+                        "job_id": job.id
+                    }
+                else:
+                    # Stale job in DB
+                    job.status = 'failed'
+                    job.error_message = "Process terminated unexpectedly."
+                    job.save()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                job.status = 'failed'
+                job.error_message = "Process no longer accessible."
+                job.save()
+    
+    st.session_state.active_processes = current_active
+
+# Perform sync on load
+sync_active_processes()
 
 # --- Scheduler Setup (Singleton-like) ---
 @st.cache_resource
@@ -76,6 +108,17 @@ def refresh_schedules():
                 )
             except Exception as e:
                 print(f"Error scheduling {cfg.scraper_name}: {e}")
+
+def validate_scraper_config(name):
+    """Basic validation of scraper setup"""
+    try:
+        from scraper_manager.scrapers import get_scraper
+        from scraper_manager.db_manager import DjangoDBManager
+        db = DjangoDBManager()
+        get_scraper(name, settings.CONFIG if hasattr(settings, 'CONFIG') else {}, db_manager=db)
+        return True, "Configuration valid. Scraper initialized successfully."
+    except Exception as e:
+        return False, f"Validation Failed: {str(e)}"
 
 # Initial sync
 if 'scheduler_synced' not in st.session_state:
@@ -178,15 +221,24 @@ def run_scraper(name):
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, f"{name}.log")
     
-    cmd = [sys.executable, "manage.py", "run_scraper", name]
+    # Pre-create job to have immediate Job ID
+    job = ScraperJob.objects.create(
+        scraper_name=name,
+        status='running',
+        started_at=datetime.now(),
+        triggered_by='dashboard'
+    )
+    
+    cmd = [sys.executable, "manage.py", "run_scraper", name, "--job-id", str(job.id)]
     # Use start_new_session=True to detach the process from the dashboard
     with open(log_file, "a") as f:
         process = subprocess.Popen(cmd, stdout=f, stderr=f, start_new_session=True)
     
     st.session_state.active_processes[name] = {
         "pid": process.pid,
-        "start": datetime.now(),
+        "start": job.started_at,
         "log": log_file,
+        "job_id": job.id,
         "last_size": 0
     }
 
@@ -266,11 +318,26 @@ tabs = st.tabs(["🛰️ Command Center", "📅 Scheduler", "📊 Analytics", "�
 
 # --- Tab 1: Command Center ---
 with tabs[0]:
-    st.subheader("Live Scraper Control")
+    c_head, c_all = st.columns([5, 1])
+    c_head.subheader("Live Scraper Control")
+    
+    # Run All Button
+    is_all_running = "all" in st.session_state.active_processes
+    if is_all_running:
+        if c_all.button("⏹ Stop All Missions", type="secondary", use_container_width=True, help="Terminate global mission"):
+            pid = st.session_state.active_processes['all']['pid']
+            stop_process(pid)
+            del st.session_state.active_processes['all']
+            st.rerun()
+    else:
+        if c_all.button("🚀 Start All Sensors", type="primary", use_container_width=True, help="Initiate batch mission"):
+            run_scraper("all")
+            st.toast("Mission control initiated for all scrapers.")
+            st.rerun()
     
     # Active Processes Monitor
-    if st.session_state.active_processes:
-        with st.expander("📺 Active Monitor", expanded=True):
+    with st.expander("📺 Continuous Mission Monitor", expanded=True):
+        if st.session_state.active_processes:
             monitor_data = []
             for name, info in list(st.session_state.active_processes.items()):
                 # Check if process is still running
@@ -280,11 +347,14 @@ with tabs[0]:
                         del st.session_state.active_processes[name]
                         continue
                     age = datetime.now() - info['start']
+                    # Fetch live progress from DB
+                    job = ScraperJob.objects.get(id=info['job_id'])
                     monitor_data.append({
                         "Scraper": name.upper(),
                         "Runtime": str(age).split(".")[0],
-                        "Logs": info['log'],
-                        "PID": info['pid']
+                        "Progress": f"{job.progress}%",
+                        "PID": info['pid'],
+                        "Job ID": job.id
                     })
                 except:
                     del st.session_state.active_processes[name]
@@ -297,12 +367,14 @@ with tabs[0]:
                 st.markdown("---")
                 primary_proc = list(st.session_state.active_processes.items())[0]
                 p_name, p_info = primary_proc
+                job = ScraperJob.objects.get(id=p_info['job_id'])
                 
-                log_col, refresh_col = st.columns([5, 1])
+                log_col, prog_col, refresh_col = st.columns([3, 1, 1])
                 log_col.markdown(f"**Live Output: {p_name.upper()}**")
+                prog_col.progress(job.progress/100, text=f"{job.progress}%")
                 
                 # Auto-refresh mechanism for logs
-                if refresh_col.button("🔄 Force Refresh"):
+                if refresh_col.button("🔄 Refresh", use_container_width=True):
                     st.rerun()
                 
                 log_p = p_info['log']
@@ -324,16 +396,58 @@ with tabs[0]:
         with cols[i % 3]:
             with st.container(border=True):
                 c_head, c_btn = st.columns([2, 1])
-                c_head.markdown(f"**{s_name.upper()}**")
-                
+                # Determine Status
                 is_running = s_name in st.session_state.active_processes
+                is_batch_active = "all" in st.session_state.active_processes
+                
+                status_label = "IDLE"
+                status_color = "var(--text-muted)"
+                pulse = False
+                
                 if is_running:
-                    if c_btn.button("Stop", key=f"stop_{s_name}", type="secondary"):
-                        stop_process(st.session_state.active_processes[s_name]['pid'])
-                        del st.session_state.active_processes[s_name]
+                    status_label = "RUNNING MISSION"
+                    status_color = "var(--primary)"
+                    pulse = True
+                elif is_batch_active:
+                    status_label = "PENDING (BATCH)"
+                    status_color = "#eab308" # Yellow for pending
+                
+                if pulse:
+                    st.markdown(f"""
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <div style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                            <span style="font-size: 12px; color: {status_color}; font-weight: 700;">{status_label}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <div style="width: 8px; height: 8px; background: {status_color}; border-radius: 50%;"></div>
+                            <span style="font-size: 12px; color: {status_color}; font-weight: 600;">{status_label}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                if is_running or is_batch_active:
+                    # Determine which PID to stop
+                    current_pid = st.session_state.active_processes.get(s_name, {}).get('pid') or st.session_state.active_processes.get('all', {}).get('pid')
+                    
+                    if c_btn.button("⏹ Stop", key=f"stop_{s_name}", type="secondary", use_container_width=True, help="Terminate mission"):
+                        if current_pid:
+                            stop_process(current_pid)
+                        if s_name in st.session_state.active_processes:
+                            del st.session_state.active_processes[s_name]
+                        if is_batch_active:
+                             # Stopping a member of a batch stops the batch
+                             del st.session_state.active_processes['all']
                         st.rerun()
                 else:
-                    if c_btn.button("Run", key=f"run_{s_name}", type="primary"):
+                    btn_col1, btn_col2 = c_btn.columns(2)
+                    if btn_col1.button("🔍", key=f"test_{s_name}", use_container_width=True, help="Verify configuration"):
+                        valid, msg = validate_scraper_config(s_name)
+                        if valid: st.success(msg)
+                        else: st.error(msg)
+                        
+                    if btn_col2.button("▶ Run", key=f"run_{s_name}", type="primary", use_container_width=True, help="Start mission"):
                         run_scraper(s_name)
                         st.rerun()
 

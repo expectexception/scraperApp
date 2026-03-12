@@ -52,6 +52,7 @@ class BaseScraper:
         self.config = config
         self.site_config = config.get('sites', {}).get(site_key, {})
         self.db_manager = db_manager
+        self.job_id = config.get('job_id') # Passed from management command
         self.scrape_start_time = None
         self.use_db = db_manager is not None
         
@@ -122,6 +123,20 @@ class BaseScraper:
                 logger.info(f"[{site_key}] Loaded filter with {len(self.filter_manager.all_keywords)} keywords")
             except Exception as e:
                 logger.error(f"[{site_key}] Failed to load filter: {e}")
+
+    async def update_progress(self, current: int, total: int):
+        """Update job progress in database"""
+        if self.job_id:
+            try:
+                progress_pct = int((current / total) * 100) if total > 0 else 0
+                import django
+                from scraper_manager.models import ScraperJob
+                from asgiref.sync import sync_to_async
+                
+                await sync_to_async(ScraperJob.objects.filter(id=self.job_id).update)(progress=progress_pct)
+                logger.debug(f"[{self.site_key}] Progress: {progress_pct}%")
+            except Exception as e:
+                logger.warning(f"[{self.site_key}] Failed to update progress: {e}")
         
     async def is_url_already_scraped(self, url: str) -> bool:
         """Check if URL was already scraped (using database if available)"""

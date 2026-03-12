@@ -121,7 +121,9 @@ class EurowingsScraper(BaseScraper):
                 
                 logger.info(f"[{self.site_key}] {len(matched_initial)} jobs passed pre-filtering. Fetching details...")
 
+                total_jobs_to_process = len(matched_initial)
                 for i, j_initial in enumerate(matched_initial):
+                    await self.update_progress(i, total_jobs_to_process)
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         

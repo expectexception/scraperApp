@@ -77,6 +77,8 @@ class ScraperJob(models.Model):
         help_text='Select which scraper to run'
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    pid = models.IntegerField(null=True, blank=True, help_text='OS Process ID')
+    progress = models.IntegerField(default=0, help_text='Progress percentage 0-100')
     
     # Timing
     created_at = models.DateTimeField(auto_now_add=True)

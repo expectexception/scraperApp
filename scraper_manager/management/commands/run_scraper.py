@@ -5,6 +5,7 @@ Usage: python manage.py run_scraper [scraper_name] [options]
 
 import asyncio
 import sys
+import os
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from django.core.management.base import BaseCommand
@@ -43,6 +44,11 @@ class Command(BaseCommand):
             '--list',
             action='store_true',
             help='List all available scrapers'
+        )
+        parser.add_argument(
+            '--job-id',
+            type=int,
+            help='Pre-created ScraperJob ID'
         )
     
     def handle(self, *args, **options):
@@ -145,17 +151,31 @@ class Command(BaseCommand):
              if scraper_name not in CONFIG['scrapers']: CONFIG['scrapers'][scraper_name] = {}
              CONFIG['scrapers'][scraper_name]['max_pages'] = effective_max_pages
         
-        # Create ScraperJob
-        scraper_job = await sync_to_async(ScraperJob.objects.create)(
-            scraper_name=scraper_name,
-            status='running',
-            started_at=timezone.now(),
-            triggered_by='management_command',
-            parameters={
-                'max_jobs': options.get('max_jobs'),
-                'max_pages': options.get('max_pages'),
-            }
-        )
+        # Get or Create ScraperJob
+        job_id = options.get('job_id')
+        if job_id:
+            try:
+                scraper_job = await sync_to_async(ScraperJob.objects.get)(id=job_id)
+                scraper_job.status = 'running'
+                scraper_job.pid = os.getpid()
+                scraper_job.started_at = timezone.now()
+                await sync_to_async(scraper_job.save)()
+            except Exception as e:
+                logger.error(f"Provided job_id {job_id} not found: {e}")
+                job_id = None
+        
+        if not job_id:
+            scraper_job = await sync_to_async(ScraperJob.objects.create)(
+                scraper_name=scraper_name,
+                status='running',
+                pid=os.getpid(),
+                started_at=timezone.now(),
+                triggered_by='management_command',
+                parameters={
+                    'max_jobs': options.get('max_jobs'),
+                    'max_pages': options.get('max_pages'),
+                }
+            )
         
         logger.info(f"Created ScraperJob with ID: {scraper_job.id}")
         self.stdout.write(self.style.SUCCESS(f'\n🚀 Starting scraper: {scraper_name} (Job ID: {scraper_job.id})'))
@@ -166,6 +186,7 @@ class Command(BaseCommand):
             logger.info(f"Initialized DjangoDBManager for {scraper_name}")
             
             # Get scraper instance
+            CONFIG['job_id'] = scraper_job.id
             scraper = get_scraper(scraper_name, CONFIG, db_manager=db_manager)
             logger.info(f"Created scraper instance for {scraper_name}")
             
