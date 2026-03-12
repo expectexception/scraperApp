@@ -69,19 +69,20 @@ export const CatalogPage: React.FC = () => {
                             <Card
                                 className="h-full group"
                                 footer={
-                                    <div className="flex justify-between items-center bg-transparent">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-transparent">
                                         <div className="flex items-center gap-3">
                                             <div className={cn("w-2.5 h-2.5 rounded-full shadow-lg", scraper.enabled ? "bg-success shadow-glow-success animate-pulse" : "bg-secondary/30")} />
-                                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">{scraper.enabled ? 'ACTIVE' : 'IDLE'}</span>
+                                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">{scraper.enabled ? 'ACTIVE' : 'DISABLED'}</span>
                                         </div>
                                         <Button
                                             size="sm"
                                             onClick={() => startScraper.mutate(scraper.name)}
+                                            disabled={!scraper.enabled}
                                             isLoading={startScraper.isPending && startScraper.variables === scraper.name}
-                                            className="gap-2 px-8 uppercase text-[10px]"
+                                            className="gap-2 px-8 uppercase text-[10px] w-full sm:w-auto"
                                         >
                                             <Rocket className="w-3.5 h-3.5" />
-                                            RUN
+                                            {scraper.enabled ? 'RUN' : 'DISABLED'}
                                         </Button>
                                     </div>
                                 }
@@ -107,6 +108,16 @@ export const CatalogPage: React.FC = () => {
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.05] text-[9px] font-black text-secondary uppercase tracking-[0.15em] transition-all group-hover:border-white/20">
                                         <Tag className="w-2.5 h-2.5" /> Intel
                                     </div>
+                                    {scraper.active_jobs ? (
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black text-primary uppercase tracking-[0.15em]">
+                                            <Tag className="w-2.5 h-2.5" /> {scraper.active_jobs} Active Job{scraper.active_jobs > 1 ? 's' : ''}
+                                        </div>
+                                    ) : null}
+                                    {scraper.schedule?.schedule_enabled ? (
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-info/10 border border-info/20 text-[9px] font-black text-info uppercase tracking-[0.15em]">
+                                            <Tag className="w-2.5 h-2.5" /> {scraper.schedule.schedule_cron}
+                                        </div>
+                                    ) : null}
                                 </div>
                             </Card>
                         </motion.div>

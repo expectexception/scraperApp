@@ -6,7 +6,7 @@ set -e
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VIRTUAL_ENV="/home/rajat/Desktop/AeroOps Intel/aeroScrap_backend/backendMain/.venv"
+VIRTUAL_ENV="$PROJECT_DIR/.venv"
 PID_DIR="$PROJECT_DIR/pids"
 LOG_DIR="$PROJECT_DIR/logs"
 
@@ -30,6 +30,54 @@ NC='\033[0m' # No Color
 
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
+is_port_listening() {
+    ss -ltn "( sport = :$1 )" 2>/dev/null | tail -n +2 | grep -q LISTEN
+}
+
+wait_for_pid_exit() {
+    local pid="$1"
+    local label="$2"
+
+    for _ in $(seq 1 20); do
+        if ! kill -0 "$pid" 2>/dev/null; then
+            return 0
+        fi
+        sleep 0.5
+    done
+
+    echo -e "${RED}${label} did not stop gracefully, sending SIGKILL...${NC}"
+    kill -9 "$pid" 2>/dev/null || true
+}
+
+wait_for_port_release() {
+    local port="$1"
+    for _ in $(seq 1 20); do
+        if ! is_port_listening "$port"; then
+            return 0
+        fi
+        sleep 0.5
+    done
+
+    if command -v fuser >/dev/null 2>&1; then
+        fuser -k "${port}/tcp" >/dev/null 2>&1 || true
+        sleep 1
+    fi
+}
+
+verify_gunicorn_started() {
+    for _ in $(seq 1 20); do
+        if [ -f "$DJANGO_PID" ] && kill -0 "$(cat "$DJANGO_PID")" 2>/dev/null && is_port_listening "$DJANGO_PORT"; then
+            return 0
+        fi
+        sleep 0.5
+    done
+
+    echo -e "${RED}FAILED${NC}"
+    echo "--- Django startup log ---"
+    tail -n 40 "$LOG_DIR/django_error.log" || true
+    exit 1
+}
+
 activate_env() {
     if [ -f "$VIRTUAL_ENV/bin/activate" ]; then
         source "$VIRTUAL_ENV/bin/activate"
@@ -47,6 +95,12 @@ start() {
         echo -e "${RED}Error: npm is required to build frontend assets.${NC}"
         exit 1
     fi
+
+    echo -n "Applying database migrations... "
+    (cd "$PROJECT_DIR" && "$VIRTUAL_ENV/bin/python" manage.py migrate --noinput >/dev/null)
+    echo -e "${GREEN}DONE${NC}"
+
+    wait_for_port_release "$DJANGO_PORT"
     
     # 1. Start Django via Gunicorn
     if [ -f "$DJANGO_PID" ] && kill -0 $(cat "$DJANGO_PID") 2>/dev/null; then
@@ -60,6 +114,7 @@ start() {
             --pid "$DJANGO_PID" \
             --access-logfile "$LOG_DIR/django_access.log" \
             --error-logfile "$LOG_DIR/django_error.log"
+        verify_gunicorn_started
         echo -e "${GREEN}DONE${NC}"
     fi
 
@@ -102,8 +157,10 @@ stop() {
         echo -n "Stopping Django (PID $PID)... "
         if kill -0 "$PID" 2>/dev/null; then
             kill "$PID"
+            wait_for_pid_exit "$PID" "Django"
         fi
         rm -f "$DJANGO_PID"
+        wait_for_port_release "$DJANGO_PORT"
         echo -e "${GREEN}STOPPED${NC}"
     else
         echo "Django is not running."

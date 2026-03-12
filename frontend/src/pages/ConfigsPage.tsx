@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useConfigs, useScraperActions, useScrapers } from '../hooks/useScrapers';
+import { useConfigs, useSchedulerOverview, useScraperActions, useScrapers } from '../hooks/useScrapers';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -18,6 +18,7 @@ export const ConfigsPage: React.FC = () => {
     const { isLoggedIn } = useAuth();
     const { data: scrapers } = useScrapers();
     const { data: configs, isLoading } = useConfigs(isLoggedIn);
+    const { data: schedulerOverview } = useSchedulerOverview(isLoggedIn);
     const { updateConfig } = useScraperActions();
 
     const [selectedScraper, setSelectedScraper] = useState<string>('');
@@ -44,17 +45,24 @@ export const ConfigsPage: React.FC = () => {
     if (isLoading) return <div className="p-8 text-secondary">Loading configurations...</div>;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-10">
             {/* Sidebar List */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="xl:col-span-1 space-y-6">
+                <Card className="p-0">
+                    <div className="p-4 space-y-2">
+                        <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Scheduler</p>
+                        <p className="text-lg font-black text-white">{schedulerOverview?.scheduled_scrapers ?? 0} scheduled</p>
+                        <p className="text-xs text-secondary">{schedulerOverview?.celery_beat_available ? `${schedulerOverview.active_periodic_tasks} beat task(s) active` : 'Beat not available in this environment'}</p>
+                    </div>
+                </Card>
                 <h3 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] px-4">Available Scrapers</h3>
-                <div className="flex flex-col gap-2">
+                <div className="flex xl:flex-col gap-2 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0">
                     {scrapers?.map(s => (
                         <button
                             key={s.name}
                             onClick={() => setSelectedScraper(s.name)}
                             className={cn(
-                                "flex items-center justify-between px-5 py-4 rounded-2xl transition-all text-left group",
+                                "flex items-center justify-between px-5 py-4 rounded-2xl transition-all text-left group min-w-[240px] xl:min-w-0",
                                 selectedScraper === s.name
                                     ? "bg-primary/10 text-primary border border-primary/30 shadow-glow-primary"
                                     : "text-secondary hover:bg-white/[0.03] border border-transparent"
@@ -71,7 +79,7 @@ export const ConfigsPage: React.FC = () => {
             </div>
 
             {/* Editor Area */}
-            <div className="lg:col-span-3">
+            <div className="xl:col-span-3">
                 {draft ? (
                     <motion.div
                         key={selectedScraper}
@@ -83,10 +91,10 @@ export const ConfigsPage: React.FC = () => {
                             title={`${selectedScraper} Settings`}
                             subtitle="Manage scraper boundaries and schedules"
                             footer={
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <p className="text-[10px] text-secondary font-bold uppercase tracking-[0.1em] opacity-50">State modified locally • Pending commit</p>
                                     <Button
-                                        className="gap-3 px-10 shadow-glow-primary"
+                                        className="gap-3 px-6 sm:px-10 shadow-glow-primary w-full sm:w-auto"
                                         onClick={handleSave}
                                         isLoading={updateConfig.isPending}
                                     >
@@ -95,7 +103,7 @@ export const ConfigsPage: React.FC = () => {
                                 </div>
                             }
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 p-1 sm:p-2">
                                 {/* Left Column: Toggles & Numbers */}
                                 <div className="space-y-8">
                                     <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.05] space-y-4">
@@ -141,6 +149,16 @@ export const ConfigsPage: React.FC = () => {
                                                 className="glass-input w-full font-black text-white px-6"
                                             />
                                         </div>
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] ml-2">Request Timeout (SECONDS)</label>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={draft.timeout}
+                                                onChange={e => setDraft({ ...draft, timeout: parseInt(e.target.value) || 300 })}
+                                                className="glass-input w-full font-black text-white px-6"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -177,6 +195,20 @@ export const ConfigsPage: React.FC = () => {
                                                 className="glass-input w-full pl-6 pr-6 py-4 font-mono text-center text-xs tracking-[0.3em] disabled:opacity-20 transition-all"
                                             />
                                         </div>
+                                        <p className="text-[10px] text-secondary uppercase tracking-[0.16em] font-black opacity-70">
+                                            {schedulerOverview?.celery_beat_available ? 'Saved schedules sync into django_celery_beat tasks.' : 'Scheduling metadata can be saved, but beat is not available.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] ml-2">Retry Count</label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={draft.retry_count}
+                                            onChange={e => setDraft({ ...draft, retry_count: parseInt(e.target.value) || 0 })}
+                                            className="glass-input w-full px-6 py-4 font-black text-white"
+                                        />
                                     </div>
 
                                     <div className="space-y-3">

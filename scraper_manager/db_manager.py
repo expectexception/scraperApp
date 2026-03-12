@@ -8,6 +8,7 @@ import re
 import json
 from typing import List, Dict, Set, Optional
 from django.utils import timezone
+from datetime import timedelta
 from asgiref.sync import sync_to_async
 from .models import ScrapedURL, ScraperJob
 from jobs.models import Job, CompanyMapping
@@ -176,9 +177,12 @@ class DjangoDBManager:
                     return op_type
 
         # 2. Weighted Keyword Scoring
-        scores = {
-            'cargo': 0, 'mro': 0, 'business': 0, 'low_cost': 0, 
-            'scheduled': 0, 'helicopter': 0, 'ground_ops': 0, 'atc': 0
+        # use float values so that later weight adjustments (1.5, 2.0, etc.)
+        # are compatible with the declared type; mypy was complaining about
+        # assigning a float to an int.
+        scores: Dict[str, float] = {
+            'cargo': 0.0, 'mro': 0.0, 'business': 0.0, 'low_cost': 0.0, 
+            'scheduled': 0.0, 'helicopter': 0.0, 'ground_ops': 0.0, 'atc': 0.0
         }
         
         patterns = {
@@ -220,7 +224,8 @@ class DjangoDBManager:
                     scores[op_type] += 1.0
 
         # Find best score
-        best_type = max(scores, key=scores.get)
+        # avoid type confusion by explicitly indexing the dict
+        best_type = max(scores, key=lambda k: scores[k])
         if scores[best_type] >= 1.5:
             return best_type
         
@@ -549,7 +554,13 @@ class DjangoDBManager:
         from django.db.models import Count
         
         total_jobs = ScrapedURL.objects.count()
-        by_source = dict(ScrapedURL.objects.values('source').annotate(count=Count('id')))
+        # build a proper mapping from source -> count instead of passing a
+        # ValuesQuerySet to dict() (mypy dislikes the type and the runtime
+        # behaviour is not what we want).
+        by_source = {
+            item['source']: item['count']
+            for item in ScrapedURL.objects.values('source').annotate(count=Count('id'))
+        }
         
         recent_scrapes = list(
             ScraperJob.objects

@@ -20,7 +20,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const requestUrl = String(error.config?.url ?? '');
+        const isLoginRequest = requestUrl.includes('/auth/login/');
+        const hasStoredToken = !!localStorage.getItem('aeroops_token');
+
+        if (error.response?.status === 401 && !isLoginRequest && hasStoredToken) {
             localStorage.removeItem('aeroops_token');
             window.location.reload(); // Simple way to force logout/redirect to login page
         }

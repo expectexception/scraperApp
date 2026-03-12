@@ -1,6 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
-import type { Scraper, ActiveJob, Stats, HistoryJob, RecentJob, ScraperConfig, SystemMetrics } from '../types';
+import type {
+    Scraper,
+    ActiveJob,
+    Stats,
+    HistoryResponse,
+    RecentJob,
+    ScraperConfig,
+    SystemMetrics,
+    HealthStatus,
+    ManagedJobsResponse,
+    ManagedJob,
+    ScrapedRecordsResponse,
+    SchedulerOverview,
+} from '../types';
 
 export const useSystemMetrics = (enabled: boolean) => {
     return useQuery({
@@ -29,7 +42,7 @@ export const useHealth = () => {
         queryKey: ['health'],
         queryFn: async () => {
             const { data } = await api.get('/health/');
-            return data.status as string;
+            return (data.status === 'healthy' ? 'ok' : 'unreachable') as HealthStatus;
         },
         refetchInterval: 30000,
     });
@@ -59,12 +72,16 @@ export const useStats = (enabled: boolean) => {
     });
 };
 
-export const useHistory = (enabled: boolean, page = 1, limit = 20) => {
+export const useHistory = (enabled: boolean, page = 1, limit = 20, search = '') => {
     return useQuery({
-        queryKey: ['history', page, limit],
+        queryKey: ['history', page, limit, search],
         queryFn: async () => {
-            const { data } = await api.get(`/history/?page=${page}&limit=${limit}`);
-            return data.jobs as HistoryJob[];
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+            if (search.trim()) {
+                params.set('q', search.trim());
+            }
+            const { data } = await api.get(`/history/?${params.toString()}`);
+            return data as HistoryResponse;
         },
         enabled,
     });
@@ -93,6 +110,47 @@ export const useConfigs = (enabled: boolean) => {
     });
 };
 
+export const useManagedJobs = (enabled: boolean, page = 1, limit = 20, search = '', status = '', source = '') => {
+    return useQuery({
+        queryKey: ['managedJobs', page, limit, search, status, source],
+        queryFn: async () => {
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+            if (search.trim()) params.set('q', search.trim());
+            if (status.trim()) params.set('status', status.trim());
+            if (source.trim()) params.set('source', source.trim());
+            const { data } = await api.get(`/jobs/?${params.toString()}`);
+            return data as ManagedJobsResponse;
+        },
+        enabled,
+    });
+};
+
+export const useScrapedRecords = (enabled: boolean, page = 1, limit = 20, search = '', source = '') => {
+    return useQuery({
+        queryKey: ['scrapedRecords', page, limit, search, source],
+        queryFn: async () => {
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+            if (search.trim()) params.set('q', search.trim());
+            if (source.trim()) params.set('source', source.trim());
+            const { data } = await api.get(`/scraped-records/?${params.toString()}`);
+            return data as ScrapedRecordsResponse;
+        },
+        enabled,
+    });
+};
+
+export const useSchedulerOverview = (enabled: boolean) => {
+    return useQuery({
+        queryKey: ['schedulerOverview'],
+        queryFn: async () => {
+            const { data } = await api.get('/scheduler/overview/');
+            return data as SchedulerOverview;
+        },
+        enabled,
+        refetchInterval: 30000,
+    });
+};
+
 export const useScraperActions = () => {
     const queryClient = useQueryClient();
 
@@ -102,6 +160,8 @@ export const useScraperActions = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['stats'] });
+            queryClient.invalidateQueries({ queryKey: ['history'] });
         },
     });
 
@@ -111,6 +171,8 @@ export const useScraperActions = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['stats'] });
+            queryClient.invalidateQueries({ queryKey: ['history'] });
         },
     });
 
@@ -120,6 +182,8 @@ export const useScraperActions = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['history'] });
+            queryClient.invalidateQueries({ queryKey: ['stats'] });
         },
     });
 
@@ -129,6 +193,20 @@ export const useScraperActions = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['configs'] });
+            queryClient.invalidateQueries({ queryKey: ['scrapers'] });
+            queryClient.invalidateQueries({ queryKey: ['schedulerOverview'] });
+        },
+    });
+
+    const updateManagedJob = useMutation({
+        mutationFn: async ({ jobId, job }: { jobId: number; job: Partial<ManagedJob> }) => {
+            const { data } = await api.patch(`/jobs/${jobId}/`, job);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['managedJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['recentJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['stats'] });
         },
     });
 
@@ -137,5 +215,6 @@ export const useScraperActions = () => {
         startAllScrapers,
         cancelJob,
         updateConfig,
+        updateManagedJob,
     };
 };

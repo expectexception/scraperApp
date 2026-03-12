@@ -100,7 +100,7 @@ export const MetricsMonitor: React.FC = () => {
             )}
 
             {!isLoading && (
-                <div className="mt-8 pt-6 border-t border-white/[0.05] grid grid-cols-2 gap-4">
+                <div className="mt-8 pt-6 border-t border-white/[0.05] grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
                         <p className="text-[9px] font-bold text-secondary uppercase tracking-widest mb-1">Process Memory</p>
                         <p className="text-xs font-bold text-white">{formatBytes(metrics?.process.memory_info || 0)}</p>

@@ -100,11 +100,11 @@ export const DashboardPage: React.FC = () => {
                     title={`Active Scrapers (${activeJobs?.length ?? 0})`}
                     subtitle="Live scraper status and management"
                     footer={
-                        <div className="flex justify-between items-center w-full">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
                             <p className="text-xs text-secondary italic">Auto-refreshing every 5 seconds</p>
                             <Button
                                 size="sm"
-                                className="gap-2"
+                                className="gap-2 w-full sm:w-auto"
                                 onClick={() => startAllScrapers.mutate()}
                                 isLoading={startAllScrapers.isPending}
                             >
@@ -115,7 +115,7 @@ export const DashboardPage: React.FC = () => {
                     }
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full min-w-[720px] text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-white/5">
                                     <th className="py-4 px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">ID</th>

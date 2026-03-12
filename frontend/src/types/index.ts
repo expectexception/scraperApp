@@ -3,6 +3,13 @@ export type Scraper = {
     display_name: string
     description: string
     enabled: boolean
+    base_url?: string
+    max_jobs?: number | null
+    max_pages?: number | null
+    timeout?: number
+    retry_count?: number
+    active_jobs?: number
+    schedule?: SchedulerSchedule
 }
 
 export type ActiveJob = {
@@ -32,15 +39,85 @@ export type HistoryJob = {
     execution_time: number | null
     jobs_found: number
     jobs_new: number
+    jobs_updated?: number
+    jobs_duplicate?: number
+    triggered_by?: string
+}
+
+export type PaginationMeta = {
+    page: number
+    page_size: number
+    total: number
+    pages: number
+}
+
+export type HistoryResponse = {
+    jobs: HistoryJob[]
+    pagination: PaginationMeta
 }
 
 export type RecentJob = {
     id: number
+    job_id?: string
     title: string
     company: string
     source: string
     url: string
     last_scraped: string
+    scrape_count?: number
+}
+
+export type ManagedJob = {
+    id: number
+    title: string
+    company: string
+    location: string | null
+    source: string | null
+    status: string
+    url: string
+    operation_type: string | null
+    job_category: string | null
+    sub_role: string | null
+    country_code: string | null
+    is_verified: boolean
+    posted_date: string | null
+    retrieved_date: string
+    description: string | null
+    salary_currency: string
+    is_remote: boolean
+    last_checked: string | null
+}
+
+export type ManagedJobsResponse = {
+    jobs: ManagedJob[]
+    pagination: PaginationMeta
+    summary: {
+        total: number
+        new: number
+        active: number
+        closed: number
+        verified: number
+    }
+    sources: string[]
+}
+
+export type ScrapedRecord = {
+    id: number
+    job_id: string
+    url: string
+    source: string
+    title: string
+    company: string
+    scrape_count: number
+    is_active: boolean
+    first_scraped: string
+    last_scraped: string
+}
+
+export type ScrapedRecordsResponse = {
+    records: ScrapedRecord[]
+    pagination: PaginationMeta
+    sources: string[]
 }
 
 export type ScraperConfig = {
@@ -53,6 +130,25 @@ export type ScraperConfig = {
     schedule_enabled: boolean
     schedule_cron: string
     description: string
+}
+
+export type SchedulerSchedule = {
+    scraper_name: string
+    schedule_enabled: boolean
+    schedule_cron: string
+    task_name?: string
+    celery_beat_available: boolean
+    periodic_task_enabled: boolean
+    periodic_task_exists: boolean
+    last_run?: string | null
+}
+
+export type SchedulerOverview = {
+    celery_beat_available: boolean
+    configured_scrapers: number
+    scheduled_scrapers: number
+    active_periodic_tasks: number
+    schedules: SchedulerSchedule[]
 }
 
 export type SystemMetrics = {
@@ -82,4 +178,4 @@ export type SystemMetrics = {
 
 export type HealthStatus = 'ok' | 'checking' | 'unreachable'
 
-export type View = 'dashboard' | 'history' | 'configs' | 'catalog'
+export type View = 'dashboard' | 'jobs' | 'scraped' | 'history' | 'configs' | 'catalog'
