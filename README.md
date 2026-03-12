@@ -1,21 +1,48 @@
-# Scraper Standalone Project
+# AeroOps Scraper Service
 
-This folder is now the full standalone scraper project.
+Standalone scraper service with a Django API backend and a React + TypeScript frontend.
 
-- Scraping runs here, independent of backend runtime.
-- Backend only reads jobs from DB.
-- Job status verification also runs here.
+## Architecture
+
+- Backend API: Django + DRF on `:8008`
+- Frontend UI: React static build served on `:8501`
+- Scraper jobs: Managed by `manage.py run_scraper` / Celery tasks
 
 ## Setup
 
 ```bash
 cd "/home/rajat/Desktop/AeroOps Intel/scraper-standalone"
 cp .env.example .env
+cp frontend/.env.example frontend/.env
 ```
 
-Set DB values in `.env` to your existing database.
+Recommended environment variables:
 
-## Run
+- `DASHBOARD_USERNAME` (default: `admin`)
+- `DASHBOARD_PASSWORD` (required for protected API actions)
+- `FRONTEND_URL` (default: `http://localhost:8501`)
+
+## Start Services
+
+```bash
+./service.sh start
+./service.sh status
+```
+
+`service.sh` starts:
+
+- Django API via gunicorn (`:8008`)
+- React frontend static server (`:8501`)
+
+## Local Frontend Development
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Scraper CLI Examples
 
 ```bash
 python manage.py run_scraper --list
@@ -23,14 +50,3 @@ python manage.py run_scraper emirates --max-jobs 20 --max-pages 2
 python manage.py run_scraper all --max-jobs 50
 python manage.py verify_job_active --age-days 7 --limit 100
 ```
-
-Or:
-
-```bash
-bash start_scraper_service.sh run_scraper airindia --max-jobs 10
-```
-
-## Notes
-
-- Tables are reused from existing DB (`jobs`, `company_mapping`, scraper tracking tables).
-- No backend scraper app is required anymore.

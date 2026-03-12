@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 217 32% 17%;
+    --accent-foreground: 210 40% 98%;
+    --glass: 222 47% 4% / 0.7;
+    --glass-border: 217 32% 20% / 0.5;
+  }
+
+  body {
+    @apply bg-[#030712] text-white font-sans antialiased selection:bg-primary/30;
+    background-image:
+      radial-gradient(at 0% 0%, hsla(263, 70%, 50%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(217, 32%, 17%, 0.15) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .glass-morphism {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .glass-card {
+    @apply glass-morphism rounded-3xl overflow-hidden transition-all duration-300 hover:border-white/20 hover:bg-white/[0.05];
+  }
+
+  .glass-input {
+    @apply bg-white/[0.02] border border-white/10 rounded-2xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all outline-none backdrop-blur-md;
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

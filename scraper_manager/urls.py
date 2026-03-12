@@ -10,9 +10,15 @@ app_name = 'scraper_manager'
 urlpatterns = [
     # Health check (no auth required)
     path('health/', api.health_check, name='health'),
+
+    # Dashboard auth
+    path('auth/login/', api.dashboard_login, name='dashboard_login'),
     
     # List available scrapers (no auth required)
     path('list/', api.list_available_scrapers, name='list'),
+
+    # List all scraper configs
+    path('configs/', api.scraper_configs, name='configs'),
     
     # Start single scraper
     path('start/', api.start_scraper, name='start'),
@@ -43,4 +49,7 @@ urlpatterns = [
     
     # Update scraper configuration
     path('config/<str:scraper_name>/update/', api.update_scraper_config, name='update_config'),
+
+    # System metrics
+    path('metrics/', api.system_metrics, name='system_metrics'),
 ]

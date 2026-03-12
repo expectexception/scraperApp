@@ -2,24 +2,85 @@
 REST API views for scraper management
 """
 
-import asyncio
 import logging
-import threading
+import os
+import secrets
+import subprocess
+import sys
+import psutil
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.db.models import Count, Avg, Sum
-from django.core.management import call_command
+from django.conf import settings
+from django.core.cache import cache
 
 from .models import ScraperJob, ScraperConfig, ScrapedURL
 from .config import CONFIG
-from .db_manager import DjangoDBManager
-from .scrapers import get_scraper, list_scrapers
+from .scrapers import list_scrapers
 
 # Setup logging
 logger = logging.getLogger(__name__)
+TOKEN_TTL_SECONDS = 60 * 60 * 12  # 12 hours
+
+
+def _dashboard_credentials() -> tuple[str, str | None]:
+    return (
+        getattr(settings, "DASHBOARD_USERNAME", "admin"),
+        getattr(settings, "DASHBOARD_PASSWORD", None),
+    )
+
+
+def _issue_dashboard_token(username: str) -> str:
+    token = secrets.token_urlsafe(32)
+    cache.set(f"dashboard_token:{token}", {"username": username}, TOKEN_TTL_SECONDS)
+    return token
+
+
+def _require_dashboard_auth(request):
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return Response({"error": "Authorization bearer token required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    token = auth_header.split(" ", 1)[1].strip()
+    token_data = cache.get(f"dashboard_token:{token}")
+    if not token_data:
+        return Response({"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED)
+    return token_data.get("username", "dashboard")
+
+
+def _dispatch_scraper_job(scraper_name: str, job_id: int, max_jobs=None, max_pages=None):
+    """Dispatch scraper command in background without Celery dependency."""
+    manage_py = os.path.join(settings.BASE_DIR, "manage.py")
+    cmd = [sys.executable, manage_py, "run_scraper", scraper_name, "--job-id", str(job_id)]
+    if max_jobs:
+        cmd.extend(["--max-jobs", str(max_jobs)])
+    if max_pages:
+        cmd.extend(["--max-pages", str(max_pages)])
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def dashboard_login(request):
+    """Authenticate dashboard user and return short-lived bearer token."""
+    expected_user, expected_password = _dashboard_credentials()
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if not expected_password:
+        return Response({'error': 'Dashboard password is not configured'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    if username != expected_user or password != expected_password:
+        return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    token = _issue_dashboard_token(username)
+    return Response({
+        'token': token,
+        'expires_in': TOKEN_TTL_SECONDS,
+        'username': username,
+    })
 
 
 @api_view(['GET'])
@@ -45,15 +106,45 @@ def list_available_scrapers(request):
     return Response({'scrapers': scrapers})
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def scraper_configs(request):
+    """Return all scraper configs for dashboard editing."""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+
+    configs = {
+        cfg.scraper_name: {
+            'scraper_name': cfg.scraper_name,
+            'is_enabled': cfg.is_enabled,
+            'max_jobs': cfg.max_jobs,
+            'max_pages': cfg.max_pages,
+            'timeout': cfg.timeout,
+            'retry_count': cfg.retry_count,
+            'schedule_enabled': cfg.schedule_enabled,
+            'schedule_cron': cfg.schedule_cron,
+            'description': cfg.description,
+            'last_run': cfg.last_run,
+        }
+        for cfg in ScraperConfig.objects.all()
+    }
+    return Response({'configs': configs})
+
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def start_scraper(request):
     """Start a scraper job"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+
     scraper_name = request.data.get('scraper_name')
     max_jobs = request.data.get('max_jobs')
     max_pages = request.data.get('max_pages')
     
-    logger.info(f"API request to start scraper: {scraper_name} by {request.user.username if request.user else 'anonymous'}")
+    logger.info(f"API request to start scraper: {scraper_name} by {auth_user}")
     
     if not scraper_name:
         logger.warning("Scraper start request missing scraper_name")
@@ -87,7 +178,7 @@ def start_scraper(request):
     scraper_job = ScraperJob.objects.create(
         scraper_name=scraper_name,
         status='pending',
-        triggered_by=request.user.username if request.user else 'api',
+        triggered_by=auth_user,
         parameters={
             'max_jobs': max_jobs,
             'max_pages': max_pages,
@@ -96,34 +187,21 @@ def start_scraper(request):
     
     logger.info(f"Created ScraperJob {scraper_job.id} for {scraper_name}")
     
-    # Delegate to Celery task
     try:
-        from .tasks import run_single_scraper_task
-        
-        # We'll let the task create the ScraperJob record for consistency with scheduled runs
-        # or we could pass the existing scraper_job.id to the task.
-        # Let's pass the id so the API returns the correct tracking ID immediately.
-        
-        run_single_scraper_task.delay(
-            scraper_name, 
-            max_jobs=max_jobs, 
-            max_pages=max_pages,
-            job_id=scraper_job.id # We'll need to update the task to accept this
-        )
-        
-        logger.info(f"Dispatched ScraperJob {scraper_job.id} to Celery")
+        _dispatch_scraper_job(scraper_name, scraper_job.id, max_jobs=max_jobs, max_pages=max_pages)
+        logger.info(f"Dispatched ScraperJob {scraper_job.id} for background execution")
         
         return Response({
             'job_id': scraper_job.id,
             'scraper_name': scraper_name,
             'status': 'pending',
-            'message': 'Scraper job queued in Celery'
+            'message': 'Scraper job queued'
         }, status=status.HTTP_202_ACCEPTED)
         
     except Exception as e:
-        logger.error(f"Failed to dispatch scraper {scraper_name} to Celery: {e}", exc_info=True)
+        logger.error(f"Failed to dispatch scraper {scraper_name}: {e}", exc_info=True)
         scraper_job.status = 'failed'
-        scraper_job.error_message = f"Celery dispatch failed: {str(e)}"
+        scraper_job.error_message = f"Dispatch failed: {str(e)}"
         scraper_job.save()
         
         return Response(
@@ -133,9 +211,13 @@ def start_scraper(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def scraper_status(request, job_id):
     """Get status of a scraper job"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+
     try:
         job = ScraperJob.objects.get(id=job_id)
         
@@ -162,11 +244,14 @@ def scraper_status(request, job_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def scraper_stats(request):
     """Get overall scraper statistics with optimized queries"""
-    from django.core.cache import cache
     from django.db.models import Q
+
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     # Try to get stats from cache (5 min TTL)
     cache_key = 'scraper_stats_summary'
@@ -218,10 +303,14 @@ def scraper_stats(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def scraper_history(request):
     """Get scraper execution history with pagination and filtering"""
     from django.core.paginator import Paginator
+
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     scraper_name = request.query_params.get('scraper')
     page = int(request.query_params.get('page', 1))
@@ -261,9 +350,12 @@ def scraper_history(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def scraper_config(request, scraper_name):
     """Get configuration for a specific scraper"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     if scraper_name not in list_scrapers():
         return Response(
@@ -281,41 +373,48 @@ def scraper_config(request, scraper_name):
             'name': scraper_name,
             'display_name': site_config.get('name', scraper_name),
             'description': site_config.get('description', ''),
-            'enabled': db_config.enabled,
+            'is_enabled': db_config.is_enabled,
             'base_url': site_config.get('base_url', ''),
             'max_jobs': db_config.max_jobs,
             'max_pages': db_config.max_pages,
-            'schedule': db_config.schedule,
+            'timeout': db_config.timeout,
+            'retry_count': db_config.retry_count,
+            'schedule_enabled': db_config.schedule_enabled,
+            'schedule_cron': db_config.schedule_cron,
             'last_run': db_config.last_run,
             'total_runs': db_config.total_runs,
             'successful_runs': db_config.successful_runs,
             'failed_runs': db_config.failed_runs,
-            'total_jobs_found': db_config.total_jobs_found,
         }
     except ScraperConfig.DoesNotExist:
         config_data = {
             'name': scraper_name,
             'display_name': site_config.get('name', scraper_name),
             'description': site_config.get('description', ''),
-            'enabled': site_config.get('enabled', False),
+            'is_enabled': site_config.get('enabled', False),
             'base_url': site_config.get('base_url', ''),
             'max_jobs': scraper_config.get('max_jobs'),
             'max_pages': scraper_config.get('max_pages'),
-            'schedule': None,
+            'timeout': 300,
+            'retry_count': 3,
+            'schedule_enabled': False,
+            'schedule_cron': '',
             'last_run': None,
             'total_runs': 0,
             'successful_runs': 0,
             'failed_runs': 0,
-            'total_jobs_found': 0,
         }
     
     return Response(config_data)
 
 
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def update_scraper_config(request, scraper_name):
     """Update scraper configuration"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     if scraper_name not in list_scrapers():
         return Response(
@@ -327,38 +426,54 @@ def update_scraper_config(request, scraper_name):
     config, created = ScraperConfig.objects.get_or_create(
         scraper_name=scraper_name,
         defaults={
-            'enabled': CONFIG['sites'].get(scraper_name, {}).get('enabled', False),
+            'is_enabled': CONFIG['sites'].get(scraper_name, {}).get('enabled', False),
             'max_jobs': CONFIG['scrapers'].get(scraper_name, {}).get('max_jobs'),
             'max_pages': CONFIG['scrapers'].get(scraper_name, {}).get('max_pages'),
         }
     )
     
     # Update fields
+    if 'is_enabled' in request.data:
+        config.is_enabled = bool(request.data['is_enabled'])
     if 'enabled' in request.data:
-        config.enabled = request.data['enabled']
+        config.is_enabled = bool(request.data['enabled'])
     if 'max_jobs' in request.data:
-        config.max_jobs = request.data['max_jobs']
+        config.max_jobs = request.data['max_jobs'] or None
     if 'max_pages' in request.data:
-        config.max_pages = request.data['max_pages']
-    if 'schedule' in request.data:
-        config.schedule = request.data['schedule']
+        config.max_pages = request.data['max_pages'] or None
+    if 'timeout' in request.data:
+        config.timeout = int(request.data['timeout'])
+    if 'retry_count' in request.data:
+        config.retry_count = int(request.data['retry_count'])
+    if 'schedule_enabled' in request.data:
+        config.schedule_enabled = bool(request.data['schedule_enabled'])
+    if 'schedule_cron' in request.data:
+        config.schedule_cron = (request.data['schedule_cron'] or '').strip()
+    if 'description' in request.data:
+        config.description = request.data['description'] or ''
     
     config.save()
     
     return Response({
         'message': 'Configuration updated successfully',
         'scraper_name': scraper_name,
-        'enabled': config.enabled,
+        'is_enabled': config.is_enabled,
         'max_jobs': config.max_jobs,
         'max_pages': config.max_pages,
-        'schedule': config.schedule,
+        'timeout': config.timeout,
+        'retry_count': config.retry_count,
+        'schedule_enabled': config.schedule_enabled,
+        'schedule_cron': config.schedule_cron,
     })
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def cancel_scraper_job(request, job_id):
     """Cancel a running scraper job"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     try:
         job = ScraperJob.objects.get(id=job_id)
@@ -388,9 +503,12 @@ def cancel_scraper_job(request, job_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def active_jobs(request):
     """Get list of currently running jobs"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     active = ScraperJob.objects.filter(
         status__in=['pending', 'running']
@@ -405,9 +523,12 @@ def active_jobs(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def recent_jobs(request):
     """Get recently scraped jobs"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     limit = int(request.query_params.get('limit', 50))
     source = request.query_params.get('source')
@@ -428,9 +549,12 @@ def recent_jobs(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def run_all_scrapers(request):
     """Start all enabled scrapers"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
     
     max_jobs = request.data.get('max_jobs')
     max_pages = request.data.get('max_pages')
@@ -439,34 +563,25 @@ def run_all_scrapers(request):
     scraper_job = ScraperJob.objects.create(
         scraper_name='all',
         status='pending',
-        triggered_by=request.user.username if request.user else 'api',
+        triggered_by=auth_user,
         parameters={
             'max_jobs': max_jobs,
             'max_pages': max_pages,
         }
     )
     
-    # Start all scrapers via Celery
     try:
-        from .tasks import run_single_scraper_task # Reuse the single task for consistency
-        
-        # Queue the 'all' scraper
-        run_single_scraper_task.delay(
-            'all', 
-            max_jobs=max_jobs, 
-            max_pages=max_pages,
-            job_id=scraper_job.id
-        )
+        _dispatch_scraper_job('all', scraper_job.id, max_jobs=max_jobs, max_pages=max_pages)
         
         return Response({
             'job_id': scraper_job.id,
-            'message': 'All scrapers queued in Celery',
+            'message': 'All scrapers queued',
             'status': 'pending'
         }, status=status.HTTP_202_ACCEPTED)
         
     except Exception as e:
         scraper_job.status = 'failed'
-        scraper_job.error_message = f"Celery dispatch failed: {str(e)}"
+        scraper_job.error_message = f"Dispatch failed: {str(e)}"
         scraper_job.save()
         
         return Response(
@@ -497,3 +612,42 @@ def health_check(request):
             'status': 'unhealthy',
             'error': str(e)
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def system_metrics(request):
+    """Get real-time system metrics (CPU, RAM, Disk)"""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+        
+    try:
+        metrics = {
+            'cpu': {
+                'percent': psutil.cpu_percent(interval=None),
+                'count': psutil.cpu_count(),
+                'freq': psutil.cpu_freq().current if psutil.cpu_freq() else 0,
+            },
+            'memory': {
+                'total': psutil.virtual_memory().total,
+                'available': psutil.virtual_memory().available,
+                'percent': psutil.virtual_memory().percent,
+                'used': psutil.virtual_memory().used,
+            },
+            'disk': {
+                'total': psutil.disk_usage('/').total,
+                'used': psutil.disk_usage('/').used,
+                'free': psutil.disk_usage('/').free,
+                'percent': psutil.disk_usage('/').percent,
+            },
+            'process': {
+                'memory_info': psutil.Process().memory_info().rss,
+                'threads': psutil.Process().num_threads(),
+            },
+            'timestamp': timezone.now().isoformat()
+        }
+        return Response(metrics)
+    except Exception as e:
+        logger.error(f"Failed to fetch system metrics: {e}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
