@@ -66,9 +66,6 @@ class AbsjetsScraper(BaseScraper):
                         if await self.is_url_already_scraped(url):
                             continue
 
-                        if not self.should_process_job(title):
-                            continue
-
                         if await self.is_url_already_scraped(url):
                             continue
 

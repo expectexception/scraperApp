@@ -804,7 +804,7 @@ class BaseScraper:
             'politique', 'rejoindre', 'notre-equipe', 'equipe', 'team',
             'support', 'feedback', 'blog', 'press', 'media', 'investor',
             'compagnie', 'fleet', 'services', 'network', 'destinations',
-            'newsletter', 'sitemap', 'accessibility', 'flight', 'booking', 
+            'newsletter', 'sitemap', 'accessibility', 'booking', 
             'check-in', 'status', 'manage', 'travel', 'trip', 'plan', 'reserve',
             'hotel', 'car', 'offer', 'destination', 'luggage', 'baggage'
         ]
@@ -817,7 +817,12 @@ class BaseScraper:
                 
             if any(x in u for x in ["job", "vacancy", "position", "career", "opening"]):
                 # Keep if title looks like a real job (e.g. contains "Pilot", "Engineer")
-                job_keywords = ['pilot', 'engineer', 'officer', 'captain', 'attendant', 'crew', 'manager', 'technician', 'analyst', 'developer', 'staff', 'mecanicien', 'mechanic']
+                job_keywords = [
+                    'pilot', 'engineer', 'officer', 'captain', 'attendant', 'crew', 
+                    'manager', 'technician', 'analyst', 'developer', 'staff', 
+                    'mecanicien', 'mechanic', 'dispatcher', 'ops', 'control', 
+                    'coordinator', 'specialist', 'planner', 'duty', 'scheduler'
+                ]
                 if any(jk in t for jk in job_keywords):
                     return True
             return False

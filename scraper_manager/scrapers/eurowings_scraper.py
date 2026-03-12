@@ -51,28 +51,70 @@ class EurowingsScraper(BaseScraper):
 
                 # Wait for results to load
                 try:
-                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=45000)
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=30000)
                 except:
-                    logger.warning(f"[{self.site_key}] No job links found after wait.")
+                    # Try scrolling to trigger load
+                    await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    await page.wait_for_timeout(3000)
+                    try:
+                        await page.wait_for_selector('a.jobad-link-wrapper', timeout=15000)
+                    except:
+                        logger.warning(f"[{self.site_key}] No job links found after wait/scroll.")
 
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
-                        .map(a => ({t: a.title || a.innerText.trim(), h: a.href}))
-                        .filter(a => a.h && a.h.includes('job'))
-                }''')
+                # Locate all job cards
+                job_cards = await page.locator('a.jobad-link-wrapper').all()
+                logger.info(f"[{self.site_key}] Found {len(job_cards)} potential job cards")
                 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
-                
-                seen_urls = set()
                 initial_jobs = []
-                for link in links:
-                    href = link['h']
-                    title = link['t']
-                    if href and href not in seen_urls and self.is_job_link(title, href):
-                        seen_urls.add(href)
-                        initial_jobs.append({'title': title, 'url': href})
+                seen_urls = set()
                 
-                logger.info(f"[{self.site_key}] Found {len(initial_jobs)} potential jobs. Applying pre-filter...")
+                for card in job_cards:
+                    try:
+                        href = await card.get_attribute('href')
+                        if not href or href in seen_urls:
+                            continue
+                            
+                        # Extract clean title from h2
+                        title_el = card.locator('h2')
+                        if not await title_el.count():
+                            # Fallback to direct text if h2 missing
+                            title = await card.inner_text()
+                            title = title.split('\n')[0].strip() # Take first line
+                        else:
+                            title = await title_el.inner_text()
+                        
+                        title = title.strip() if title else "Unknown Title"
+                        
+                        # Extract company and location
+                        company_el = card.locator('.company-name')
+                        company = await company_el.inner_text() if await company_el.count() else self.company_name
+                        
+                        # Many Lufthansa portal sites have location in .jobad-meta-item > span:nth-child(2)
+                        location = "Germany" # Default
+                        loc_el = card.locator('.jobad-meta-item').first
+                        if await loc_el.count():
+                            loc_spans = await loc_el.locator('span').all()
+                            if len(loc_spans) >= 2:
+                                location = await loc_spans[1].inner_text()
+                            else:
+                                location = await loc_el.inner_text()
+
+                        # Basic link cleaning
+                        if not href.startswith('http'):
+                            href = f"https://apply.lufthansagroup.careers/{href}" if href.startswith('/') else f"https://apply.lufthansagroup.careers/index.php{href}"
+                        
+                        if self.is_job_link(title, href):
+                            seen_urls.add(href)
+                            initial_jobs.append({
+                                'title': title, 
+                                'url': href,
+                                'company': company.strip(),
+                                'location': location.strip()
+                            })
+                    except Exception as e:
+                        logger.debug(f"[{self.site_key}] Skip card due to error: {e}")
+
+                logger.info(f"[{self.site_key}] {len(initial_jobs)} jobs passed link checks. Applying pre-filter...")
                 
                 # PRE-FILTER: Filter by title first to skip irrelevant roles COMPLETELY
                 matched_initial, _, _ = self.apply_title_filter(initial_jobs)
@@ -87,27 +129,29 @@ class EurowingsScraper(BaseScraper):
                     title = j_initial['title']
                         
                     try:
-                        if not self.should_process_job(title):
-                            continue
-
                         if await self.is_url_already_scraped(url):
                             continue
 
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
                         # Increased timeout for stability
-                        await detail_page.goto(url, wait_until='load', timeout=60000)
-                        await detail_page.wait_for_timeout(2000)
+                        try:
+                            await detail_page.goto(url, wait_until='domcontentloaded', timeout=45000)
+                            await detail_page.wait_for_timeout(2000)
+                        except Exception as e:
+                            logger.warning(f"[{self.site_key}] Detail page load timeout for {url}: {e}")
+                            await detail_page.close()
+                            continue
                         
                         real_title = title
                         h1 = detail_page.locator('h1').first
                         if await h1.is_visible():
                             extracted = await h1.inner_text()
                             if len(extracted) > 5:
-                                real_title = extracted
+                                real_title = extracted.strip()
 
                         description = ""
-                        desc_selectors = ['.jobad-content', '.job-description', '.content', 'main']
+                        desc_selectors = ['.jobad-content', '.job-description', 'div[id*="jobad"]', 'main']
                         for selector in desc_selectors:
                             elem = detail_page.locator(selector).first
                             if await elem.is_visible():
@@ -117,21 +161,20 @@ class EurowingsScraper(BaseScraper):
                         if not description:
                             description = await self.extract_description_from_page(detail_page)
 
-                        location = "Germany"
                         posted_date = await self.extract_posted_date_from_page(detail_page)
                         
-                        job_id = f"eurowings_{i+1}"
-                        match = re.search(r'id=(\d+)', url)
-                        if not match:
-                            match = re.search(r'job/(\d+)', url)
-                        if match:
-                            job_id = f"eurowings_{match.group(1)}"
+                        # Robust Job ID from URL
+                        job_id_match = re.search(r'id=(\d+)', url)
+                        if not job_id_match:
+                            job_id_match = re.search(r'job/(\d+)', url)
+                        
+                        final_id = f"eurowings_{job_id_match.group(1)}" if job_id_match else f"eurowings_{hash(url)}"
 
                         job = get_job_dict(
-                            job_id=job_id,
+                            job_id=final_id,
                             title=real_title,
-                            company=self.company_name,
-                            location=location,
+                            company=j_initial['company'],
+                            location=j_initial['location'],
                             url=url,
                             source_url=self.base_url,
                             description=description,
