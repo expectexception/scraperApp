@@ -21,6 +21,25 @@ Recommended environment variables:
 - `DASHBOARD_USERNAME` (default: `admin`)
 - `DASHBOARD_PASSWORD` (required for protected API actions)
 - `FRONTEND_URL` (default: `http://localhost:8501`)
+- `DATABASE_ENGINE` (`mongodb` recommended)
+- `MONGODB_URI` (use same URI as backend)
+- `MONGODB_NAME` (use same DB name as backend)
+
+## MongoDB Configuration (Recommended)
+
+Use the same MongoDB database as `aeroScrap_backend` so scraped jobs are visible to backend APIs.
+
+```env
+DATABASE_ENGINE=mongodb
+MONGODB_URI=<same value as backendMain/.env MONGODB_URI>
+MONGODB_NAME=<same value as backendMain/.env MONGODB_NAME>
+```
+
+Install dependencies after updating requirements:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Start Services
 

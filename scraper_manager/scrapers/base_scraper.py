@@ -8,6 +8,7 @@ import json
 import random
 import logging
 import re
+import os
 from pathlib import Path
 from typing import List, Dict, Optional
 from datetime import datetime, timedelta
@@ -96,8 +97,13 @@ class BaseScraper:
         except Exception:
             self.ua = None
         
-        # Filter settings - ALWAYS ENABLED (Default to True unless explicitly disabled)
-        self.use_filter = scraper_settings.get('use_filter', True)
+        # Filter settings with env override for operational control.
+        # SCRAPER_USE_FILTER=0 disables title filtering globally.
+        env_use_filter = os.environ.get('SCRAPER_USE_FILTER')
+        if env_use_filter is None:
+            self.use_filter = scraper_settings.get('use_filter', True)
+        else:
+            self.use_filter = str(env_use_filter).strip().lower() in ('1', 'true', 'yes', 'y', 'on')
         self.filter_manager = None
         
         if self.use_filter and JobFilterManager:
@@ -107,7 +113,6 @@ class BaseScraper:
                 # base_scraper.py is in scraper_manager/scrapers/
                 # filter_title.json is in scraper_manager/
                 # So we go up one level from current_dir
-                import os
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 filter_path = os.path.join(os.path.dirname(current_dir), filter_file)
                 

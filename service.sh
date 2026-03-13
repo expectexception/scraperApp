@@ -2,11 +2,24 @@
 # AeroOps Intelligence | Production Service Management Script
 # Handle lifecycle of Django API and React frontend
 
-set -e
+set -euo pipefail
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VIRTUAL_ENV="$PROJECT_DIR/.venv"
+WORKSPACE_DIR="$(cd "$PROJECT_DIR/.." && pwd)"
+
+# Prefer project-local virtualenv, fallback to workspace virtualenv.
+if [ -d "$PROJECT_DIR/.venv" ]; then
+    VIRTUAL_ENV="$PROJECT_DIR/.venv"
+elif [ -d "$WORKSPACE_DIR/.venv" ]; then
+    VIRTUAL_ENV="$WORKSPACE_DIR/.venv"
+else
+    VIRTUAL_ENV="$PROJECT_DIR/.venv"
+fi
+
+PYTHON_BIN="$VIRTUAL_ENV/bin/python"
+PIP_BIN="$VIRTUAL_ENV/bin/pip"
+GUNICORN_BIN="$VIRTUAL_ENV/bin/gunicorn"
 PID_DIR="$PROJECT_DIR/pids"
 LOG_DIR="$PROJECT_DIR/logs"
 
@@ -96,9 +109,15 @@ start() {
         exit 1
     fi
 
-    echo -n "Applying database migrations... "
-    (cd "$PROJECT_DIR" && "$VIRTUAL_ENV/bin/python" manage.py migrate --noinput >/dev/null)
-    echo -e "${GREEN}DONE${NC}"
+    DB_ENGINE="$(grep -E '^DATABASE_ENGINE=' "$PROJECT_DIR/.env" 2>/dev/null | head -n1 | cut -d'=' -f2- | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]' || true)"
+    DB_ENGINE="${DB_ENGINE:-mongodb}"
+    if [ "${DB_ENGINE:-mongodb}" = "mongodb" ]; then
+        echo -e "Skipping SQL migrations for MongoDB backend."
+    else
+        echo -n "Applying database migrations... "
+        (cd "$PROJECT_DIR" && "$PYTHON_BIN" manage.py migrate --noinput >/dev/null)
+        echo -e "${GREEN}DONE${NC}"
+    fi
 
     wait_for_port_release "$DJANGO_PORT"
     
@@ -107,7 +126,7 @@ start() {
         echo -e "${RED}Django (Gunicorn) is already running (PID: $(cat "$DJANGO_PID"))${NC}"
     else
         echo -n "Starting Django API on port $DJANGO_PORT... "
-        gunicorn scraper_service.wsgi:application \
+        "$GUNICORN_BIN" scraper_service.wsgi:application \
             --bind 0.0.0.0:$DJANGO_PORT \
             --workers 3 \
             --daemon \
@@ -139,7 +158,7 @@ start() {
         echo -e "${RED}Frontend is already running (PID: $(cat "$FRONTEND_PID"))${NC}"
     else
         echo -n "Starting React frontend on port $FRONTEND_PORT... "
-        nohup "$VIRTUAL_ENV/bin/python" -m http.server "$FRONTEND_PORT" \
+        nohup "$PYTHON_BIN" -m http.server "$FRONTEND_PORT" \
             --directory "$FRONTEND_DIST_DIR" \
             > "$LOG_DIR/frontend.log" 2>&1 &
         echo $! > "$FRONTEND_PID"

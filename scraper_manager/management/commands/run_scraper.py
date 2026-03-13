@@ -242,7 +242,7 @@ class Command(BaseCommand):
             self.stdout.write(f'  Duration: {scraper_job.execution_time:.1f}s')
 
             # Fire completion webhook
-            dispatch_event('completed', {
+            await sync_to_async(dispatch_event)('completed', {
                 'scraper_name': scraper_name,
                 'jobs_found': scraper_job.jobs_found,
                 'jobs_new': scraper_job.jobs_new,
@@ -279,7 +279,7 @@ class Command(BaseCommand):
             traceback.print_exc()
 
             # Fire failure webhook
-            dispatch_event('failed', {
+            await sync_to_async(dispatch_event)('failed', {
                 'scraper_name': scraper_name,
                 'error_message': str(e),
             })

@@ -1,10 +1,24 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
+
+# If scraper .env does not include MongoDB credentials, try backend .env so
+# both services can share the same database without duplicated config.
+BACKEND_ENV_PATH = BASE_DIR.parent / "aeroScrap_backend" / "backendMain" / ".env"
+current_mongo_uri = (os.environ.get("MONGODB_URI") or "").strip()
+if BACKEND_ENV_PATH.exists() and (not current_mongo_uri or "<db_password>" in current_mongo_uri):
+    backend_env = dotenv_values(BACKEND_ENV_PATH)
+    backend_mongo_uri = (backend_env.get("MONGODB_URI") or "").strip()
+    backend_mongo_name = (backend_env.get("MONGODB_NAME") or backend_env.get("DB_NAME") or "").strip()
+
+    if backend_mongo_uri:
+        os.environ["MONGODB_URI"] = backend_mongo_uri
+    if backend_mongo_name and not os.environ.get("MONGODB_NAME"):
+        os.environ["MONGODB_NAME"] = backend_mongo_name
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "scraper-service-dev-key")
 DEBUG = os.environ.get("DEBUG", "1") == "1"
@@ -48,38 +62,30 @@ ROOT_URLCONF = "scraper_service.urls"
 TEMPLATES = []
 WSGI_APPLICATION = "scraper_service.wsgi.application"
 
-# Database Configuration - PostgreSQL with SQLite fallback
-if os.environ.get('DB_HOST'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'aeroops_db'),
-            'USER': os.environ.get('DB_USER', 'aeroops_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-            'OPTIONS': {
-                'connect_timeout': 10,
-                'options': '-c statement_timeout=30000',  # 30 seconds
-            },
-            'CONN_MAX_AGE': 600,  # Connection pooling: 10 minutes
-            'ATOMIC_REQUESTS': True,  # Wrap each request in a transaction
-            'DISABLE_SERVER_SIDE_CURSORS': True,  # Better for connection pooling
-        }
+# Database Configuration (MongoDB only)
+DATABASE_ENGINE = os.environ.get("DATABASE_ENGINE", "mongodb").strip().lower()
+if DATABASE_ENGINE not in {"mongodb", "mongo", "django_mongodb_backend"}:
+    raise ValueError("Only MongoDB is supported. Set DATABASE_ENGINE=mongodb.")
+
+mongodb_uri = os.environ.get("MONGODB_URI") or os.environ.get("MONGO_URI") or os.environ.get("DB_HOST")
+mongodb_name = os.environ.get("MONGODB_NAME") or os.environ.get("DB_NAME") or "aeroops_db"
+
+if not mongodb_uri:
+    raise ValueError("MONGODB_URI is required when DATABASE_ENGINE=mongodb.")
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django_mongodb_backend",
+        "HOST": mongodb_uri,
+        "NAME": mongodb_name,
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.environ.get("DJANGO_TIME_ZONE", "Asia/Kolkata")
 USE_I18N = True
 USE_TZ = True
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
 
 LOGGING = {
     "version": 1,
