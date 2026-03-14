@@ -17,7 +17,7 @@ AUTO_SCHEDULE = {
         'enabled': True,
         'schedule': '0 */6 * * *',  # Every 6 hours
         'description': 'Run high-priority scrapers (Signature, LinkedIn, AviationJobSearch)',
-        'scrapers': ['signature',  'aviationjobsearch'],
+        'scrapers': ['signature' ],
         'max_jobs': 100,
     },
     'run_specialty_scrapers': {
@@ -660,10 +660,10 @@ SITES = {
     },
     'cabotaviation': {
         'name': 'Cabot Aviation',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://cabotaviation.com',
         'jobs_url': 'https://cabotaviation.com/',
-        'description': 'Cabot Aviation',
+        'description': 'Cabot Aviation (disabled for official-employer-only runs)',
     },
     'capitalairlines': {
         'name': 'Beijing Capital Airlines',
@@ -960,10 +960,10 @@ SITES = {
     },
     'aap': {
         'name': 'AAP Aviation',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://jobs.aapaviation.com',
         'jobs_url': 'https://jobs.aapaviation.com/jobs',
-        'description': 'AAP Aviation job board',
+        'description': 'AAP Aviation job board (disabled for official-employer-only runs)',
     },
     'indigo': {
         'name': 'IndiGo Airlines',
@@ -1014,24 +1014,24 @@ SITES = {
     },
     'jmc': {
         'name': 'JMC Aviation',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://www.jmc-aviation.com',
         'jobs_url': 'https://www.jmc-aviation.com/jobs/',
-        'description': 'Aviation recruitment specialist'
+        'description': 'Aviation recruitment specialist (disabled for official-employer-only runs)'
     },
     'iata': {
         'name': 'IATA',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://iata.csod.com',
         'jobs_url': 'https://iata.csod.com/ux/ats/careersite/1/home?c=iata',
-        'description': 'International Air Transport Association'
+        'description': 'International Air Transport Association (disabled for official-employer-only runs)'
     },
     'avianation': {
         'name': 'AviaNation',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://www.avianation.com',
         'jobs_url': 'https://www.avianation.com/',
-        'description': 'Aviation jobs portal'
+        'description': 'Aviation jobs portal (disabled for official-employer-only runs)'
     },
     'wizzair': {
         'name': 'Wizz Air',
@@ -1049,10 +1049,10 @@ SITES = {
     },
     'nbaa': {
         'name': 'NBAA (National Business Aviation Association)',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://jobs.nbaa.org',
         'jobs_url': 'https://jobs.nbaa.org/jobs/',
-        'description': 'NBAA Jobs'
+        'description': 'NBAA Jobs (disabled for official-employer-only runs)'
     },
     'starair': {
         'name': 'Star Air',

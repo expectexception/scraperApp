@@ -14,6 +14,7 @@ from .models import ScrapedURL, ScraperJob
 from jobs.models import Job, CompanyMapping
 from curl_cffi import requests as curl_requests
 from .company_manager import CompanyManager
+from .category_taxonomy import infer_job_category
 import hashlib
 
 # Setup logging
@@ -384,6 +385,14 @@ class DjangoDBManager:
             
             # Infer operation type from job data
             operation_type = self._infer_operation_type(title, company, description)
+            job_category = infer_job_category(
+                title=title,
+                description=description,
+                primary_category=job_data.get('primary_category'),
+                matched_categories=job_data.get('matched_categories'),
+                matched_filter_types=job_data.get('matched_filter_types'),
+                existing_category=job_data.get('job_category'),
+            )
             
             # 1. Normalize company name using CompanyManager
             mapped_company = company
@@ -410,6 +419,7 @@ class DjangoDBManager:
                 'source': source,
                 'country_code': country_code,
                 'operation_type': operation_type,
+                'job_category': job_category,
                 'raw_json': job_data,
                 'retrieved_date': timezone.now(),
                 'salary_min': job_data.get('salary_min'),

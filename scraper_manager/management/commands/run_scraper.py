@@ -13,6 +13,7 @@ from django.utils import timezone
 from asgiref.sync import sync_to_async
 from scraper_manager.models import ScraperJob, ScraperConfig
 from scraper_manager.config import CONFIG
+from scraper_manager.category_taxonomy import normalize_job_categories
 from scraper_manager.db_manager import DjangoDBManager
 from scraper_manager.scrapers import get_scraper, list_scrapers
 from scraper_manager.webhook_notify import dispatch_event
@@ -50,6 +51,11 @@ class Command(BaseCommand):
             '--job-id',
             type=int,
             help='Pre-created ScraperJob ID'
+        )
+        parser.add_argument(
+            '--job-categories',
+            nargs='*',
+            help='Optional canonical job categories to keep during filtering',
         )
     
     def handle(self, *args, **options):
@@ -143,6 +149,7 @@ class Command(BaseCommand):
             effective_max_pages = config.max_pages
             
         logger.info(f"Effective limits: max_jobs={effective_max_jobs}, max_pages={effective_max_pages}")
+        selected_job_categories = normalize_job_categories(options.get('job_categories'))
         
         # Update in-memory config for scrapers that read CONFIG directly (legacy support)
         if effective_max_jobs is not None:
@@ -175,6 +182,7 @@ class Command(BaseCommand):
                 parameters={
                     'max_jobs': options.get('max_jobs'),
                     'max_pages': options.get('max_pages'),
+                    'job_categories': selected_job_categories,
                 }
             )
         
@@ -188,6 +196,7 @@ class Command(BaseCommand):
             
             # Get scraper instance
             CONFIG['job_id'] = scraper_job.id
+            CONFIG['selected_job_categories'] = selected_job_categories
             scraper = get_scraper(scraper_name, CONFIG, db_manager=db_manager)
             logger.info(f"Created scraper instance for {scraper_name}")
             

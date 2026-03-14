@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from asgiref.sync import sync_to_async
 from fake_useragent import UserAgent
 from curl_cffi import requests as curl_requests
+from ..category_taxonomy import matches_selected_categories, normalize_job_categories
 
 # Import filter manager
 try:
@@ -129,6 +130,8 @@ class BaseScraper:
             except Exception as e:
                 logger.error(f"[{site_key}] Failed to load filter: {e}")
 
+            self.selected_job_categories = normalize_job_categories(config.get('selected_job_categories'))
+
     async def update_progress(self, current: int, total: int):
         """Update job progress in database"""
         if self.job_id:
@@ -177,8 +180,29 @@ class BaseScraper:
         if not self.use_filter or not self.filter_manager:
             # No filtering - return all jobs as matched
             return jobs, [], {'total': len(jobs), 'matched': len(jobs), 'rejected': 0, 'by_category': {}}
-        
-        return self.filter_manager.filter_jobs(jobs)
+
+        matched_jobs, rejected_jobs, stats = self.filter_manager.filter_jobs(jobs)
+        if not self.selected_job_categories:
+            return matched_jobs, rejected_jobs, stats
+
+        selected_matches = []
+        category_rejected = []
+        for job in matched_jobs:
+            if matches_selected_categories(
+                self.selected_job_categories,
+                primary_category=job.get('primary_category'),
+                matched_categories=job.get('matched_categories'),
+                matched_filter_types=job.get('matched_filter_types'),
+            ):
+                selected_matches.append(job)
+            else:
+                job['rejection_reason'] = 'category_filter'
+                category_rejected.append(job)
+
+        stats['matched'] = len(selected_matches)
+        stats['rejected'] = len(rejected_jobs) + len(category_rejected)
+        stats['selected_categories'] = self.selected_job_categories
+        return selected_matches, rejected_jobs + category_rejected, stats
 
     def should_process_job(self, title: str) -> bool:
         """
@@ -196,6 +220,15 @@ class BaseScraper:
         matches, categories, score, details = self.filter_manager.matches_filter(title)
         if not matches:
             logger.info(f"[{self.site_key}] Skipping job: '{title}' (Title doesn't match filter)")
+            return False
+
+        if self.selected_job_categories and not matches_selected_categories(
+            self.selected_job_categories,
+            primary_category=max(details.get('category_scores', {}).items(), key=lambda item: item[1])[0] if details.get('category_scores') else None,
+            matched_categories=[cat.get('display_name') for cat in categories],
+            matched_filter_types=[cat.get('filter_type') for cat in categories],
+        ):
+            logger.info(f"[{self.site_key}] Skipping job: '{title}' (Outside selected category filters)")
             return False
             
         return True
@@ -284,6 +317,8 @@ class BaseScraper:
             print("🔍 Title filtering: ENABLED")
             if self.filter_manager:
                 print(f"   Loaded {len(self.filter_manager.all_keywords)} keywords in {len(self.filter_manager.filters)} categories")
+            if self.selected_job_categories:
+                print(f"   Selected categories: {', '.join(self.selected_job_categories)}")
         else:
             print("🔍 Title filtering: DISABLED")
         

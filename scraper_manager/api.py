@@ -25,6 +25,7 @@ from .models import ScraperJob, ScraperConfig, ScrapedURL
 from .config import CONFIG
 from .scrapers import list_scrapers
 from jobs.models import Job
+from .category_taxonomy import normalize_job_categories
 
 try:
     from django_celery_beat.models import PeriodicTask, CrontabSchedule
@@ -71,7 +72,7 @@ def _require_dashboard_auth(request):
     return token_data.get("username", "dashboard")
 
 
-def _dispatch_scraper_job(scraper_name: str, job_id: int, max_jobs=None, max_pages=None) -> int:
+def _dispatch_scraper_job(scraper_name: str, job_id: int, max_jobs=None, max_pages=None, job_categories=None) -> int:
     """Dispatch scraper command in background without Celery dependency."""
     manage_py = os.path.join(settings.BASE_DIR, "manage.py")
     cmd = [sys.executable, manage_py, "run_scraper", scraper_name, "--job-id", str(job_id)]
@@ -79,6 +80,10 @@ def _dispatch_scraper_job(scraper_name: str, job_id: int, max_jobs=None, max_pag
         cmd.extend(["--max-jobs", str(max_jobs)])
     if max_pages:
         cmd.extend(["--max-pages", str(max_pages)])
+    normalized_categories = normalize_job_categories(job_categories)
+    if normalized_categories:
+        cmd.append("--job-categories")
+        cmd.extend(normalized_categories)
     process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return process.pid
 
@@ -277,6 +282,7 @@ def start_scraper(request):
     scraper_name = request.data.get('scraper_name')
     max_jobs = request.data.get('max_jobs')
     max_pages = request.data.get('max_pages')
+    job_categories = normalize_job_categories(request.data.get('job_categories'))
     
     logger.info(f"API request to start scraper: {scraper_name} by {auth_user}")
     
@@ -325,6 +331,7 @@ def start_scraper(request):
         parameters={
             'max_jobs': max_jobs,
             'max_pages': max_pages,
+            'job_categories': job_categories,
         }
     )
     scraper_job_id = _job_pk(scraper_job)
@@ -332,7 +339,13 @@ def start_scraper(request):
     logger.info(f"Created ScraperJob {scraper_job_id} for {scraper_name}")
     
     try:
-        process_pid = _dispatch_scraper_job(scraper_name, scraper_job_id, max_jobs=max_jobs, max_pages=max_pages)
+        process_pid = _dispatch_scraper_job(
+            scraper_name,
+            scraper_job_id,
+            max_jobs=max_jobs,
+            max_pages=max_pages,
+            job_categories=job_categories,
+        )
         scraper_job.pid = process_pid
         scraper_job.save(update_fields=['pid'])
         logger.info(f"Dispatched ScraperJob {scraper_job_id} for background execution")
@@ -932,6 +945,7 @@ def run_all_scrapers(request):
     
     max_jobs = request.data.get('max_jobs')
     max_pages = request.data.get('max_pages')
+    job_categories = normalize_job_categories(request.data.get('job_categories'))
     
     # Create job
     scraper_job = ScraperJob.objects.create(
@@ -941,12 +955,19 @@ def run_all_scrapers(request):
         parameters={
             'max_jobs': max_jobs,
             'max_pages': max_pages,
+            'job_categories': job_categories,
         }
     )
     scraper_job_id = _job_pk(scraper_job)
     
     try:
-        process_pid = _dispatch_scraper_job('all', scraper_job_id, max_jobs=max_jobs, max_pages=max_pages)
+        process_pid = _dispatch_scraper_job(
+            'all',
+            scraper_job_id,
+            max_jobs=max_jobs,
+            max_pages=max_pages,
+            job_categories=job_categories,
+        )
         scraper_job.pid = process_pid
         scraper_job.save(update_fields=['pid'])
         

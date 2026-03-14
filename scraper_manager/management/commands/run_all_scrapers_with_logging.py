@@ -36,6 +36,11 @@ class Command(BaseCommand):
             nargs='*',
             help='Specific scrapers to run (default: all enabled)',
         )
+        parser.add_argument(
+            '--job-categories',
+            nargs='*',
+            help='Optional canonical job categories to keep during filtering',
+        )
 
     def handle(self, *args, **options):
         # Setup logging
@@ -99,6 +104,8 @@ class Command(BaseCommand):
 
                 if options['max_jobs']:
                     call_kwargs['max_jobs'] = options['max_jobs']
+                if options['job_categories']:
+                    call_kwargs['job_categories'] = options['job_categories']
 
                 # Run the scraper
                 result_code = call_command('run_scraper', *call_args, **call_kwargs)
