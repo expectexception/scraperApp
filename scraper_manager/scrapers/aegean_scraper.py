@@ -94,7 +94,9 @@ class AegeanScraper(BaseScraper):
                     if l['href'] not in unique_links:
                         unique_links[l['href']] = l['title']
 
-                print(f"✓ Found {len(unique_links)} jobs")
+                print(f"✓ Found {len(unique_links)} jobs:")
+                for i, (href, title) in enumerate(unique_links.items(), 1):
+                    print(f"  [{i}] {title}")
 
                 if not unique_links:
                     return jobs

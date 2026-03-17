@@ -28,20 +28,35 @@ class BuzzScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             
             try:
-                logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
+                # Navigate directly to search results for "Buzz"
+                # This is more robust than trying to interact with the SPA search box
+                target_url = "https://careers.ryanair.com/jobs/?title=Buzz&ryanair-jobs-department=&ryanair-jobs-location="
+                logger.info(f"[{self.site_key}] Navigating directly to: {target_url}")
                 
                 try:
-                    await page.goto(self.base_url, wait_until='networkidle', timeout=60000)
-                    await self.random_delay(2, 4)
+                    await page.goto(target_url, wait_until='networkidle', timeout=60000)
+                    await self.random_delay(3, 5)
                 except Exception as e:
-                    logger.error(f"[{self.site_key}] Navigation failed: {e}")
+                    logger.error(f"[{self.site_key}] Navigation to results failed: {e}")
                     return []
+
+                # Wait for the job list to load
+                try:
+                    await page.wait_for_selector('li.job, .content__jobs', timeout=15000)
+                except Exception:
+                    logger.warning(f"[{self.site_key}] Timeout waiting for job list")
+
+                # Scroll to ensure all jobs are loaded
+                await self.scroll_to_bottom(page)
+                await self.random_delay(2, 3)
                 
-                # We extract links that appear in the Ryanair job portal
+                # We extract links using the specific selector for Ryanair portal results
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && (a.h.includes('job') || a.h.includes('career') || a.h.includes('vacanc') || a.h.includes('workable')))
+                    const jobElements = document.querySelectorAll('li.job h2.job__title a, a.job-title, .job-item a');
+                    return Array.from(jobElements).map(a => ({
+                        t: a.innerText.trim(), 
+                        h: a.href
+                    }));
                 }''')
                 
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
@@ -54,6 +69,8 @@ class BuzzScraper(BaseScraper):
                     if href and href not in seen_urls and self.is_job_link(title, href):
                         seen_urls.add(href)
                         job_urls.append((href, title))
+                
+                logger.info(f"[{self.site_key}] Found {len(job_urls)} relevant job links")
                 
                 for i, (url, title) in enumerate(job_urls):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
@@ -79,12 +96,14 @@ class BuzzScraper(BaseScraper):
                                 real_title = extracted
 
                         description = ""
-                        desc_loc = detail_page.locator('main, article, .job-description, .content, [data-ui="job-description"]')
                         for loc in ['main', 'article', '.job-description', '.content', '[data-ui="job-description"]']:
                             elem = detail_page.locator(loc).first
-                            if await elem.is_visible():
-                                description = await elem.inner_html()
-                                break
+                            try:
+                                if await elem.is_visible():
+                                    description = await elem.inner_html()
+                                    break
+                            except:
+                                continue
                                 
                         if not description:
                             description = await self.extract_description_from_page(detail_page)

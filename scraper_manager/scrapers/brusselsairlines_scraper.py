@@ -55,7 +55,10 @@ class BrusselsAirlinesScraper(BaseScraper):
 
                 links = await page.evaluate('''() => {
                     return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
-                        .map(a => ({t: a.title || a.innerText.trim(), h: a.href}))
+                        .map(a => {
+                            let h2 = a.querySelector('h2');
+                            return {t: h2 ? h2.innerText.trim() : (a.title || a.innerText.trim()), h: a.href};
+                        })
                         .filter(a => a.h && a.h.includes('job'))
                 }''')
                 

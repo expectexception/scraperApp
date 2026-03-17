@@ -57,6 +57,11 @@ class Command(BaseCommand):
             nargs='*',
             help='Optional canonical job categories to keep during filtering',
         )
+        parser.add_argument(
+            '--no-db',
+            action='store_true',
+            help='Run without database connection (for testing)'
+        )
     
     def handle(self, *args, **options):
         # List scrapers
@@ -160,39 +165,64 @@ class Command(BaseCommand):
              CONFIG['scrapers'][scraper_name]['max_pages'] = effective_max_pages
         
         # Get or Create ScraperJob
-        job_id = options.get('job_id')
-        if job_id:
-            try:
-                scraper_job = await sync_to_async(ScraperJob.objects.get)(id=job_id)
-                scraper_job.status = 'running'
-                scraper_job.pid = os.getpid()
-                scraper_job.started_at = timezone.now()
-                await sync_to_async(scraper_job.save)()
-            except Exception as e:
-                logger.error(f"Provided job_id {job_id} not found: {e}")
-                job_id = None
+        no_db = options.get('no_db', False)
+        scraper_job = None
         
-        if not job_id:
-            scraper_job = await sync_to_async(ScraperJob.objects.create)(
-                scraper_name=scraper_name,
-                status='running',
-                pid=os.getpid(),
-                started_at=timezone.now(),
-                triggered_by='management_command',
-                parameters={
-                    'max_jobs': options.get('max_jobs'),
-                    'max_pages': options.get('max_pages'),
-                    'job_categories': selected_job_categories,
-                }
-            )
-        
-        logger.info(f"Created ScraperJob with ID: {scraper_job.id}")
-        self.stdout.write(self.style.SUCCESS(f'\n🚀 Starting scraper: {scraper_name} (Job ID: {scraper_job.id})'))
+        if not no_db:
+            job_id = options.get('job_id')
+            if job_id:
+                try:
+                    scraper_job = await sync_to_async(ScraperJob.objects.get)(id=job_id)
+                    scraper_job.status = 'running'
+                    scraper_job.pid = os.getpid()
+                    scraper_job.started_at = timezone.now()
+                    await sync_to_async(scraper_job.save)()
+                except Exception as e:
+                    logger.error(f"Provided job_id {job_id} not found: {e}")
+                    job_id = None
+            
+            if not job_id:
+                scraper_job = await sync_to_async(ScraperJob.objects.create)(
+                    scraper_name=scraper_name,
+                    status='running',
+                    pid=os.getpid(),
+                    started_at=timezone.now(),
+                    triggered_by='management_command',
+                    parameters={
+                        'max_jobs': options.get('max_jobs'),
+                        'max_pages': options.get('max_pages'),
+                        'job_categories': selected_job_categories,
+                    }
+                )
+            
+            logger.info(f"Created ScraperJob with ID: {scraper_job.id}")
+            self.stdout.write(self.style.SUCCESS(f'\n🚀 Starting scraper: {scraper_name} (Job ID: {scraper_job.id})'))
+        else:
+            self.stdout.write(self.style.WARNING(f'\n🚀 Starting scraper: {scraper_name} (NO-DB MODE)'))
+            # Create a mock object with attributes for compatibility
+            class MockJob:
+                def __init__(self):
+                    self.id = 0
+                    self.status = 'running'
+                    self.jobs_found = 0
+                    self.jobs_new = 0
+                    self.jobs_updated = 0
+                    self.jobs_duplicate = 0
+                    self.execution_time = 0.0
+                    self.error_message = ""
+                    self.started_at = timezone.now()
+                    self.completed_at = timezone.now()
+                def save(self): pass
+            scraper_job = MockJob()
         
         try:
             # Initialize database manager
-            db_manager = DjangoDBManager()
-            logger.info(f"Initialized DjangoDBManager for {scraper_name}")
+            if not no_db:
+                db_manager = DjangoDBManager()
+                logger.info(f"Initialized DjangoDBManager for {scraper_name}")
+            else:
+                db_manager = None
+                logger.info(f"Skipping DjangoDBManager (no-db mode)")
             
             # Get scraper instance
             CONFIG['job_id'] = scraper_job.id
@@ -203,46 +233,56 @@ class Command(BaseCommand):
             # Run scraper
             logger.info(f"Starting scraper execution for {scraper_name}")
             jobs = await scraper.run()
+            # Scraper execution completed
             logger.info(f"Scraper execution completed, found {len(jobs)} jobs")
             
-            # Update ScraperJob
-            scraper_job.status = 'completed'
-            scraper_job.completed_at = timezone.now()
-            scraper_job.jobs_found = len(jobs)
-            
-            # Calculate stats from database
-            stats = {
-                'total': len(jobs),
-                'new': sum(1 for j in jobs if j.get('_is_new', False)),
-                'updated': sum(1 for j in jobs if not j.get('_is_new', True)),
-            }
-            
-            scraper_job.jobs_new = stats['new']
-            scraper_job.jobs_updated = stats['updated']
-            scraper_job.jobs_duplicate = stats['total'] - stats['new']
-            scraper_job.execution_time = (scraper_job.completed_at - scraper_job.started_at).total_seconds()
-            await sync_to_async(scraper_job.save)()
+            if not no_db:
+                # Update ScraperJob
+                scraper_job.status = 'completed'
+                scraper_job.completed_at = timezone.now()
+                scraper_job.jobs_found = len(jobs)
+                
+                # Calculate stats from database
+                stats = {
+                    'total': len(jobs),
+                    'new': sum(1 for j in jobs if j.get('_is_new', False)),
+                    'updated': sum(1 for j in jobs if not j.get('_is_new', True)),
+                }
+                
+                scraper_job.jobs_new = stats['new']
+                scraper_job.jobs_updated = stats['updated']
+                scraper_job.jobs_duplicate = stats['total'] - stats['new']
+                scraper_job.execution_time = (scraper_job.completed_at - scraper_job.started_at).total_seconds()
+                await sync_to_async(scraper_job.save)()
+            else:
+                # Output jobs summary in no-db mode
+                self.stdout.write(self.style.SUCCESS(f"Found {len(jobs)} jobs in no-db mode"))
+                for i, job in enumerate(jobs[:5], 1):
+                    self.stdout.write(f"  [{i}] {job.get('title')} @ {job.get('company')}")
+                if len(jobs) > 5:
+                    self.stdout.write(f"  ... and {len(jobs) - 5} more")
             
             logger.info(f"Updated ScraperJob {scraper_job.id}: "
                        f"found={scraper_job.jobs_found}, new={scraper_job.jobs_new}, "
                        f"updated={scraper_job.jobs_updated}, time={scraper_job.execution_time:.1f}s")
             
             # Update config stats - create default ScraperConfig if missing
-            try:
-                site_cfg = CONFIG['sites'].get(scraper_name, {})
-                defaults = {
-                    'is_enabled': site_cfg.get('enabled', True),
-                    'max_jobs': site_cfg.get('max_jobs'),
-                    'max_pages': site_cfg.get('max_pages'),
-                    'description': site_cfg.get('description', ''),
-                }
-                config, created = await sync_to_async(ScraperConfig.objects.get_or_create)(scraper_name=scraper_name, defaults=defaults)
-                await sync_to_async(config.update_stats)(success=True)
-                if created:
-                    logger.info(f"Created default ScraperConfig for {scraper_name}")
-                logger.debug(f"Updated ScraperConfig stats for {scraper_name}")
-            except Exception as e:
-                logger.warning(f"Failed to update/create ScraperConfig for {scraper_name}: {e}")
+            if not no_db:
+                try:
+                    site_cfg = CONFIG['sites'].get(scraper_name, {})
+                    defaults = {
+                        'is_enabled': site_cfg.get('enabled', True),
+                        'max_jobs': site_cfg.get('max_jobs'),
+                        'max_pages': site_cfg.get('max_pages'),
+                        'description': site_cfg.get('description', ''),
+                    }
+                    config, created = await sync_to_async(ScraperConfig.objects.get_or_create)(scraper_name=scraper_name, defaults=defaults)
+                    await sync_to_async(config.update_stats)(success=True)
+                    if created:
+                        logger.info(f"Created default ScraperConfig for {scraper_name}")
+                    logger.debug(f"Updated ScraperConfig stats for {scraper_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to update/create ScraperConfig for {scraper_name}: {e}")
             
             self.stdout.write(self.style.SUCCESS(f'\n✓ Scraper completed successfully'))
             self.stdout.write(f'  Jobs found: {scraper_job.jobs_found}')
@@ -262,26 +302,28 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Scraper {scraper_name} failed: {e}", exc_info=True)
             
-            scraper_job.status = 'failed'
-            scraper_job.completed_at = timezone.now()
-            scraper_job.error_message = str(e)
-            await sync_to_async(scraper_job.save)()
+            if not no_db:
+                scraper_job.status = 'failed'
+                scraper_job.completed_at = timezone.now()
+                scraper_job.error_message = str(e)
+                await sync_to_async(scraper_job.save)()
             
             # Update config stats (ensure config exists)
-            try:
-                site_cfg = CONFIG['sites'].get(scraper_name, {})
-                defaults = {
-                    'is_enabled': site_cfg.get('enabled', True),
-                    'max_jobs': site_cfg.get('max_jobs'),
-                    'max_pages': site_cfg.get('max_pages'),
-                    'description': site_cfg.get('description', ''),
-                }
-                config, created = await sync_to_async(ScraperConfig.objects.get_or_create)(scraper_name=scraper_name, defaults=defaults)
-                await sync_to_async(config.update_stats)(success=False)
-                if created:
-                    logger.info(f"Created default ScraperConfig for {scraper_name} due to failure path")
-            except Exception as e2:
-                logger.warning(f"Failed to update/create ScraperConfig for {scraper_name}: {e2}")
+            if not no_db:
+                try:
+                    site_cfg = CONFIG['sites'].get(scraper_name, {})
+                    defaults = {
+                        'is_enabled': site_cfg.get('enabled', True),
+                        'max_jobs': site_cfg.get('max_jobs'),
+                        'max_pages': site_cfg.get('max_pages'),
+                        'description': site_cfg.get('description', ''),
+                    }
+                    config, created = await sync_to_async(ScraperConfig.objects.get_or_create)(scraper_name=scraper_name, defaults=defaults)
+                    await sync_to_async(config.update_stats)(success=False)
+                    if created:
+                        logger.info(f"Created default ScraperConfig for {scraper_name} due to failure path")
+                except Exception as e2:
+                    logger.warning(f"Failed to update/create ScraperConfig for {scraper_name}: {e2}")
             
             self.stdout.write(self.style.ERROR(f'\n✗ Scraper failed: {e}'))
             import traceback

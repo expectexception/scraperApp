@@ -6,8 +6,9 @@ logger = logging.getLogger(__name__)
 class BlueIslandsScraper(BaseScraper):
     """
     Scraper for Blue Islands.
-    The provided URL is an airlinestaffrates proxy which does not contain the actual ATS.
-    Safely returning empty for this placeholder.
+    NOTE: As of November 2025, Blue Islands has ceased operations and suspended all flights.
+    Site is currently parked/defunct.
+    Returning empty list.
     """
     
     def __init__(self, config, db_manager=None):
@@ -16,7 +17,7 @@ class BlueIslandsScraper(BaseScraper):
         self.company_name = "Blue Islands"
 
     async def fetch_jobs(self) -> list:
-        logger.info(f"[{self.site_key}] URL is a proxy/article, actual ATS not provided. Returning 0.")
+        logger.info(f"[{self.site_key}] Airline ceased operations (Nov 2025). Returning 0.")
         return []
 
     async def run(self):

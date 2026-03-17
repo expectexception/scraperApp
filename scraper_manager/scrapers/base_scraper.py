@@ -655,6 +655,24 @@ class BaseScraper:
         logger.debug(f"[{self.site_key}] Could not parse date: {date_text}")
         return None
     
+    async def scroll_to_bottom(self, page):
+        """Scroll to the bottom of the page to trigger lazy loading"""
+        await page.evaluate("""async () => {
+            await new Promise((resolve) => {
+                let totalHeight = 0;
+                let distance = 100;
+                let timer = setInterval(() => {
+                    let scrollHeight = document.body.scrollHeight;
+                    window.scrollBy(0, distance);
+                    totalHeight += distance;
+                    if(totalHeight >= scrollHeight){
+                        clearInterval(timer);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }""")
+
     async def random_delay(self, min_seconds: Optional[float] = None, max_seconds: Optional[float] = None):
         """Add random delay to mimic human behavior"""
         min_delay = min_seconds if min_seconds is not None else self.request_delay_min
@@ -858,7 +876,7 @@ class BaseScraper:
             'sign-up', 'register', 'impressum', 'confidentialite', 'mentions-legales',
             'politique', 'rejoindre', 'notre-equipe', 'equipe', 'team',
             'support', 'feedback', 'blog', 'press', 'media', 'investor',
-            'compagnie', 'fleet', 'services', 'network', 'destinations',
+            'compagnie', 'services', 'destinations',
             'newsletter', 'sitemap', 'accessibility', 'booking', 
             'check-in', 'status', 'manage', 'travel', 'trip', 'plan', 'reserve',
             'hotel', 'car', 'offer', 'destination', 'luggage', 'baggage'
@@ -876,7 +894,8 @@ class BaseScraper:
                     'pilot', 'engineer', 'officer', 'captain', 'attendant', 'crew', 
                     'manager', 'technician', 'analyst', 'developer', 'staff', 
                     'mecanicien', 'mechanic', 'dispatcher', 'ops', 'control', 
-                    'coordinator', 'specialist', 'planner', 'duty', 'scheduler'
+                    'coordinator', 'specialist', 'planner', 'duty', 'scheduler',
+                    'simulator', 'ground', 'technical'
                 ]
                 if any(jk in t for jk in job_keywords):
                     return True

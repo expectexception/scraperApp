@@ -14,6 +14,11 @@ from typing import List, Dict, Set, Optional, Tuple
 from pathlib import Path
 from functools import lru_cache
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 
 class JobFilterManager:
@@ -21,6 +26,7 @@ class JobFilterManager:
     
     def __init__(self, filter_file: str = 'filter_title.json', use_cache: bool = True):
         """Initialize filter manager with filter configuration"""
+        self.logger = logger
         self.filter_file = Path(filter_file)
         if not self.filter_file.is_absolute():
             # Resolve relative to this specific file's directory
@@ -54,12 +60,13 @@ class JobFilterManager:
         
         # Category weights for scoring (higher = more important)
         self.category_weights = {
-            'Core_Function_Terms_Only': 4.0,  # Highest priority - specific OCC/NOC terms
+            'Core_Function_Terms_Only': 4.0,
             'Operative_Functional_Control_Keywords': 3.0,
             'Supervisory_Level_Control_Keywords': 2.0,
             'Management_Executive_Control_Keywords': 1.5,
+            'Maintenance_Engineering_Control': 2.5,
+            'Operations_Performance_Analytics': 2.0,
             'Flight_Deck_Crew': 2.5,
-            'Maintenance_Engineering': 2.5,
             'Cabin_Crew_Inflight': 2.5,
             'Ground_Airport_Operations': 2.5
         }
@@ -172,11 +179,6 @@ class JobFilterManager:
     @lru_cache(maxsize=10000)
     def _matches_filter_impl(self, title_lower: str) -> Tuple[bool, Tuple, float, Dict]:
         """Internal implementation of filter matching - optimized for speed"""
-        # Hard Global Exclusion Check (Instant Rejection)
-        for neg in self.global_negatives:
-            if neg in title_lower:
-                return False, tuple(), 0.0, {'reason': f'global_negative_{neg}'}
-
         # Fast exclusion pattern check (early return)
         for pattern in self.exclusion_compiled:
             if pattern.search(title_lower):
