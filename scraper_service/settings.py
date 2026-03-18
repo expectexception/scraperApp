@@ -87,6 +87,10 @@ USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
 
+# Silence MongoDB compatibility system checks so third-party apps (auth,
+# django_celery_beat) that use plain AutoField don't block startup/migrate.
+SILENCED_SYSTEM_CHECKS = ["mongodb.E001"]
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

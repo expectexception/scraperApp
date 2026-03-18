@@ -47,15 +47,25 @@ class JobFilterManager:
         self.single_patterns = []  # List of (pattern, keyword) tuples
         self.exclusion_compiled = []  # Precompiled exclusion patterns
         
-        # Exclusion patterns to filter out truly irrelevant roles (NOT aviation core)
+        # Exclusion patterns — jobs matching ANY of these are hard-blocked regardless of score.
+        # Pattern: pilot/captain/cabin crew/baggage handler/customer service/unrelated industries.
         self.exclusion_patterns = [
-            r'\b(software developer|frontend|backend|fullstack|devops|programmer)\b', # Generic IT
-            r'\b(nurse|physician|doctor|healthcare|medical|pharmacist)\b', # Healthcare
-            r'\b(teacher|professor|faculty|lecturer|educator)\b', # Education
-            r'\b(real estate|realtor|broker|property manager)\b', # Generic Property
-            r'\b(cashier|retail associate|store clerk|shop assistant)\b', # Generic Retail
-            r'\b(hospitality|waiter|waitress|bartender|chef)\b', # Generic F&B (unless flight)
-            r'\b(delivery driver|truck driver|courier)\b', # Generic Logistics
+            # Pilots & flight deck (we do NOT want pilot jobs)
+            r'\b(pilot|co-pilot|copilot|first officer|second officer|captain)\b',
+            # Cabin crew / inflight service
+            r'\b(cabin crew|flight attendant|cabin attendant|steward|stewardess|purser|pnc|hostess|air host)\b',
+            # Basic ground handling (unskilled ramp/baggage — NOT controllers)
+            r'\b(baggage handler|ramp agent|ramp handler|ground handler|bagagiste|gepäckabfertiger)\b',
+            # Customer-facing airport roles
+            r'\b(check-in agent|gate agent|ticket agent|passenger service agent|customer service agent)\b',
+            # Generic IT
+            r'\b(software developer|frontend developer|backend developer|fullstack|devops|programmer)\b',
+            # Healthcare / Education / Retail / F&B / Logistics
+            r'\b(nurse|physician|doctor|healthcare|pharmacist)\b',
+            r'\b(teacher|professor|faculty|lecturer|educator)\b',
+            r'\b(cashier|retail associate|store clerk|shop assistant)\b',
+            r'\b(bartender|chef|waiter|waitress)\b',
+            r'\b(delivery driver|truck driver|courier)\b',
         ]
         
         # Category weights for scoring (higher = more important)
@@ -83,6 +93,7 @@ class JobFilterManager:
         # Initialize attributes that might be used even if load fails
         self.keyword_patterns_compiled = {}
         self.global_negatives = set()
+        self._neg_pattern_cache: dict = {}  # compiled regex cache for negative keywords
         
         self.load_filters()
     
@@ -176,6 +187,15 @@ class JobFilterManager:
         """Generate cache key for job title"""
         return job_title.lower()
     
+    def _negative_matches(self, nk: str, title_lower: str) -> bool:
+        """Word-boundary-aware negative keyword check (cached compiled patterns)."""
+        key = nk
+        if key not in self._neg_pattern_cache:
+            self._neg_pattern_cache[key] = re.compile(
+                r'\b' + re.escape(nk) + r'\b', re.IGNORECASE
+            )
+        return bool(self._neg_pattern_cache[key].search(title_lower))
+
     @lru_cache(maxsize=10000)
     def _matches_filter_impl(self, title_lower: str) -> Tuple[bool, Tuple, float, Dict]:
         """Internal implementation of filter matching - optimized for speed"""
@@ -196,9 +216,9 @@ class JobFilterManager:
                 phrase_rejected = False
                 
                 for cat in categories:
-                    # Check negative keywords for this specific category
+                    # Word-boundary negative keyword check
                     for nk in cat.get('negative_keywords', []):
-                        if nk in title_lower:
+                        if self._negative_matches(nk, title_lower):
                             phrase_rejected = True
                             break
                     if phrase_rejected:
@@ -224,16 +244,16 @@ class JobFilterManager:
         for pattern, keyword in self.single_patterns:
             if pattern.search(title_lower):
                 # Penalty for very generic single words unless combined with others
-                generic_keywords = {'officer', 'manager', 'director', 'supervisor', 'controller', 'agent', 'specialist', 'assistant', 'coordinator'}
+                generic_keywords = {'officer', 'manager', 'director', 'supervisor', 'controller', 'agent', 'specialist', 'assistant', 'coordinator', 'analyst', 'planner'}
                 is_generic = keyword in generic_keywords
                 
                 matched_keywords.append(keyword)
                 categories = self.keyword_to_category[keyword]
                 for cat in categories:
-                    # Check negative keywords for this category match
+                    # Word-boundary negative keyword check
                     negative_match = False
                     for nk in cat.get('negative_keywords', []):
-                        if nk in title_lower: # Using 'in' for substring match, can be changed to regex if needed
+                        if self._negative_matches(nk, title_lower):
                             negative_match = True
                             break
                     

@@ -803,10 +803,9 @@ def managed_jobs(request):
     })
 
 
-@api_view(['PATCH'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([AllowAny])
 def update_managed_job(request, job_id):
-    """Update editable fields for a stored job record."""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
@@ -815,6 +814,11 @@ def update_managed_job(request, job_id):
         job = Job.objects.get(pk=job_id)
     except Job.DoesNotExist:
         return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        job_title = job.title
+        job.delete()
+        return Response({'message': f'Job "{job_title}" deleted successfully', 'job_id': job_id})
 
     field_names = [
         'title', 'company', 'location', 'status', 'operation_type',
