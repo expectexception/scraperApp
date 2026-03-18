@@ -185,16 +185,41 @@ class WizzAirScraper(BaseScraper):
                                         try:
                                             script_el = await detail_page.query_selector('script[type="application/ld+json"]')
                                             if script_el:
-                                                js_data = await script_el.innerText() # Wait, innerText vs inner_text? I'll use evaluate
                                                 js_data = await detail_page.evaluate('el => el.innerText', script_el)
                                                 data = json.loads(js_data)
                                                 if isinstance(data, dict) and 'jobLocation' in data:
                                                     loc_data = data['jobLocation']
                                                     if isinstance(loc_data, dict) and 'address' in loc_data:
                                                         addr = loc_data['address']
-                                                        parts = [addr.get('addressLocality'), addr.get('addressCountry')]
-                                                        location = ", ".join([p for p in parts if p])
-                                        except:
+                                                        locality = addr.get('addressLocality', '').strip()
+                                                        country  = addr.get('addressCountry', '').strip()
+                                                        postal   = addr.get('postalCode', '').strip()
+                                                        # addressLocality may be a postal code ("H-1095") — use
+                                                        # addressRegion or fall back to country name
+                                                        import re as _re
+                                                        if _re.match(r'^[A-Z]{1,3}-\d{3,6}$', locality, _re.IGNORECASE):
+                                                            locality = addr.get('addressRegion', '').strip() or ''
+                                                        # Resolve 2-letter country code → full name
+                                                        if country and len(country) == 2:
+                                                            _CC = {
+                                                                'HU': 'Hungary', 'AT': 'Austria', 'DE': 'Germany',
+                                                                'FR': 'France', 'GB': 'United Kingdom', 'IT': 'Italy',
+                                                                'ES': 'Spain', 'NL': 'Netherlands', 'BE': 'Belgium',
+                                                                'PL': 'Poland', 'CZ': 'Czech Republic', 'RO': 'Romania',
+                                                                'SE': 'Sweden', 'NO': 'Norway', 'DK': 'Denmark',
+                                                                'FI': 'Finland', 'CH': 'Switzerland', 'PT': 'Portugal',
+                                                                'GR': 'Greece', 'UA': 'Ukraine', 'TR': 'Turkey',
+                                                                'AE': 'United Arab Emirates', 'QA': 'Qatar',
+                                                                'SA': 'Saudi Arabia', 'US': 'United States',
+                                                                'CA': 'Canada', 'AU': 'Australia', 'SG': 'Singapore',
+                                                                'RS': 'Serbia', 'HR': 'Croatia', 'BG': 'Bulgaria',
+                                                                'SK': 'Slovakia', 'SI': 'Slovenia', 'SK': 'Slovakia',
+                                                                'AL': 'Albania', 'MK': 'North Macedonia',
+                                                            }
+                                                            country = _CC.get(country.upper(), country)
+                                                        parts = [p for p in [locality, country] if p]
+                                                        location = ', '.join(parts) if parts else location
+                                        except Exception:
                                             pass
                                 
                                 company = "Wizz Air"

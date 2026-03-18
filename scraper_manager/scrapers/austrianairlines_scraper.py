@@ -108,11 +108,23 @@ class AustrianAirlinesScraper(BaseScraper):
                         if not description:
                             description = await self.extract_description_from_page(detail_page)
 
-                        location = "Austria"
-                        loc_elem = detail_page.locator('.lh-jobad-content-facts li').first
-                        if await loc_elem.is_visible():
-                            loc_text = await loc_elem.inner_text()
-                            if loc_text: location = loc_text.strip()
+                        location = "Vienna, Austria"
+                        # Try the value span inside the first facts list item first
+                        loc_value_elem = detail_page.locator('.lh-jobad-content-facts li .lh-jobad-content-facts-item').first
+                        if await loc_value_elem.is_visible():
+                            loc_text = await loc_value_elem.inner_text()
+                            if loc_text:
+                                location = loc_text.strip() + ", Austria"
+                        else:
+                            # Fallback: read the whole li and strip the label prefix
+                            loc_elem = detail_page.locator('.lh-jobad-content-facts li').first
+                            if await loc_elem.is_visible():
+                                loc_text = await loc_elem.inner_text()
+                                if loc_text:
+                                    # Strip "Location" / "LOCATION" label prefix if present
+                                    import re as _re
+                                    cleaned = _re.sub(r'^(?:Location|LOCATION|Standort|Lieu|Ubicación)\s*[:\-]?\s*', '', loc_text.strip(), flags=_re.IGNORECASE)
+                                    location = (cleaned + ", Austria") if cleaned else "Vienna, Austria"
                         posted_date = await self.extract_posted_date_from_page(detail_page)
                         
                         job_id = f"austrian_{i+1}"

@@ -28,6 +28,147 @@ class DjangoDBManager:
         """Initialize Django database manager"""
         pass
     
+    # Map from 2-letter ISO country codes to full country names
+    _CC_TO_NAME = {
+        'AF': 'Afghanistan', 'AL': 'Albania', 'DZ': 'Algeria', 'AD': 'Andorra',
+        'AO': 'Angola', 'AG': 'Antigua and Barbuda', 'AR': 'Argentina', 'AM': 'Armenia',
+        'AU': 'Australia', 'AT': 'Austria', 'AZ': 'Azerbaijan', 'BS': 'Bahamas',
+        'BH': 'Bahrain', 'BD': 'Bangladesh', 'BB': 'Barbados', 'BY': 'Belarus',
+        'BE': 'Belgium', 'BZ': 'Belize', 'BJ': 'Benin', 'BT': 'Bhutan',
+        'BO': 'Bolivia', 'BA': 'Bosnia and Herzegovina', 'BW': 'Botswana', 'BR': 'Brazil',
+        'BN': 'Brunei', 'BG': 'Bulgaria', 'BF': 'Burkina Faso', 'BI': 'Burundi',
+        'CV': 'Cabo Verde', 'KH': 'Cambodia', 'CM': 'Cameroon', 'CA': 'Canada',
+        'CF': 'Central African Republic', 'TD': 'Chad', 'CL': 'Chile', 'CN': 'China',
+        'CO': 'Colombia', 'KM': 'Comoros', 'CG': 'Congo', 'CD': 'DR Congo',
+        'CR': 'Costa Rica', 'HR': 'Croatia', 'CU': 'Cuba', 'CY': 'Cyprus',
+        'CZ': 'Czech Republic', 'DK': 'Denmark', 'DJ': 'Djibouti', 'DM': 'Dominica',
+        'DO': 'Dominican Republic', 'EC': 'Ecuador', 'EG': 'Egypt', 'SV': 'El Salvador',
+        'GQ': 'Equatorial Guinea', 'ER': 'Eritrea', 'EE': 'Estonia', 'SZ': 'Eswatini',
+        'ET': 'Ethiopia', 'FJ': 'Fiji', 'FI': 'Finland', 'FR': 'France',
+        'GA': 'Gabon', 'GM': 'Gambia', 'GE': 'Georgia', 'DE': 'Germany',
+        'GH': 'Ghana', 'GR': 'Greece', 'GD': 'Grenada', 'GT': 'Guatemala',
+        'GN': 'Guinea', 'GW': 'Guinea-Bissau', 'GY': 'Guyana', 'HT': 'Haiti',
+        'HN': 'Honduras', 'HU': 'Hungary', 'IS': 'Iceland', 'IN': 'India',
+        'ID': 'Indonesia', 'IR': 'Iran', 'IQ': 'Iraq', 'IE': 'Ireland',
+        'IL': 'Israel', 'IT': 'Italy', 'JM': 'Jamaica', 'JP': 'Japan',
+        'JO': 'Jordan', 'KZ': 'Kazakhstan', 'KE': 'Kenya', 'KI': 'Kiribati',
+        'KP': 'North Korea', 'KR': 'South Korea', 'KW': 'Kuwait', 'KG': 'Kyrgyzstan',
+        'LA': 'Laos', 'LV': 'Latvia', 'LB': 'Lebanon', 'LS': 'Lesotho',
+        'LR': 'Liberia', 'LY': 'Libya', 'LI': 'Liechtenstein', 'LT': 'Lithuania',
+        'LU': 'Luxembourg', 'MG': 'Madagascar', 'MW': 'Malawi', 'MY': 'Malaysia',
+        'MV': 'Maldives', 'ML': 'Mali', 'MT': 'Malta', 'MH': 'Marshall Islands',
+        'MR': 'Mauritania', 'MU': 'Mauritius', 'MX': 'Mexico', 'FM': 'Micronesia',
+        'MD': 'Moldova', 'MC': 'Monaco', 'MN': 'Mongolia', 'ME': 'Montenegro',
+        'MA': 'Morocco', 'MZ': 'Mozambique', 'MM': 'Myanmar', 'NA': 'Namibia',
+        'NR': 'Nauru', 'NP': 'Nepal', 'NL': 'Netherlands', 'NZ': 'New Zealand',
+        'NI': 'Nicaragua', 'NE': 'Niger', 'NG': 'Nigeria', 'MK': 'North Macedonia',
+        'NO': 'Norway', 'OM': 'Oman', 'PK': 'Pakistan', 'PW': 'Palau',
+        'PA': 'Panama', 'PG': 'Papua New Guinea', 'PY': 'Paraguay', 'PE': 'Peru',
+        'PH': 'Philippines', 'PL': 'Poland', 'PT': 'Portugal', 'QA': 'Qatar',
+        'RO': 'Romania', 'RU': 'Russia', 'RW': 'Rwanda', 'KN': 'Saint Kitts and Nevis',
+        'LC': 'Saint Lucia', 'VC': 'Saint Vincent and the Grenadines', 'WS': 'Samoa',
+        'SM': 'San Marino', 'ST': 'Sao Tome and Principe', 'SA': 'Saudi Arabia',
+        'SN': 'Senegal', 'RS': 'Serbia', 'SC': 'Seychelles', 'SL': 'Sierra Leone',
+        'SG': 'Singapore', 'SK': 'Slovakia', 'SI': 'Slovenia', 'SB': 'Solomon Islands',
+        'SO': 'Somalia', 'ZA': 'South Africa', 'SS': 'South Sudan', 'ES': 'Spain',
+        'LK': 'Sri Lanka', 'SD': 'Sudan', 'SR': 'Suriname', 'SE': 'Sweden',
+        'CH': 'Switzerland', 'SY': 'Syria', 'TW': 'Taiwan', 'TJ': 'Tajikistan',
+        'TZ': 'Tanzania', 'TH': 'Thailand', 'TL': 'Timor-Leste', 'TG': 'Togo',
+        'TO': 'Tonga', 'TT': 'Trinidad and Tobago', 'TN': 'Tunisia', 'TR': 'Turkey',
+        'TM': 'Turkmenistan', 'TV': 'Tuvalu', 'UG': 'Uganda', 'UA': 'Ukraine',
+        'AE': 'United Arab Emirates', 'GB': 'United Kingdom', 'US': 'United States',
+        'UY': 'Uruguay', 'UZ': 'Uzbekistan', 'VU': 'Vanuatu', 'VE': 'Venezuela',
+        'VN': 'Vietnam', 'YE': 'Yemen', 'ZM': 'Zambia', 'ZW': 'Zimbabwe',
+        'HK': 'Hong Kong',
+    }
+
+    # Label prefixes that may be prepended to location values by scrapers
+    # International postal country-prefix → (ISO-2-code, country name, major-city)
+    # Format used in European addresses: "H-1095", "D-60549", "A-1300", etc.
+    _POSTAL_PREFIX_MAP = {
+        'H':  ('HU', 'Hungary',     'Budapest'),
+        'A':  ('AT', 'Austria',     'Vienna'),
+        'D':  ('DE', 'Germany',     'Frankfurt'),
+        'F':  ('FR', 'France',      'Paris'),
+        'I':  ('IT', 'Italy',       'Milan'),
+        'E':  ('ES', 'Spain',       'Madrid'),
+        'P':  ('PT', 'Portugal',    'Lisbon'),
+        'B':  ('BE', 'Belgium',     'Brussels'),
+        'NL': ('NL', 'Netherlands', 'Amsterdam'),
+        'CH': ('CH', 'Switzerland', 'Zurich'),
+        'PL': ('PL', 'Poland',      'Warsaw'),
+        'CZ': ('CZ', 'Czech Republic', 'Prague'),
+        'SK': ('SK', 'Slovakia',    'Bratislava'),
+        'RO': ('RO', 'Romania',     'Bucharest'),
+        'BG': ('BG', 'Bulgaria',    'Sofia'),
+        'HR': ('HR', 'Croatia',     'Zagreb'),
+        'SI': ('SI', 'Slovenia',    'Ljubljana'),
+        'GR': ('GR', 'Greece',      'Athens'),
+        'LT': ('LT', 'Lithuania',   'Vilnius'),
+        'LV': ('LV', 'Latvia',      'Riga'),
+        'EE': ('EE', 'Estonia',     'Tallinn'),
+        'SE': ('SE', 'Sweden',      'Stockholm'),
+        'NO': ('NO', 'Norway',      'Oslo'),
+        'DK': ('DK', 'Denmark',     'Copenhagen'),
+        'FI': ('FI', 'Finland',     'Helsinki'),
+        'GB': ('GB', 'United Kingdom', 'London'),
+        'IE': ('IE', 'Ireland',     'Dublin'),
+        'AT': ('AT', 'Austria',     'Vienna'),
+        'HU': ('HU', 'Hungary',     'Budapest'),
+        'DE': ('DE', 'Germany',     'Frankfurt'),
+    }
+    # Regex to detect an international postal-prefix code like "H-1095", "CH-8058", "D-60549"
+    _POSTAL_PREFIX_RE = re.compile(
+        r'^([A-Z]{1,3})-\d{3,6}(?:\s+(.+))?$',
+        re.IGNORECASE
+    )
+
+    _LOCATION_LABEL_PREFIXES = re.compile(
+        r'^(?:location|standort|lieu|ubicaci[oó]n|localisation|lokalizacja|lokalita'          
+        r'|place|site|city|town|country|region|area|base|work location|job location)'
+        r'\s*[:\-–]?\s*',
+        re.IGNORECASE
+    )
+
+    def _resolve_postal_prefix(self, location: str):
+        """If location is a postal-prefix string (e.g. 'H-1095'), return (iso_code, 'City, Country').
+        If it has additional text after the postal code (e.g. 'H-1095 Budapest'), use that city.
+        Returns (None, None) if not a postal-prefix string."""
+        m = self._POSTAL_PREFIX_RE.match(location.strip())
+        if not m:
+            return None, None
+        prefix = m.group(1).upper()
+        trailing_city = (m.group(2) or '').strip()
+        if prefix not in self._POSTAL_PREFIX_MAP:
+            return None, None
+        iso, country, default_city = self._POSTAL_PREFIX_MAP[prefix]
+        city = trailing_city if trailing_city else default_city
+        return iso, f"{city}, {country}"
+
+    def _clean_location(self, location: str) -> str:
+        """Strip label prefixes and resolve postal-prefix codes.
+        e.g. 'LOCATION Vienna Airport' → 'Vienna Airport'
+             'H-1095'                  → 'Budapest, Hungary'
+             'H-1095 Budapest'         → 'Budapest, Hungary'
+        """
+        if not location:
+            return location
+        # Step 1: strip label prefix
+        cleaned = self._LOCATION_LABEL_PREFIXES.sub('', location).strip()
+        if not cleaned:
+            return location
+        # Step 2: resolve postal prefix code
+        _, resolved = self._resolve_postal_prefix(cleaned)
+        if resolved:
+            return resolved
+        return cleaned
+
+    def _country_name_from_code(self, code: str) -> Optional[str]:
+        """Return full country name for a 2-letter ISO code, e.g. 'AT' → 'Austria'"""
+        if not code:
+            return None
+        return self._CC_TO_NAME.get(code.upper())
+
     def _extract_country_code(self, location: str, company: str = '') -> Optional[str]:
         """Extract country code from location string"""
         if not location:
@@ -126,11 +267,21 @@ class DjangoDBManager:
             'jnb': 'ZA', 'cpt': 'ZA', 'cai': 'EG', 'los': 'NG', 'nbo': 'KE'
         }
         
-        # Check each pattern
+        # Check each pattern — use word-boundary matching for short (≤3 char) patterns
+        # to avoid "us" matching inside "austria", "brussels", etc.
         for pattern, code in country_map.items():
-            if pattern in location_lower:
-                return code
+            if len(pattern) <= 3:
+                if re.search(r'\b' + re.escape(pattern) + r'\b', location_lower):
+                    return code
+            else:
+                if pattern in location_lower:
+                    return code
         
+        # Check if location is a postal-prefix code (e.g. "H-1095", "D-60549")
+        postal_iso, _ = self._resolve_postal_prefix(location.strip())
+        if postal_iso:
+            return postal_iso
+
         # Check if location ends with 2-letter code (e.g., "New York, US")
         parts = location.strip().split(',')
         if len(parts) >= 2:
@@ -342,7 +493,7 @@ class DjangoDBManager:
             title = job_data.get('title', 'No Title').strip()
             company = job_data.get('company', 'Unknown').strip()
             url = job_data.get('url', '').strip()
-            location = job_data.get('location', '').strip()
+            location = self._clean_location(job_data.get('location', '').strip())
             description = job_data.get('description', '').strip()
             
             if not url:
