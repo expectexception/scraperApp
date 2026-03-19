@@ -23,7 +23,7 @@ export const LoginPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden text-slate-200">
             {/* Background Decor */}
             <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[150px] rounded-full animate-float" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-float" style={{ animationDelay: '1s' }} />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-float" style={{ animationDelay: '1s' }} />
 
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -40,7 +40,7 @@ export const LoginPage: React.FC = () => {
                     >
                         <Plane className="text-white w-10 h-10 rotate-45" />
                     </motion.div>
-                    <h1 className="text-4xl font-black tracking-tighter text-white mb-3 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/40">AEROOPS INTEL</h1>
+                    <h1 className="text-4xl font-black tracking-tighter text-white mb-3 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/40">IFOA SCRAPERS</h1>
                     <p className="text-xs font-black text-primary uppercase tracking-[0.4em]">Control Center</p>
                 </div>
 

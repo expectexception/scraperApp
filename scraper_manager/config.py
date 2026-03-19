@@ -618,7 +618,7 @@ SITES = {
     },
     'blueislands': {
         'name': 'Blue Islands',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://www.airlinestaffrates.com',
         'jobs_url': 'https://www.airlinestaffrates.com/blue-islands-is-hiring-cabin-crew-channel-islands/',
         'description': 'Blue Islands proxy careers',
@@ -770,7 +770,7 @@ SITES = {
     },
     'flybe': {
         'name': 'Flybe',
-        'enabled': True,
+        'enabled': False,
         'base_url': 'https://flybe.com',
         'jobs_url': 'https://flybe.com',
         'description': 'Flybe careers (Ceased operations, returning 0)',

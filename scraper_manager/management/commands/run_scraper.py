@@ -261,6 +261,11 @@ class Command(BaseCommand):
                     self.stdout.write(f"  [{i}] {job.get('title')} @ {job.get('company')}")
                 if len(jobs) > 5:
                     self.stdout.write(f"  ... and {len(jobs) - 5} more")
+                
+                # Update scraper_job for final summary
+                scraper_job.jobs_found = len(jobs)
+                scraper_job.jobs_new = len(jobs) # In no-db mode, assume all are new for reporting
+                scraper_job.execution_time = (timezone.now() - scraper_job.started_at).total_seconds()
             
             logger.info(f"Updated ScraperJob {scraper_job.id}: "
                        f"found={scraper_job.jobs_found}, new={scraper_job.jobs_new}, "

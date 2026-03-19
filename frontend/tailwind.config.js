@@ -11,9 +11,9 @@ export default {
                 background: '#030712',
                 surface: '#0F172A',
                 primary: {
-                    DEFAULT: '#8B5CF6', // Violet 500
-                    dark: '#7C3AED',   // Violet 600
-                    glow: 'rgba(139, 92, 246, 0.5)',
+                    DEFAULT: '#1E40AF', // Deep Blue 800
+                    dark: '#1E3A8A',    // Deep Blue 900
+                    glow: 'rgba(30, 64, 175, 0.5)',
                 },
                 secondary: '#94A3B8',
                 success: '#10B981',
@@ -40,7 +40,8 @@ export default {
                 }
             },
             boxShadow: {
-                'glow-primary': '0 0 15px rgba(139, 92, 246, 0.3)',
+                'glow-primary': '0 0 20px rgba(30, 64, 175, 0.4)',
+                'glow-blue': '0 0 25px rgba(30, 64, 175, 0.25)',
                 'glow-success': '0 0 15px rgba(16, 185, 129, 0.3)',
             }
         },

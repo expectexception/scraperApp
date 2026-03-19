@@ -27,10 +27,10 @@ urlpatterns = [
     path('start-all/', api.run_all_scrapers, name='start_all'),
     
     # Check scraper status
-    path('status/<int:job_id>/', api.scraper_status, name='status'),
+    path('status/<str:job_id>/', api.scraper_status, name='status'),
     
     # Cancel scraper job
-    path('cancel/<int:job_id>/', api.cancel_scraper_job, name='cancel'),
+    path('cancel/<str:job_id>/', api.cancel_scraper_job, name='cancel'),
     
     # Get active jobs
     path('active/', api.active_jobs, name='active'),
@@ -45,8 +45,9 @@ urlpatterns = [
     path('jobs/', api.managed_jobs, name='managed_jobs'),
 
     # Update or delete a stored job record
-    path('jobs/<int:job_id>/', api.update_managed_job, name='update_managed_job'),
-    path('jobs/<int:job_id>/delete/', api.update_managed_job, name='delete_managed_job'),
+    path('jobs/<str:job_id>/', api.update_managed_job, name='update_managed_job'),
+    path('jobs/<str:job_id>/check-status/', api.check_job_url_status, name='check_job_status'),
+    path('jobs/<str:job_id>/delete/', api.update_managed_job, name='delete_managed_job'),
     
     # Get recent scraped jobs
     path('recent-jobs/', api.recent_jobs, name='recent_jobs'),

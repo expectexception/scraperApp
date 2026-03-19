@@ -118,11 +118,11 @@ export const DashboardPage: React.FC = () => {
                         <table className="w-full min-w-[720px] text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-white/5">
-                                    <th className="py-4 px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">ID</th>
-                                    <th className="py-4 px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">Scraper</th>
-                                    <th className="py-4 px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">Status</th>
-                                    <th className="py-4 px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">Started</th>
-                                    <th className="py-4 px-4 text-[10px] font-bold text-secondary uppercase tracking-widest text-right">Actions</th>
+                                    <th className="py-4 px-6 text-[10px] font-bold text-secondary uppercase tracking-widest">ID</th>
+                                    <th className="py-4 px-6 text-[10px] font-bold text-secondary uppercase tracking-widest">Scraper</th>
+                                    <th className="py-4 px-6 text-[10px] font-bold text-secondary uppercase tracking-widest">Status</th>
+                                    <th className="py-4 px-6 text-[10px] font-bold text-secondary uppercase tracking-widest">Started</th>
+                                    <th className="py-4 px-6 text-[10px] font-bold text-secondary uppercase tracking-widest text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -134,28 +134,24 @@ export const DashboardPage: React.FC = () => {
                                     </tr>
                                 ) : activeJobs?.map(job => (
                                     <tr key={job.id} className="group hover:bg-white/[0.02] transition-colors">
-                                        <td className="py-4 px-4 text-xs font-mono text-secondary">#{job.id}</td>
-                                        <td className="py-4 px-4 font-semibold text-sm">{job.scraper_name}</td>
-                                        <td className="py-4 px-4">
+                                        <td className="py-4 px-6 text-xs font-mono text-secondary">#{job.id}</td>
+                                        <td className="py-4 px-6 font-semibold text-sm">{job.scraper_name}</td>
+                                        <td className="py-4 px-6">
                                             <Badge variant={job.status === 'running' ? 'info' : 'warning'}>
-                                                {job.status === 'running' ? (
-                                                    <span className="flex items-center gap-1.5">
-                                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                                        {job.status}
-                                                    </span>
-                                                ) : job.status}
+                                                {job.status === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+                                                {job.status}
                                             </Badge>
                                         </td>
-                                        <td className="py-4 px-4 text-xs text-secondary flex items-center gap-2">
+                                        <td className="py-4 px-6 text-xs text-secondary flex items-center gap-2">
                                             <Clock className="w-3.5 h-3.5" />
                                             {formatDate(job.started_at)}
                                         </td>
-                                        <td className="py-4 px-4 text-right">
+                                        <td className="py-4 px-6 text-right">
                                             {job.status === 'running' || job.status === 'pending' ? (
                                                 <Button
                                                     variant="danger"
                                                     size="sm"
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="px-4 font-black transition-all hover:scale-105 active:scale-95 shadow-glow-danger"
                                                     onClick={() => cancelJob.mutate(job.id)}
                                                     isLoading={cancelJob.isPending && cancelJob.variables === job.id}
                                                 >

@@ -61,42 +61,53 @@ class AmericanAirlinesScraper(BaseScraper):
                     search_url = f"{self.base_url}/search/?q=&locationsearch="
                     response = await self.make_request(search_url)
                     
-                    if response and response.status_code == 200:
-                        soup = BeautifulSoup(response.text, 'html.parser')
-                        # CarrierSite (SuccessFactors RMK) structure
-                        # Look for links in the results table
-                        links = soup.select('table[id*="job-table"] a[href*="/job/"], .job-title a[href*="/job/"], a[href*="/job/"]')
-                        if links:
-                            logger.info(f"[{self.site_key}] Found {len(links)} job links via make_request fallback")
-                            seen_urls = set()
-                            for link in links:
-                                if len(jobs) >= self.max_jobs: break
-                                href = link.get('href')
-                                title_text = link.get_text().strip()
-                                
-                                if href and title_text and "/job/" in href:
-                                    full_url = urljoin(self.base_url, href)
-                                    if full_url not in seen_urls:
-                                        seen_urls.add(full_url)
-                                        # Try to find location in the parent structure (sibling cells)
-                                        location = "Unknown"
-                                        parent_row = link.find_parent('tr')
-                                        if parent_row:
-                                            loc_cell = parent_row.select_one('.jobLocation, .location')
-                                            if loc_cell: location = loc_cell.get_text().strip()
-                                            
-                                        jobs.append({
-                                            'title': title_text,
-                                            'url': full_url,
-                                            'location': location
-                                        })
+                    if response:
+                        logger.info(f"[{self.site_key}] Fallback request status: {response.status_code}")
+                        if response.status_code == 200:
+                            # Save HTML for debugging
+                            with open('aa_fallback.html', 'w', encoding='utf-8') as f:
+                                f.write(response.text)
+                            logger.info(f"[{self.site_key}] Saved fallback HTML to aa_fallback.html")
                             
-                            if jobs:
-                                logger.info(f"[{self.site_key}] Successfully extracted {len(jobs)} jobs via fallback")
-                                return jobs
+                            soup = BeautifulSoup(response.text, 'html.parser')
+                            # CarrierSite (SuccessFactors RMK) structure
+                            # Look for links in the results table
+                            links = soup.select('table[id*="job-table"] a[href*="/job/"], .job-title a[href*="/job/"], a[href*="/job/"]')
+                            if links:
+                                logger.info(f"[{self.site_key}] Found {len(links)} job links via make_request fallback")
+                                seen_urls = set()
+                                for link in links:
+                                    if len(jobs) >= self.max_jobs: break
+                                    href = link.get('href')
+                                    title_text = link.get_text().strip()
+                                    
+                                    if href and title_text and "/job/" in href:
+                                        full_url = urljoin(self.base_url, href)
+                                        if full_url not in seen_urls:
+                                            seen_urls.add(full_url)
+                                            # Try to find location in the parent structure (sibling cells)
+                                            location = "Unknown"
+                                            parent_row = link.find_parent('tr')
+                                            if parent_row:
+                                                loc_cell = parent_row.select_one('.jobLocation, .location')
+                                                if loc_cell: location = loc_cell.get_text().strip()
+                                                
+                                            jobs.append({
+                                                'title': title_text,
+                                                'url': full_url,
+                                                'location': location
+                                            })
+                                
+                                if jobs:
+                                    logger.info(f"[{self.site_key}] Successfully extracted {len(jobs)} jobs via fallback")
+                                    return jobs
+                            else:
+                                logger.warning(f"[{self.site_key}] Fallback returned 200 but no jobs found in HTML.")
+                        else:
+                            logger.error(f"[{self.site_key}] Fallback request failed with status: {response.status_code}")
                     else:
-                        logger.error(f"[{self.site_key}] Both browser and make_request failed.")
-                        return []
+                        logger.error(f"[{self.site_key}] Both browser and make_request failed (no response).")
+                    return []
                 
                 if not jobs:
                     # Detect job row selector dynamically

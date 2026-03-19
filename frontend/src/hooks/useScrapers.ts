@@ -210,11 +210,22 @@ export const useScraperActions = () => {
         },
     });
 
+    const checkJobStatus = useMutation({
+        mutationFn: async (jobId: number) => {
+            const { data } = await api.post(`/jobs/${jobId}/check-status/`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['managedJobs'] });
+        },
+    });
+
     return {
         startScraper,
         startAllScrapers,
         cancelJob,
         updateConfig,
         updateManagedJob,
+        checkJobStatus,
     };
 };

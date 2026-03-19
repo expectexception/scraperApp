@@ -129,6 +129,7 @@ start() {
         "$GUNICORN_BIN" scraper_service.wsgi:application \
             --bind 0.0.0.0:$DJANGO_PORT \
             --workers 3 \
+            --log-level info \
             --daemon \
             --pid "$DJANGO_PID" \
             --access-logfile "$LOG_DIR/django_access.log" \

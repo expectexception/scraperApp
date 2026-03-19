@@ -10,6 +10,7 @@ import sys
 import json
 import signal
 import psutil
+import requests
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -72,7 +73,7 @@ def _require_dashboard_auth(request):
     return token_data.get("username", "dashboard")
 
 
-def _dispatch_scraper_job(scraper_name: str, job_id: int, max_jobs=None, max_pages=None, job_categories=None) -> int:
+def _dispatch_scraper_job(scraper_name: str, job_id: str, max_jobs=None, max_pages=None, job_categories=None) -> int:
     """Dispatch scraper command in background without Celery dependency."""
     manage_py = os.path.join(settings.BASE_DIR, "manage.py")
     cmd = [sys.executable, manage_py, "run_scraper", scraper_name, "--job-id", str(job_id)]
@@ -88,11 +89,11 @@ def _dispatch_scraper_job(scraper_name: str, job_id: int, max_jobs=None, max_pag
     return process.pid
 
 
-def _job_pk(job: ScraperJob) -> int:
-    """Return a saved job primary key with a concrete int type."""
+def _job_pk(job: ScraperJob) -> str:
+    """Return a saved job primary key for compatibility with both SQL and MongoDB."""
     if job.pk is None:
         raise ValueError("ScraperJob must be saved before dispatch")
-    return int(job.pk)
+    return str(job.pk)
 
 
 def _serialize_schedule_snapshot(config: ScraperConfig) -> dict:
@@ -184,6 +185,10 @@ def _build_job_summary(queryset):
 @permission_classes([AllowAny])
 def dashboard_login(request):
     """Authenticate dashboard user and return short-lived bearer token."""
+    expected_user, expected_password = _dashboard_credentials()
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
     expected_user, expected_password = _dashboard_credentials()
     username = request.data.get('username')
     password = request.data.get('password')
@@ -448,6 +453,11 @@ def scraper_stats(request):
         .values('id', 'scraper_name', 'status', 'started_at', 'jobs_found')
     )
     
+    # Convert ObjectIds to strings for JSON serialization
+    for rj in recent_jobs:
+        if 'id' in rj:
+            rj['id'] = str(rj['id'])
+    
     stats_response = {
         'total_runs': job_stats['total_runs'] or 0,
         'completed_runs': job_stats['completed_runs'] or 0,
@@ -502,11 +512,15 @@ def scraper_history(request):
     paginator = Paginator(queryset, limit)
     paginated_jobs = paginator.get_page(page)
     
-    jobs = list(paginated_jobs.object_list.values(
+    jobs = []
+    for job in paginated_jobs.object_list.values(
         'id', 'scraper_name', 'status', 'started_at', 'completed_at',
         'execution_time', 'jobs_found', 'jobs_new', 'jobs_updated',
         'jobs_duplicate', 'triggered_by'
-    ))
+    ):
+        if 'id' in job:
+            job['id'] = str(job['id'])
+        jobs.append(job)
     
     return Response({
         'jobs': jobs,
@@ -677,12 +691,42 @@ def cancel_scraper_job(request, job_id):
         process_stopped = False
         if job.pid:
             try:
-                os.kill(job.pid, signal.SIGTERM)
+                # Use psutil for robust recursive termination
+                parent = psutil.Process(job.pid)
+                children = parent.children(recursive=True)
+                
+                # Terminate children first
+                for child in children:
+                    try:
+                        child.terminate()
+                    except psutil.NoSuchProcess:
+                        pass
+                
+                # Terminate parent
+                parent.terminate()
+                
+                # Wait for processes to terminate gracefully
+                gone, alive = psutil.wait_procs(children + [parent], timeout=3)
+                
+                # Force kill any survivors
+                for p in alive:
+                    try:
+                        p.kill()
+                    except psutil.NoSuchProcess:
+                        pass
+                
                 process_stopped = True
-            except ProcessLookupError:
+            except psutil.NoSuchProcess:
+                logger.warning(f"PID {job.pid} not found for job {job.pk} during cancellation")
                 process_stopped = False
-            except PermissionError:
-                logger.warning(f"Insufficient permission to terminate PID {job.pid} for job {job.pk}")
+            except Exception as e:
+                logger.error(f"Error terminating PID {job.pid} for job {job.pk}: {e}")
+                # Fallback to simple os.kill
+                try:
+                    os.kill(job.pid, signal.SIGTERM)
+                    process_stopped = True
+                except:
+                    process_stopped = False
 
         job.status = 'cancelled'
         job.completed_at = timezone.now()
@@ -716,10 +760,14 @@ def active_jobs(request):
         status__in=['pending', 'running']
     ).order_by('-started_at')
     
-    jobs = list(active.values(
+    jobs = []
+    for job in active.values(
         'id', 'scraper_name', 'status', 'started_at', 'created_at',
         'parameters', 'triggered_by', 'progress', 'pid', 'jobs_found'
-    ))
+    ):
+        if 'id' in job:
+            job['id'] = str(job['id'])
+        jobs.append(job)
     
     return Response({'active_jobs': jobs, 'count': len(jobs)})
 
@@ -739,13 +787,14 @@ def recent_jobs(request):
     if source:
         queryset = queryset.filter(source=source)
     
-    jobs = list(
-        queryset.order_by('-last_scraped')[:limit]
-        .values(
-            'id', 'job_id', 'url', 'source', 'title', 'company',
-            'scrape_count', 'first_scraped', 'last_scraped'
-        )
-    )
+    jobs = []
+    for job in queryset.order_by('-last_scraped')[:limit].values(
+        'id', 'job_id', 'url', 'source', 'title', 'company',
+        'scrape_count', 'first_scraped', 'last_scraped'
+    ):
+        if 'id' in job:
+            job['id'] = str(job['id'])
+        jobs.append(job)
     
     return Response({'jobs': jobs, 'count': len(jobs)})
 
@@ -783,12 +832,16 @@ def managed_jobs(request):
     paginator = Paginator(queryset, limit)
     page_obj = paginator.get_page(page)
 
-    jobs = list(page_obj.object_list.values(
+    jobs = []
+    for job in page_obj.object_list.values(
         'id', 'title', 'company', 'location', 'source', 'status', 'url',
         'operation_type', 'job_category', 'sub_role', 'country_code',
         'is_verified', 'posted_date', 'retrieved_date', 'description',
         'salary_currency', 'is_remote', 'last_checked'
-    ))
+    ):
+        if 'id' in job:
+            job['id'] = str(job['id'])
+        jobs.append(job)
 
     return Response({
         'jobs': jobs,
@@ -849,7 +902,7 @@ def update_managed_job(request, job_id):
     return Response({
         'message': 'Job updated successfully',
         'job': {
-            'id': int(job.pk),
+            'id': str(job.pk),
             'title': job.title,
             'company': job.company,
             'location': job.location,
@@ -869,6 +922,79 @@ def update_managed_job(request, job_id):
             'last_checked': job.last_checked,
         }
     })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def check_job_url_status(request, job_id):
+    """Perform a live check on a job URL to see if it's still active."""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+
+    try:
+        job = Job.objects.get(pk=job_id)
+        if not job.url:
+            return Response({'error': 'Job has no URL to check'}, status=status.HTTP_400_BAD_REQUEST)
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        result = 'active'
+        try:
+            # Use a relatively short timeout
+            response = requests.get(job.url, headers=headers, timeout=12, allow_redirects=True)
+            
+            # 1. Check HTTP status code
+            if response.status_code in [404, 410]:
+                job.status = 'closed'
+                result = 'closed_status_code'
+            else:
+                # 2. Check for "closed" keywords in the page title or body
+                closed_keywords = [
+                    'position no longer available',
+                    'job is closed',
+                    'no longer accepting applications',
+                    'this job has expired',
+                    'position has been filled',
+                    'job not found',
+                    'page not found',
+                    'opportunity has passed',
+                    'no longer active'
+                ]
+                
+                content_lower = response.text.lower()
+                is_closed = any(kw in content_lower for kw in closed_keywords)
+                
+                if is_closed:
+                    job.status = 'closed'
+                    result = 'closed_keyword_match'
+                else:
+                    result = 'active' if job.status != 'closed' else 'was_closed_now_seems_active'
+        
+        except requests.RequestException as e:
+            # If we can't reach it, we don't necessarily mark it closed, but we report the check failed
+            return Response({
+                'error': f'Request failed: {str(e)}',
+                'job_id': job_id,
+                'status': job.status,
+                'last_checked': job.last_checked
+            }, status=status.HTTP_502_BAD_GATEWAY)
+
+        job.last_checked = timezone.now()
+        job.save()
+        
+        return Response({
+            'job_id': str(job.pk),
+            'status': job.status,
+            'last_checked': job.last_checked,
+            'result': result,
+            'message': f"Job status check completed: {result}"
+        })
+
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])

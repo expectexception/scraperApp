@@ -4,7 +4,7 @@ import { cn } from '../../services/utils';
 interface CardProps {
     children: React.ReactNode;
     className?: string;
-    title?: string;
+    title?: React.ReactNode;
     subtitle?: string;
     footer?: React.ReactNode;
 }
@@ -14,7 +14,11 @@ export const Card: React.FC<CardProps> = ({ children, className, title, subtitle
         <div className={cn('glass-card flex flex-col', className)}>
             {title && (
                 <div className="px-6 py-5 border-b border-white/[0.08]">
-                    <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>
+                    {typeof title === 'string' ? (
+                        <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>
+                    ) : (
+                        title
+                    )}
                     {subtitle && <p className="text-xs text-secondary mt-1 font-medium">{subtitle}</p>}
                 </div>
             )}

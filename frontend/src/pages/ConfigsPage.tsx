@@ -79,7 +79,7 @@ export const ConfigsPage: React.FC = () => {
             </div>
 
             {/* Editor Area */}
-            <div className="xl:col-span-3">
+            <div className="xl:col-span-3 xl:sticky xl:top-24 h-fit">
                 {draft ? (
                     <motion.div
                         key={selectedScraper}

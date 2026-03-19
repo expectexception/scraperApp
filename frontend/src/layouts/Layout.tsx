@@ -145,7 +145,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                     </div>
                     <div>
                         <h1 className="font-black text-xl tracking-tighter text-white">IFOA Scrapers</h1>
-                        <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] -mt-1 leading-none">Dashboard</p>
+                        {/* <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] -mt-1 leading-none">Dashboard</p> */}
                     </div>
                 </div>
 
@@ -216,7 +216,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                         </button>
                     </div>
                 </header>
-                <div className="p-4 sm:p-6 lg:p-12 max-w-[1400px] mx-auto">
+                <div className="p-4 sm:p-6 lg:p-12 max-w-[1800px] mx-auto">
                     {children}
                 </div>
             </main>
