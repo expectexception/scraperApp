@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import api from '../services/api';
+import { useToast } from './useToast';
 import type {
     Scraper,
     ActiveJob,
@@ -13,7 +15,23 @@ import type {
     ManagedJob,
     ScrapedRecordsResponse,
     SchedulerOverview,
+    BulkJobStatusCheckResponse,
 } from '../types';
+
+type ApiErrorPayload = {
+    error?: string
+    message?: string
+};
+
+const extractApiError = (error: unknown, fallback: string) => {
+    const axiosError = error as AxiosError<ApiErrorPayload> | undefined;
+    return String(
+        axiosError?.response?.data?.error
+        ?? axiosError?.response?.data?.message
+        ?? (error as Error | undefined)?.message
+        ?? fallback
+    );
+};
 
 export const useSystemMetrics = (enabled: boolean) => {
     return useQuery({
@@ -34,6 +52,8 @@ export const useScrapers = () => {
             const { data } = await api.get('/list/');
             return data.scrapers as Scraper[];
         },
+        refetchInterval: 5000,
+        refetchIntervalInBackground: true,
     });
 };
 
@@ -56,7 +76,8 @@ export const useActiveJobs = (enabled: boolean) => {
             return data.active_jobs as ActiveJob[];
         },
         enabled,
-        refetchInterval: 5000,
+        refetchInterval: 2500,
+        refetchIntervalInBackground: true,
     });
 };
 
@@ -110,14 +131,15 @@ export const useConfigs = (enabled: boolean) => {
     });
 };
 
-export const useManagedJobs = (enabled: boolean, page = 1, limit = 20, search = '', status = '', source = '') => {
+export const useManagedJobs = (enabled: boolean, page = 1, limit = 20, search = '', status = '', source = '', verified = 'all') => {
     return useQuery({
-        queryKey: ['managedJobs', page, limit, search, status, source],
+        queryKey: ['managedJobs', page, limit, search, status, source, verified],
         queryFn: async () => {
             const params = new URLSearchParams({ page: String(page), limit: String(limit) });
             if (search.trim()) params.set('q', search.trim());
             if (status.trim()) params.set('status', status.trim());
             if (source.trim()) params.set('source', source.trim());
+            if (verified.trim() && verified !== 'all') params.set('verified', verified.trim());
             const { data } = await api.get(`/jobs/?${params.toString()}`);
             return data as ManagedJobsResponse;
         },
@@ -153,15 +175,31 @@ export const useSchedulerOverview = (enabled: boolean) => {
 
 export const useScraperActions = () => {
     const queryClient = useQueryClient();
+    const { showToast } = useToast();
 
     const startScraper = useMutation({
         mutationFn: async (scraperName: string) => {
             await api.post('/start/', { scraper_name: scraperName });
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['scrapers'] });
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
             queryClient.invalidateQueries({ queryKey: ['stats'] });
             queryClient.invalidateQueries({ queryKey: ['history'] });
+        },
+        onError: (error: unknown) => {
+            const status = (error as AxiosError | undefined)?.response?.status;
+            if (status === 409) {
+                showToast({
+                    level: 'info',
+                    message: extractApiError(error, 'Scraper is already running.'),
+                });
+                return;
+            }
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to start scraper.'),
+            });
         },
     });
 
@@ -170,20 +208,34 @@ export const useScraperActions = () => {
             await api.post('/start-all/');
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['scrapers'] });
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
             queryClient.invalidateQueries({ queryKey: ['stats'] });
             queryClient.invalidateQueries({ queryKey: ['history'] });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to start all scrapers.'),
+            });
         },
     });
 
     const cancelJob = useMutation({
-        mutationFn: async (jobId: number) => {
+        mutationFn: async (jobId: number | string) => {
             await api.delete(`/cancel/${jobId}/`);
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['scrapers'] });
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
             queryClient.invalidateQueries({ queryKey: ['history'] });
             queryClient.invalidateQueries({ queryKey: ['stats'] });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to cancel scraper job.'),
+            });
         },
     });
 
@@ -199,7 +251,7 @@ export const useScraperActions = () => {
     });
 
     const updateManagedJob = useMutation({
-        mutationFn: async ({ jobId, job }: { jobId: number; job: Partial<ManagedJob> }) => {
+        mutationFn: async ({ jobId, job }: { jobId: number | string; job: Partial<ManagedJob> }) => {
             const { data } = await api.patch(`/jobs/${jobId}/`, job);
             return data;
         },
@@ -207,16 +259,82 @@ export const useScraperActions = () => {
             queryClient.invalidateQueries({ queryKey: ['managedJobs'] });
             queryClient.invalidateQueries({ queryKey: ['recentJobs'] });
             queryClient.invalidateQueries({ queryKey: ['stats'] });
+            showToast({
+                level: 'success',
+                message: 'Job metadata updated successfully.',
+            });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to update job metadata.'),
+            });
         },
     });
 
     const checkJobStatus = useMutation({
-        mutationFn: async (jobId: number) => {
+        mutationFn: async (jobId: number | string) => {
             const { data } = await api.post(`/jobs/${jobId}/check-status/`);
             return data;
         },
-        onSuccess: () => {
+        onSuccess: (data: { result?: string } | undefined) => {
             queryClient.invalidateQueries({ queryKey: ['managedJobs'] });
+            if (data?.result === 'skipped_verified') {
+                showToast({
+                    level: 'info',
+                    message: 'Verified jobs are excluded from automated checks.',
+                });
+                return;
+            }
+            showToast({
+                level: 'success',
+                message: 'Live status check completed.',
+            });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Live status check failed.'),
+            });
+        },
+    });
+
+    const checkJobStatusBulk = useMutation({
+        mutationFn: async ({
+            q = '',
+            status = '',
+            source = '',
+            maxChecks = 200,
+        }: {
+            q?: string
+            status?: string
+            source?: string
+            maxChecks?: number
+        }) => {
+            const { data } = await api.post('/jobs/check-status/bulk/', {
+                q,
+                status,
+                source,
+                max_checks: maxChecks,
+            });
+            return data as BulkJobStatusCheckResponse;
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['managedJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['scrapedRecords'] });
+            queryClient.invalidateQueries({ queryKey: ['recentJobs'] });
+            const summary = data.results;
+            showToast({
+                level: 'success',
+                message: `Checked ${summary.checked}. Closed ${summary.closed_detected}. Skipped verified ${summary.skipped_verified}.`,
+                durationMs: 5000,
+            });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Bulk validation failed.'),
+            });
         },
     });
 
@@ -227,5 +345,6 @@ export const useScraperActions = () => {
         updateConfig,
         updateManagedJob,
         checkJobStatus,
+        checkJobStatusBulk,
     };
 };

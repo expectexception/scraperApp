@@ -47,6 +47,7 @@ urlpatterns = [
     # Update or delete a stored job record
     path('jobs/<str:job_id>/', api.update_managed_job, name='update_managed_job'),
     path('jobs/<str:job_id>/check-status/', api.check_job_url_status, name='check_job_status'),
+    path('jobs/check-status/bulk/', api.bulk_check_job_url_status, name='bulk_check_job_status'),
     path('jobs/<str:job_id>/delete/', api.update_managed_job, name='delete_managed_job'),
     
     # Get recent scraped jobs

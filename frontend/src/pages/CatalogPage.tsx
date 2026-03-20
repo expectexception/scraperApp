@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { useScrapers, useScraperActions } from '../hooks/useScrapers';
+import { useScrapers, useScraperActions, useActiveJobs } from '../hooks/useScrapers';
+import { useAuth } from '../hooks/useAuth';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -15,9 +16,29 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const CatalogPage: React.FC = () => {
+    const { isLoggedIn } = useAuth();
     const { data: scrapers, isLoading } = useScrapers();
-    const { startScraper } = useScraperActions();
+    const { data: activeJobs } = useActiveJobs(isLoggedIn);
+    const { startScraper, cancelJob } = useScraperActions();
     const [filter, setFilter] = useState('');
+
+    const activeJobByScraper = useMemo(() => {
+        const map = new Map<string, { id: number | string; status: string }>();
+        for (const job of activeJobs ?? []) {
+            if (!map.has(job.scraper_name)) {
+                map.set(job.scraper_name, { id: job.id, status: job.status });
+            }
+        }
+        return map;
+    }, [activeJobs]);
+
+    const activeJobsCountByScraper = useMemo(() => {
+        const map = new Map<string, number>();
+        for (const job of activeJobs ?? []) {
+            map.set(job.scraper_name, (map.get(job.scraper_name) ?? 0) + 1);
+        }
+        return map;
+    }, [activeJobs]);
 
     const filteredScrapers = useMemo(() => {
         if (!scrapers) return [];
@@ -58,7 +79,14 @@ export const CatalogPage: React.FC = () => {
                         [...Array(6)].map((_, i) => (
                             <div key={i} className="h-72 glass-card animate-pulse" />
                         ))
-                    ) : filteredScrapers.map((scraper, index) => (
+                    ) : filteredScrapers.map((scraper, index) => {
+                        const activeJob = activeJobByScraper.get(scraper.name);
+                        const liveActiveJobs = activeJobsCountByScraper.get(scraper.name) ?? scraper.active_jobs ?? 0;
+                        const isRunning = liveActiveJobs > 0;
+                        const isCancellingThis = cancelJob.isPending && String(cancelJob.variables) === String(activeJob?.id);
+                        const isStartingThis = startScraper.isPending && startScraper.variables === scraper.name;
+
+                        return (
                         <motion.div
                             key={scraper.name}
                             initial={{ opacity: 0, y: 20 }}
@@ -73,17 +101,35 @@ export const CatalogPage: React.FC = () => {
                                         <div className="flex items-center gap-3">
                                             <div className={cn("w-2.5 h-2.5 rounded-full shadow-lg", scraper.enabled ? "bg-success shadow-glow-success animate-pulse" : "bg-secondary/30")} />
                                             <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">{scraper.enabled ? 'ACTIVE' : 'DISABLED'}</span>
+                                            {isRunning && (
+                                                <Badge variant={activeJob?.status === 'pending' ? 'warning' : 'info'} className="text-[8px]">
+                                                    {activeJob?.status === 'pending' ? 'PENDING' : 'RUNNING'}
+                                                </Badge>
+                                            )}
                                         </div>
-                                        <Button
-                                            size="sm"
-                                            onClick={() => startScraper.mutate(scraper.name)}
-                                            disabled={!scraper.enabled}
-                                            isLoading={startScraper.isPending && startScraper.variables === scraper.name}
-                                            className="gap-2 px-8 uppercase text-[10px] w-full sm:w-auto"
-                                        >
-                                            <Rocket className="w-3.5 h-3.5" />
-                                            {scraper.enabled ? 'RUN' : 'DISABLED'}
-                                        </Button>
+                                        {isRunning ? (
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
+                                                onClick={() => activeJob && cancelJob.mutate(activeJob.id)}
+                                                disabled={!activeJob}
+                                                isLoading={isCancellingThis}
+                                                className="gap-2 px-8 uppercase text-[10px] w-full sm:w-auto"
+                                            >
+                                                {activeJob?.status === 'pending' ? 'STOP PENDING' : 'STOP'}
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                size="sm"
+                                                onClick={() => startScraper.mutate(scraper.name)}
+                                                disabled={!scraper.enabled}
+                                                isLoading={isStartingThis}
+                                                className="gap-2 px-8 uppercase text-[10px] w-full sm:w-auto"
+                                            >
+                                                <Rocket className="w-3.5 h-3.5" />
+                                                {scraper.enabled ? 'RUN' : 'DISABLED'}
+                                            </Button>
+                                        )}
                                     </div>
                                 }
                             >
@@ -108,9 +154,9 @@ export const CatalogPage: React.FC = () => {
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.05] text-[9px] font-black text-secondary uppercase tracking-[0.15em] transition-all group-hover:border-white/20">
                                         <Tag className="w-2.5 h-2.5" /> Intel
                                     </div>
-                                    {scraper.active_jobs ? (
+                                    {liveActiveJobs ? (
                                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black text-primary uppercase tracking-[0.15em]">
-                                            <Tag className="w-2.5 h-2.5" /> {scraper.active_jobs} Active Job{scraper.active_jobs > 1 ? 's' : ''}
+                                            <Tag className="w-2.5 h-2.5" /> {liveActiveJobs} Active Job{liveActiveJobs > 1 ? 's' : ''}
                                         </div>
                                     ) : null}
                                     {scraper.schedule?.schedule_enabled ? (
@@ -121,7 +167,8 @@ export const CatalogPage: React.FC = () => {
                                 </div>
                             </Card>
                         </motion.div>
-                    ))}
+                        );
+                    })}
                 </AnimatePresence>
             </div>
 

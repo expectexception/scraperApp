@@ -181,6 +181,77 @@ def _build_job_summary(queryset):
     )
 
 
+def _is_truthy(value) -> bool:
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _check_job_url(job: Job) -> dict:
+    """Check job URL and update job status/last_checked."""
+    if not job.url:
+        return {
+            'result': 'skipped_no_url',
+            'error': 'Job has no URL to check',
+            'status_changed': False,
+            'status': job.status,
+        }
+
+    previous_status = job.status
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
+    try:
+        response = requests.get(job.url, headers=headers, timeout=12, allow_redirects=True)
+    except requests.RequestException as exc:
+        return {
+            'result': 'request_failed',
+            'error': str(exc),
+            'status_changed': False,
+            'status': job.status,
+        }
+
+    result = 'active'
+    should_mark_closed = False
+    if response.status_code in [404, 410]:
+        should_mark_closed = True
+        result = 'closed_status_code'
+    else:
+        closed_keywords = [
+            'position no longer available',
+            'job is closed',
+            'no longer accepting applications',
+            'this job has expired',
+            'position has been filled',
+            'job not found',
+            'page not found',
+            'opportunity has passed',
+            'no longer active'
+        ]
+        content_lower = response.text.lower()
+        if any(keyword in content_lower for keyword in closed_keywords):
+            should_mark_closed = True
+            result = 'closed_keyword_match'
+        else:
+            result = 'active' if previous_status != 'closed' else 'was_closed_now_seems_active'
+
+    if should_mark_closed:
+        job.status = 'closed'
+
+    job.last_checked = timezone.now()
+    update_fields = ['last_checked']
+    if job.status != previous_status:
+        update_fields.append('status')
+    job.save(update_fields=update_fields)
+
+    return {
+        'result': result,
+        'error': None,
+        'status_changed': job.status != previous_status,
+        'status': job.status,
+        'last_checked': job.last_checked,
+    }
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def dashboard_login(request):
@@ -812,6 +883,7 @@ def managed_jobs(request):
     search = (request.query_params.get('q') or '').strip()
     status_filter = (request.query_params.get('status') or '').strip()
     source_filter = (request.query_params.get('source') or '').strip()
+    verified_filter = (request.query_params.get('verified') or 'all').strip().lower()
 
     queryset = Job.objects.all()
     if search:
@@ -827,6 +899,10 @@ def managed_jobs(request):
         queryset = queryset.filter(status=status_filter)
     if source_filter:
         queryset = queryset.filter(source=source_filter)
+    if verified_filter == 'verified':
+        queryset = queryset.filter(is_verified=True)
+    elif verified_filter == 'unverified':
+        queryset = queryset.filter(is_verified=False)
 
     queryset = queryset.order_by('-retrieved_date', '-created_at')
     paginator = Paginator(queryset, limit)
@@ -934,67 +1010,111 @@ def check_job_url_status(request, job_id):
 
     try:
         job = Job.objects.get(pk=job_id)
-        if not job.url:
-            return Response({'error': 'Job has no URL to check'}, status=status.HTTP_400_BAD_REQUEST)
-
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        
-        result = 'active'
-        try:
-            # Use a relatively short timeout
-            response = requests.get(job.url, headers=headers, timeout=12, allow_redirects=True)
-            
-            # 1. Check HTTP status code
-            if response.status_code in [404, 410]:
-                job.status = 'closed'
-                result = 'closed_status_code'
-            else:
-                # 2. Check for "closed" keywords in the page title or body
-                closed_keywords = [
-                    'position no longer available',
-                    'job is closed',
-                    'no longer accepting applications',
-                    'this job has expired',
-                    'position has been filled',
-                    'job not found',
-                    'page not found',
-                    'opportunity has passed',
-                    'no longer active'
-                ]
-                
-                content_lower = response.text.lower()
-                is_closed = any(kw in content_lower for kw in closed_keywords)
-                
-                if is_closed:
-                    job.status = 'closed'
-                    result = 'closed_keyword_match'
-                else:
-                    result = 'active' if job.status != 'closed' else 'was_closed_now_seems_active'
-        
-        except requests.RequestException as e:
-            # If we can't reach it, we don't necessarily mark it closed, but we report the check failed
+        if job.is_verified:
             return Response({
-                'error': f'Request failed: {str(e)}',
-                'job_id': job_id,
+                'job_id': str(job.pk),
+                'status': job.status,
+                'result': 'skipped_verified',
+                'message': 'Verified jobs are skipped for automated URL checks.',
+            })
+
+        result_payload = _check_job_url(job)
+        if result_payload['result'] == 'request_failed':
+            return Response({
+                'error': f"Request failed: {result_payload['error']}",
+                'job_id': str(job.pk),
                 'status': job.status,
                 'last_checked': job.last_checked
             }, status=status.HTTP_502_BAD_GATEWAY)
-
-        job.last_checked = timezone.now()
-        job.save()
         
         return Response({
             'job_id': str(job.pk),
             'status': job.status,
             'last_checked': job.last_checked,
-            'result': result,
-            'message': f"Job status check completed: {result}"
+            'result': result_payload['result'],
+            'message': f"Job status check completed: {result_payload['result']}"
         })
 
     except Job.DoesNotExist:
         return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def bulk_check_job_url_status(request):
+    """Bulk validate job URLs with guardrails for verified jobs."""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+
+    search = (request.data.get('q') or '').strip()
+    status_filter = (request.data.get('status') or '').strip()
+    source_filter = (request.data.get('source') or '').strip()
+    # Enforce platform policy for bulk automated checks:
+    # only scraped records are checked, and verified jobs are always skipped.
+    only_scraped = True
+    skip_verified = True
+    max_checks = min(max(int(request.data.get('max_checks', 200)), 1), 500)
+
+    queryset = Job.objects.all()
+    if search:
+        queryset = queryset.filter(
+            Q(title__icontains=search)
+            | Q(company__icontains=search)
+            | Q(location__icontains=search)
+            | Q(source__icontains=search)
+            | Q(operation_type__icontains=search)
+            | Q(job_category__icontains=search)
+        )
+    if status_filter:
+        queryset = queryset.filter(status=status_filter)
+    if source_filter:
+        queryset = queryset.filter(source=source_filter)
+    if only_scraped:
+        queryset = queryset.exclude(source__isnull=True).exclude(source='')
+
+    jobs = list(queryset.order_by('-retrieved_date', '-created_at')[:max_checks])
+    results = {
+        'checked': 0,
+        'skipped_verified': 0,
+        'skipped_no_url': 0,
+        'failed_requests': 0,
+        'status_changed': 0,
+        'closed_detected': 0,
+        'total_candidates': len(jobs),
+    }
+
+    for job in jobs:
+        if skip_verified and job.is_verified:
+            results['skipped_verified'] += 1
+            continue
+
+        check_payload = _check_job_url(job)
+        if check_payload['result'] == 'skipped_no_url':
+            results['skipped_no_url'] += 1
+            continue
+        if check_payload['result'] == 'request_failed':
+            results['failed_requests'] += 1
+            continue
+
+        results['checked'] += 1
+        if check_payload['status_changed']:
+            results['status_changed'] += 1
+        if check_payload['status'] == 'closed':
+            results['closed_detected'] += 1
+
+    return Response({
+        'message': 'Bulk URL validation completed',
+        'filters': {
+            'q': search,
+            'status': status_filter,
+            'source': source_filter,
+            'only_scraped': only_scraped,
+            'skip_verified': skip_verified,
+            'max_checks': max_checks,
+        },
+        'results': results,
+    })
 
 
 @api_view(['GET'])

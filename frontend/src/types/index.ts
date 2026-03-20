@@ -13,7 +13,7 @@ export type Scraper = {
 }
 
 export type ActiveJob = {
-    id: number
+    id: number | string
     scraper_name: string
     status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
     started_at: string
@@ -31,7 +31,7 @@ export type Stats = {
 }
 
 export type HistoryJob = {
-    id: number
+    id: number | string
     scraper_name: string
     status: string
     started_at: string
@@ -57,7 +57,7 @@ export type HistoryResponse = {
 }
 
 export type RecentJob = {
-    id: number
+    id: number | string
     job_id?: string
     title: string
     company: string
@@ -68,7 +68,7 @@ export type RecentJob = {
 }
 
 export type ManagedJob = {
-    id: number
+    id: number | string
     title: string
     company: string
     location: string | null
@@ -101,8 +101,29 @@ export type ManagedJobsResponse = {
     sources: string[]
 }
 
+export type BulkJobStatusCheckResponse = {
+    message: string
+    filters: {
+        q: string
+        status: string
+        source: string
+        only_scraped: boolean
+        skip_verified: boolean
+        max_checks: number
+    }
+    results: {
+        checked: number
+        skipped_verified: number
+        skipped_no_url: number
+        failed_requests: number
+        status_changed: number
+        closed_detected: number
+        total_candidates: number
+    }
+}
+
 export type ScrapedRecord = {
-    id: number
+    id: number | string
     job_id: string
     url: string
     source: string

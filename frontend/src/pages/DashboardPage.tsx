@@ -153,7 +153,7 @@ export const DashboardPage: React.FC = () => {
                                                     size="sm"
                                                     className="px-4 font-black transition-all hover:scale-105 active:scale-95 shadow-glow-danger"
                                                     onClick={() => cancelJob.mutate(job.id)}
-                                                    isLoading={cancelJob.isPending && cancelJob.variables === job.id}
+                                                    isLoading={cancelJob.isPending && String(cancelJob.variables) === String(job.id)}
                                                 >
                                                     Abort
                                                 </Button>

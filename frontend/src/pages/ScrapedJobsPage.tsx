@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useScrapedRecords } from '../hooks/useScrapers';
+import { useScrapedRecords, useScraperActions } from '../hooks/useScrapers';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { Database, ExternalLink, Loader2, Search } from 'lucide-react';
+import { Activity, Database, ExternalLink, Loader2, Search } from 'lucide-react';
 import { formatDate } from '../services/utils';
 
 export const ScrapedJobsPage: React.FC = () => {
@@ -12,7 +12,16 @@ export const ScrapedJobsPage: React.FC = () => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [sourceFilter, setSourceFilter] = useState('');
+    const { checkJobStatusBulk } = useScraperActions();
     const { data, isLoading } = useScrapedRecords(isLoggedIn, page, 20, search, sourceFilter);
+
+    const handleBulkValidation = async () => {
+        await checkJobStatusBulk.mutateAsync({
+            q: search,
+            source: sourceFilter,
+            maxChecks: 250,
+        });
+    };
 
     return (
         <div className="space-y-8">
@@ -59,6 +68,23 @@ export const ScrapedJobsPage: React.FC = () => {
                     </div>
                 }
             >
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
+                    <p className="text-[10px] text-secondary font-black uppercase tracking-[0.2em]">
+                        Bulk validation checks scraped records and always skips verified jobs.
+                    </p>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10 px-5 text-[10px] gap-2 border-white/10 hover:border-primary/40"
+                        onClick={handleBulkValidation}
+                        isLoading={checkJobStatusBulk.isPending}
+                        disabled={isLoading || !data?.records.length}
+                    >
+                        <Activity className="w-3.5 h-3.5" />
+                        Validate Scraped Records
+                    </Button>
+                </div>
+
                 <div className="hidden xl:block overflow-x-auto">
                     <table className="w-full min-w-[980px]">
                         <thead>

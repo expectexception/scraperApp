@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useManagedJobs, useScraperActions } from '../hooks/useScrapers';
+import { useToast } from '../hooks/useToast';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -34,20 +35,48 @@ const statusVariant = (status: string) => {
 
 export const JobsPage: React.FC = () => {
     const { isLoggedIn } = useAuth();
-    const { updateManagedJob, checkJobStatus } = useScraperActions();
+    const { showToast } = useToast();
+    const { updateManagedJob, checkJobStatus, checkJobStatusBulk } = useScraperActions();
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [sourceFilter, setSourceFilter] = useState('');
-    const { data, isLoading } = useManagedJobs(isLoggedIn, page, 20, search, statusFilter, sourceFilter);
+    const [verifiedFilter, setVerifiedFilter] = useState<'all' | 'unverified' | 'verified'>('all');
+    const { data, isLoading } = useManagedJobs(isLoggedIn, page, 20, search, statusFilter, sourceFilter, verifiedFilter);
     
     // UI State
-    const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+    const [selectedJobId, setSelectedJobId] = useState<number | string | null>(null);
     const [draft, setDraft] = useState<ManagedJob | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     
-    const selectedJob = useMemo(() => data?.jobs.find((job) => job.id === selectedJobId) ?? null, [data?.jobs, selectedJobId]);
+    const selectedJob = useMemo(() => {
+        if (selectedJobId == null) return null;
+        return data?.jobs.find((job) => String(job.id) === String(selectedJobId)) ?? null;
+    }, [data?.jobs, selectedJobId]);
     const editorJob = draft ?? selectedJob;
+    const closeEditModal = () => {
+        setIsEditModalOpen(false);
+        setDraft(null);
+        setSelectedJobId(null);
+    };
+
+    const hasUnsavedChanges = useMemo(() => {
+        if (!editorJob || !selectedJob) return false;
+        const normalize = (job: ManagedJob) => ({
+            title: job.title?.trim() ?? '',
+            company: job.company?.trim() ?? '',
+            location: job.location ?? '',
+            status: job.status ?? '',
+            operation_type: job.operation_type ?? '',
+            job_category: job.job_category ?? '',
+            sub_role: job.sub_role ?? '',
+            country_code: (job.country_code ?? '').toUpperCase().slice(0, 3),
+            is_verified: !!job.is_verified,
+            is_remote: !!job.is_remote,
+            description: job.description ?? '',
+        });
+        return JSON.stringify(normalize(editorJob)) !== JSON.stringify(normalize(selectedJob));
+    }, [editorJob, selectedJob]);
 
     const handleEditClick = (job: ManagedJob) => {
         setSelectedJobId(job.id);
@@ -55,33 +84,52 @@ export const JobsPage: React.FC = () => {
         setIsEditModalOpen(true);
     };
 
-    const handleCheckStatus = async (jobId: number) => {
+    const handleCheckStatus = async (jobId: number | string) => {
         try {
             await checkJobStatus.mutateAsync(jobId);
-        } catch (error) {
-            console.error("Status check failed", error);
+        } catch {
+            // Error toast is handled centrally in the mutation hook.
         }
     };
 
     const handleSave = async () => {
         if (!editorJob) return;
+        const title = editorJob.title?.trim() ?? '';
+        const company = editorJob.company?.trim() ?? '';
+        if (!title || !company) {
+            showToast({
+                level: 'error',
+                message: 'Title and company are required.',
+            });
+            return;
+        }
+
         await updateManagedJob.mutateAsync({
             jobId: editorJob.id,
             job: {
-                title: editorJob.title,
-                company: editorJob.company,
-                location: editorJob.location,
+                title,
+                company,
+                location: editorJob.location?.trim() || null,
                 status: editorJob.status,
-                operation_type: editorJob.operation_type,
-                job_category: editorJob.job_category,
-                sub_role: editorJob.sub_role,
-                country_code: editorJob.country_code,
+                operation_type: editorJob.operation_type?.trim() || null,
+                job_category: editorJob.job_category?.trim() || null,
+                sub_role: editorJob.sub_role?.trim() || null,
+                country_code: editorJob.country_code?.toUpperCase().slice(0, 3) || null,
                 is_verified: editorJob.is_verified,
                 is_remote: editorJob.is_remote,
-                description: editorJob.description,
+                description: editorJob.description?.trim() || null,
             },
         });
-        setIsEditModalOpen(false);
+        closeEditModal();
+    };
+
+    const handleBulkValidation = async () => {
+        await checkJobStatusBulk.mutateAsync({
+            q: search,
+            status: statusFilter,
+            source: sourceFilter,
+            maxChecks: 250,
+        });
     };
 
     const pagination = data?.pagination;
@@ -125,7 +173,7 @@ export const JobsPage: React.FC = () => {
                     }
                 >
                     <div className="space-y-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1fr] gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1fr_1fr] gap-4">
                             <div className="relative group">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary" />
                                 <input
@@ -148,6 +196,32 @@ export const JobsPage: React.FC = () => {
                                 <option value="">All sources</option>
                                 {data?.sources.map((source) => <option key={source} value={source}>{source}</option>)}
                             </select>
+                            <select
+                                value={verifiedFilter}
+                                onChange={(e) => { setVerifiedFilter(e.target.value as 'all' | 'unverified' | 'verified'); setPage(1); }}
+                                className="glass-input w-full h-12"
+                            >
+                                <option value="all">All verification states</option>
+                                <option value="unverified">Hide verified jobs</option>
+                                <option value="verified">Show only verified</option>
+                            </select>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
+                            <p className="text-[10px] text-secondary font-black uppercase tracking-[0.2em]">
+                                Bulk check validates scraped records only and skips verified jobs automatically.
+                            </p>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-10 px-5 text-[10px] gap-2 border-white/10 hover:border-primary/40"
+                                onClick={handleBulkValidation}
+                                isLoading={checkJobStatusBulk.isPending}
+                                disabled={isLoading || !data?.jobs.length}
+                            >
+                                <Activity className="w-3.5 h-3.5" />
+                                Validate Matching Unverified
+                            </Button>
                         </div>
 
                         <div className="hidden xl:block overflow-x-auto rounded-2xl border border-white/5 bg-white/[0.01]">
@@ -195,7 +269,7 @@ export const JobsPage: React.FC = () => {
                                                     <Button 
                                                         variant="outline" 
                                                         size="sm" 
-                                                        disabled={checkJobStatus.isPending && selectedJobId === job.id}
+                                                        disabled={job.is_verified || (checkJobStatus.isPending && selectedJobId === job.id)}
                                                         onClick={() => {
                                                             setSelectedJobId(job.id);
                                                             handleCheckStatus(job.id);
@@ -207,7 +281,7 @@ export const JobsPage: React.FC = () => {
                                                         ) : (
                                                             <Activity className="w-3 h-3 text-primary" />
                                                         )}
-                                                        Check Live
+                                                        {job.is_verified ? 'Verified' : 'Check Live'}
                                                     </Button>
                                                     {job.last_checked && (
                                                         <span className="text-[9px] text-secondary font-bold uppercase tracking-tighter">
@@ -272,10 +346,10 @@ export const JobsPage: React.FC = () => {
                                             size="sm" 
                                             className="flex-1 h-10 text-[10px] uppercase tracking-widest font-black gap-2"
                                             onClick={() => handleCheckStatus(job.id)}
-                                            disabled={checkJobStatus.isPending}
+                                            disabled={job.is_verified || checkJobStatus.isPending}
                                         >
                                             <Activity className="w-3.5 h-3.5" />
-                                            Check
+                                            {job.is_verified ? 'Verified' : 'Check'}
                                         </Button>
                                     </div>
                                 </div>
@@ -290,7 +364,7 @@ export const JobsPage: React.FC = () => {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8">
                     <div 
                         className="absolute inset-0 bg-background/60 backdrop-blur-md animate-in fade-in duration-300" 
-                        onClick={() => setIsEditModalOpen(false)} 
+                        onClick={closeEditModal} 
                     />
                     <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
                         <Card
@@ -307,7 +381,7 @@ export const JobsPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <button 
-                                        onClick={() => setIsEditModalOpen(false)}
+                                        onClick={closeEditModal}
                                         className="p-2 rounded-xl border border-white/5 hover:bg-white/5 text-secondary hover:text-white transition-all"
                                     >
                                         <X className="w-5 h-5" />
@@ -405,13 +479,13 @@ export const JobsPage: React.FC = () => {
                                     </a>
                                     {editorJob.last_checked && (
                                         <span className="text-[9px] text-white/20 font-bold uppercase tracking-widest">
-                                            Last Valided: {formatDate(editorJob.last_checked)}
+                                            Last Validated: {formatDate(editorJob.last_checked)}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex gap-3 w-full sm:w-auto">
-                                    <Button variant="secondary" className="flex-1 sm:flex-none h-12 px-8 uppercase tracking-widest" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-                                    <Button className="flex-1 sm:flex-none h-12 px-8 uppercase tracking-widest" onClick={handleSave} isLoading={updateManagedJob.isPending}>Submit Changes</Button>
+                                    <Button variant="secondary" className="flex-1 sm:flex-none h-12 px-8 uppercase tracking-widest" onClick={closeEditModal}>Cancel</Button>
+                                    <Button className="flex-1 sm:flex-none h-12 px-8 uppercase tracking-widest" onClick={handleSave} isLoading={updateManagedJob.isPending} disabled={!hasUnsavedChanges}>Submit Changes</Button>
                                 </div>
                             </div>
                         </Card>
