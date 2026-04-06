@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStats, useActiveJobs, useRecentJobs, useScraperActions } from '../hooks/useScrapers';
+import { useStats, useActiveMonitor, useRecentJobs, useScraperActions } from '../hooks/useScrapers';
 import { StatTile } from '../components/features/StatTile';
 import { MetricsMonitor } from '../components/features/MetricsMonitor';
 import { Card } from '../components/ui/Card';
@@ -22,9 +22,12 @@ import { formatDate, formatDuration } from '../services/utils';
 export const DashboardPage: React.FC = () => {
     const { isLoggedIn } = useAuth();
     const { data: stats, isLoading: statsLoading } = useStats(isLoggedIn);
-    const { data: activeJobs, isLoading: jobsLoading } = useActiveJobs(isLoggedIn);
+    const { data: activeMonitor, isLoading: jobsLoading } = useActiveMonitor(isLoggedIn);
     const { data: recentJobs, isLoading: recentLoading } = useRecentJobs(isLoggedIn, 5);
     const { startAllScrapers, cancelJob } = useScraperActions();
+    const activeJobs = activeMonitor?.active_jobs ?? [];
+    const recentlyFinished = activeMonitor?.recently_finished ?? [];
+    const monitorRows = [...activeJobs, ...recentlyFinished.slice(0, 8)];
 
     return (
         <div className="space-y-8">
@@ -98,10 +101,10 @@ export const DashboardPage: React.FC = () => {
                 <Card
                     className="lg:col-span-2"
                     title={`Active Scrapers (${activeJobs?.length ?? 0})`}
-                    subtitle="Live scraper status and management"
+                    subtitle="Live running status with recent completions"
                     footer={
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
-                            <p className="text-xs text-secondary italic">Auto-refreshing every 5 seconds</p>
+                            <p className="text-xs text-secondary italic">Auto-refreshing every 2.5 seconds</p>
                             <Button
                                 size="sm"
                                 className="gap-2 w-full sm:w-auto"
@@ -126,25 +129,25 @@ export const DashboardPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {!activeJobs?.length && !jobsLoading ? (
+                                {!monitorRows.length && !jobsLoading ? (
                                     <tr>
                                         <td colSpan={5} className="py-12 text-center text-secondary text-sm">
                                             No active scrapers. Ready to run.
                                         </td>
                                     </tr>
-                                ) : activeJobs?.map(job => (
+                                ) : monitorRows.map(job => (
                                     <tr key={job.id} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="py-4 px-6 text-xs font-mono text-secondary">#{job.id}</td>
                                         <td className="py-4 px-6 font-semibold text-sm">{job.scraper_name}</td>
                                         <td className="py-4 px-6">
-                                            <Badge variant={job.status === 'running' ? 'info' : 'warning'}>
+                                            <Badge variant={job.status === 'running' ? 'info' : job.status === 'completed' ? 'success' : job.status === 'failed' ? 'danger' : 'warning'}>
                                                 {job.status === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
                                                 {job.status}
                                             </Badge>
                                         </td>
                                         <td className="py-4 px-6 text-xs text-secondary flex items-center gap-2">
                                             <Clock className="w-3.5 h-3.5" />
-                                            {formatDate(job.started_at)}
+                                            {formatDate(job.completed_at || job.started_at)}
                                         </td>
                                         <td className="py-4 px-6 text-right">
                                             {job.status === 'running' || job.status === 'pending' ? (

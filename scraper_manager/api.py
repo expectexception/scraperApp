@@ -252,6 +252,25 @@ def _check_job_url(job: Job) -> dict:
     }
 
 
+def _filter_file_path() -> str:
+    filter_file = CONFIG.get('filtering', {}).get('filter_file', 'filter_title.json')
+    if os.path.isabs(filter_file):
+        return filter_file
+    return os.path.join(os.path.dirname(__file__), filter_file)
+
+
+def _load_filter_payload() -> dict:
+    file_path = _filter_file_path()
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def _save_filter_payload(payload: dict) -> None:
+    file_path = _filter_file_path()
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def dashboard_login(request):
@@ -839,8 +858,24 @@ def active_jobs(request):
         if 'id' in job:
             job['id'] = str(job['id'])
         jobs.append(job)
-    
-    return Response({'active_jobs': jobs, 'count': len(jobs)})
+
+    recent_finished = []
+    finished_queryset = ScraperJob.objects.filter(
+        status__in=['completed', 'failed', 'cancelled']
+    ).order_by('-completed_at', '-created_at')[:20]
+    for job in finished_queryset.values(
+        'id', 'scraper_name', 'status', 'started_at', 'completed_at', 'execution_time',
+        'jobs_found', 'jobs_new', 'jobs_updated', 'jobs_duplicate', 'triggered_by'
+    ):
+        if 'id' in job:
+            job['id'] = str(job['id'])
+        recent_finished.append(job)
+
+    return Response({
+        'active_jobs': jobs,
+        'recently_finished': recent_finished,
+        'count': len(jobs),
+    })
 
 
 @api_view(['GET'])
@@ -1196,47 +1231,171 @@ def run_all_scrapers(request):
     max_jobs = request.data.get('max_jobs')
     max_pages = request.data.get('max_pages')
     job_categories = normalize_job_categories(request.data.get('job_categories'))
-    
-    # Create job
-    scraper_job = ScraperJob.objects.create(
-        scraper_name='all',
-        status='pending',
-        triggered_by=auth_user,
-        parameters={
-            'max_jobs': max_jobs,
-            'max_pages': max_pages,
-            'job_categories': job_categories,
-        }
-    )
-    scraper_job_id = _job_pk(scraper_job)
-    
-    try:
-        process_pid = _dispatch_scraper_job(
-            'all',
-            scraper_job_id,
-            max_jobs=max_jobs,
-            max_pages=max_pages,
-            job_categories=job_categories,
+
+    config_map = {cfg.scraper_name: cfg for cfg in ScraperConfig.objects.all()}
+    started_jobs = []
+    skipped = {
+        'disabled': [],
+        'already_running': [],
+        'dispatch_failed': [],
+    }
+
+    for scraper_name in list_scrapers():
+        scraper_config = config_map.get(scraper_name)
+        is_enabled = scraper_config.is_enabled if scraper_config else CONFIG['sites'].get(scraper_name, {}).get('enabled', False)
+        if not is_enabled:
+            skipped['disabled'].append(scraper_name)
+            continue
+
+        active_count = ScraperJob.objects.filter(
+            scraper_name=scraper_name,
+            status__in=['pending', 'running']
+        ).count()
+        if active_count > 0:
+            skipped['already_running'].append({
+                'scraper_name': scraper_name,
+                'active_jobs': active_count,
+            })
+            continue
+
+        scraper_job = ScraperJob.objects.create(
+            scraper_name=scraper_name,
+            status='pending',
+            triggered_by=auth_user,
+            parameters={
+                'max_jobs': max_jobs,
+                'max_pages': max_pages,
+                'job_categories': job_categories,
+                'triggered_from': 'start_all',
+            }
         )
-        scraper_job.pid = process_pid
-        scraper_job.save(update_fields=['pid'])
-        
-        return Response({
-            'job_id': scraper_job_id,
-            'message': 'All scrapers queued',
-            'status': 'pending',
-            'pid': process_pid,
-        }, status=status.HTTP_202_ACCEPTED)
-        
-    except Exception as e:
-        scraper_job.status = 'failed'
-        scraper_job.error_message = f"Dispatch failed: {str(e)}"
-        scraper_job.save()
-        
+        scraper_job_id = _job_pk(scraper_job)
+
+        try:
+            process_pid = _dispatch_scraper_job(
+                scraper_name,
+                scraper_job_id,
+                max_jobs=max_jobs,
+                max_pages=max_pages,
+                job_categories=job_categories,
+            )
+            scraper_job.pid = process_pid
+            scraper_job.save(update_fields=['pid'])
+            started_jobs.append({
+                'job_id': scraper_job_id,
+                'scraper_name': scraper_name,
+                'status': 'pending',
+                'pid': process_pid,
+            })
+        except Exception as exc:
+            scraper_job.status = 'failed'
+            scraper_job.error_message = f"Dispatch failed: {str(exc)}"
+            scraper_job.save()
+            skipped['dispatch_failed'].append({
+                'scraper_name': scraper_name,
+                'error': str(exc),
+            })
+
+    if not started_jobs:
         return Response(
-            {'error': f"Failed to queue job: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {
+                'error': 'No scrapers were queued',
+                'queued_count': 0,
+                'jobs': [],
+                'skipped': skipped,
+            },
+            status=status.HTTP_409_CONFLICT
         )
+
+    return Response({
+        'message': f"Queued {len(started_jobs)} scraper(s)",
+        'queued_count': len(started_jobs),
+        'jobs': started_jobs,
+        'skipped': skipped,
+    }, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([AllowAny])
+def title_filters(request):
+    """View and edit title-filter keywords from filter_title.json."""
+    auth_user = _require_dashboard_auth(request)
+    if isinstance(auth_user, Response):
+        return auth_user
+
+    try:
+        payload = _load_filter_payload()
+    except Exception as exc:
+        return Response({'error': f'Failed to load filter file: {exc}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    filters = payload.get('Filters', [])
+
+    if request.method == 'GET':
+        all_keywords = []
+        for group in filters:
+            all_keywords.extend(group.get('Keywords', []))
+        return Response({
+            'filter_name': payload.get('FilterName', ''),
+            'description': payload.get('Description', ''),
+            'file_path': _filter_file_path(),
+            'groups': [
+                {
+                    'filter_type': group.get('FilterType', ''),
+                    'display_name': group.get('DisplayName', ''),
+                    'keyword_count': len(group.get('Keywords', [])),
+                }
+                for group in filters
+            ],
+            'keywords': sorted(set(all_keywords), key=lambda item: item.lower()),
+            'count': len(set(all_keywords)),
+        })
+
+    action = (request.data.get('action') or '').strip().lower()
+    keyword_raw = str(request.data.get('keyword') or '').strip()
+    filter_type = str(request.data.get('filter_type') or '').strip()
+
+    if action not in {'add', 'remove'}:
+        return Response({'error': "action must be 'add' or 'remove'"}, status=status.HTTP_400_BAD_REQUEST)
+    if not keyword_raw:
+        return Response({'error': 'keyword is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    changed = False
+    if action == 'add':
+        target_group = None
+        if filter_type:
+            for group in filters:
+                if str(group.get('FilterType', '')).strip().lower() == filter_type.lower():
+                    target_group = group
+                    break
+        if target_group is None and filters:
+            target_group = filters[0]
+        if target_group is None:
+            return Response({'error': 'No filter groups found in filter file'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        keywords = target_group.setdefault('Keywords', [])
+        if not any(str(item).strip().lower() == keyword_raw.lower() for item in keywords):
+            keywords.append(keyword_raw)
+            changed = True
+    else:
+        for group in filters:
+            keywords = group.get('Keywords', [])
+            remaining = [item for item in keywords if str(item).strip().lower() != keyword_raw.lower()]
+            if len(remaining) != len(keywords):
+                group['Keywords'] = remaining
+                changed = True
+
+    if changed:
+        try:
+            _save_filter_payload(payload)
+        except Exception as exc:
+            return Response({'error': f'Failed to save filter file: {exc}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({
+        'message': f"Keyword {'updated' if changed else 'unchanged'} successfully",
+        'action': action,
+        'keyword': keyword_raw,
+        'changed': changed,
+    })
 
 
 @api_view(['GET'])

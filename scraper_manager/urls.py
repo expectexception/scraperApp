@@ -67,4 +67,7 @@ urlpatterns = [
 
     # Scheduling overview
     path('scheduler/overview/', api.scheduler_overview, name='scheduler_overview'),
+
+    # Title filter management
+    path('title-filters/', api.title_filters, name='title_filters'),
 ]

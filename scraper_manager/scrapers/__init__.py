@@ -98,6 +98,18 @@ from .kalitta_holdings_scraper import KalittaHoldingsScraper
 from .jet_aviation_scraper import JetAviationScraper
 from .riyadh_air_scraper import RiyadhAirScraper
 from .global_jet_scraper import GlobalJetScraper
+from .aar_corp_scraper import AARCorpScraper
+from .fedex_scraper import FedexScraper
+from .kalitta_air_scraper import KalittaAirScraper
+from .envoy_air_scraper import EnvoyAirScraper
+from .atlas_air_scraper import AtlasAirScraper
+from .atlantic_aviation_scraper import AtlanticAviationScraper
+from .cargolux_scraper import CargoluxScraper
+from .netjets_scraper import NetJetsScraper
+from .wheels_up_scraper import WheelsUpScraper
+from .flexjet_scraper import FlexjetScraper
+from .amerijet_scraper import AmerijetScraper
+from .cargojet_scraper import CargojetScraper
 
 
 # Available scrapers
@@ -197,6 +209,18 @@ SCRAPERS = {
     'jet_aviation': JetAviationScraper,
     'riyadh_air': RiyadhAirScraper,
     'global_jet': GlobalJetScraper,
+    'aar_corp': AARCorpScraper,
+    'fedex': FedexScraper,
+    'kalitta_air': KalittaAirScraper,
+    'envoy_air': EnvoyAirScraper,
+    'atlas_air': AtlasAirScraper,
+    'atlantic_aviation': AtlanticAviationScraper,
+    'cargolux': CargoluxScraper,
+    'netjets': NetJetsScraper,
+    'wheels_up': WheelsUpScraper,
+    'flexjet': FlexjetScraper,
+    'amerijet': AmerijetScraper,
+    'cargojet': CargojetScraper,
 }
 
 

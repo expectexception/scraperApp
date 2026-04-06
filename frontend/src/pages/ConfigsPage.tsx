@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useConfigs, useSchedulerOverview, useScraperActions, useScrapers } from '../hooks/useScrapers';
+import { useConfigs, useSchedulerOverview, useScraperActions, useScrapers, useTitleFilters } from '../hooks/useScrapers';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -8,7 +8,10 @@ import {
     Save,
     ChevronRight,
     Sliders,
-    Clock
+    Clock,
+    Plus,
+    Trash2,
+    Search
 } from 'lucide-react';
 import type { ScraperConfig } from '../types';
 import { motion } from 'framer-motion';
@@ -19,10 +22,14 @@ export const ConfigsPage: React.FC = () => {
     const { data: scrapers } = useScrapers();
     const { data: configs, isLoading } = useConfigs(isLoggedIn);
     const { data: schedulerOverview } = useSchedulerOverview(isLoggedIn);
-    const { updateConfig } = useScraperActions();
+    const { data: titleFilters } = useTitleFilters(isLoggedIn);
+    const { updateConfig, updateTitleFilter } = useScraperActions();
 
     const [selectedScraper, setSelectedScraper] = useState<string>('');
     const [draft, setDraft] = useState<ScraperConfig | null>(null);
+    const [newKeyword, setNewKeyword] = useState('');
+    const [keywordSearch, setKeywordSearch] = useState('');
+    const [targetFilterType, setTargetFilterType] = useState('');
 
     useEffect(() => {
         if (scrapers?.length && !selectedScraper) {
@@ -41,6 +48,28 @@ export const ConfigsPage: React.FC = () => {
             updateConfig.mutate({ name: selectedScraper, config: draft });
         }
     };
+
+    const handleAddKeyword = async () => {
+        const keyword = newKeyword.trim();
+        if (!keyword) return;
+        await updateTitleFilter.mutateAsync({
+            action: 'add',
+            keyword,
+            filterType: targetFilterType || undefined,
+        });
+        setNewKeyword('');
+    };
+
+    const handleRemoveKeyword = async (keyword: string) => {
+        await updateTitleFilter.mutateAsync({
+            action: 'remove',
+            keyword,
+        });
+    };
+
+    const filteredKeywords = (titleFilters?.keywords ?? []).filter((keyword) =>
+        keyword.toLowerCase().includes(keywordSearch.toLowerCase())
+    );
 
     if (isLoading) return <div className="p-8 text-secondary">Loading configurations...</div>;
 
@@ -86,6 +115,7 @@ export const ConfigsPage: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
+                        className="space-y-8"
                     >
                         <Card
                             title={`${selectedScraper} Settings`}
@@ -222,6 +252,79 @@ export const ConfigsPage: React.FC = () => {
                                         />
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
+
+                        <Card
+                            title="Title Filter Keywords"
+                            subtitle="Add or remove job title keywords used by filter_title.json"
+                        >
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_auto] gap-3">
+                                    <div className="relative">
+                                        <Search className="w-4 h-4 text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            value={newKeyword}
+                                            onChange={(e) => setNewKeyword(e.target.value)}
+                                            placeholder="Add keyword (e.g. Flight Dispatcher)"
+                                            className="glass-input w-full pl-10"
+                                        />
+                                    </div>
+                                    <select
+                                        value={targetFilterType}
+                                        onChange={(e) => setTargetFilterType(e.target.value)}
+                                        className="glass-input w-full"
+                                    >
+                                        <option value="">Default group</option>
+                                        {titleFilters?.groups.map((group) => (
+                                            <option key={group.filter_type} value={group.filter_type}>
+                                                {group.display_name} ({group.keyword_count})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <Button
+                                        className="gap-2"
+                                        onClick={handleAddKeyword}
+                                        isLoading={updateTitleFilter.isPending}
+                                        disabled={!newKeyword.trim()}
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Add
+                                    </Button>
+                                </div>
+
+                                <div className="relative">
+                                    <Search className="w-4 h-4 text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        value={keywordSearch}
+                                        onChange={(e) => setKeywordSearch(e.target.value)}
+                                        placeholder="Search existing keywords..."
+                                        className="glass-input w-full pl-10"
+                                    />
+                                </div>
+
+                                <div className="max-h-80 overflow-y-auto rounded-2xl border border-white/5 bg-white/[0.02] p-3 space-y-2">
+                                    {filteredKeywords.slice(0, 200).map((keyword) => (
+                                        <div key={keyword} className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2">
+                                            <span className="text-xs font-bold text-white">{keyword}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 px-3 text-danger hover:bg-danger/10 hover:text-danger"
+                                                onClick={() => handleRemoveKeyword(keyword)}
+                                                isLoading={updateTitleFilter.isPending}
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    {!filteredKeywords.length && (
+                                        <p className="text-xs text-secondary text-center py-6">No matching keywords found.</p>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-secondary uppercase tracking-[0.16em] font-black">
+                                    Showing {Math.min(filteredKeywords.length, 200)} of {titleFilters?.count ?? 0} keywords
+                                </p>
                             </div>
                         </Card>
                     </motion.div>

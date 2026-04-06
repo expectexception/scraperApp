@@ -11,7 +11,7 @@ Standalone scraper service with a Django API backend and a React + TypeScript fr
 ## Setup
 
 ```bash
-cd "/home/rajat/Desktop/AeroOps Intel/scraper-standalone"
+cd "/home/rajat/Desktop/IFOA Talent/scraper-standalone"
 cp .env.example .env
 cp frontend/.env.example frontend/.env
 ```

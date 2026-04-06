@@ -197,6 +197,18 @@ SCRAPER_SETTINGS = {
         'jet_aviation': 'medium',
         'riyadh_air': 'medium',
         'global_jet': 'medium',
+        'aar_corp': 'medium',
+        'fedex': 'medium',
+        'kalitta_air': 'medium',
+        'envoy_air': 'medium',
+        'atlas_air': 'medium',
+        'atlantic_aviation': 'medium',
+        'cargolux': 'medium',
+        'netjets': 'medium',
+        'wheels_up': 'medium',
+        'flexjet': 'medium',
+        'amerijet': 'medium',
+        'cargojet': 'medium',
     }
 }
 
@@ -535,6 +547,42 @@ SCRAPERS = {
     'global_jet': {
         'max_jobs': 50,
     },
+    'aar_corp': {
+        'max_jobs': 50,
+    },
+    'fedex': {
+        'max_jobs': 50,
+    },
+    'kalitta_air': {
+        'max_jobs': 50,
+    },
+    'envoy_air': {
+        'max_jobs': 50,
+    },
+    'atlas_air': {
+        'max_jobs': 50,
+    },
+    'atlantic_aviation': {
+        'max_jobs': 50,
+    },
+    'cargolux': {
+        'max_jobs': 50,
+    },
+    'netjets': {
+        'max_jobs': 50,
+    },
+    'wheels_up': {
+        'max_jobs': 50,
+    },
+    'flexjet': {
+        'max_jobs': 50,
+    },
+    'amerijet': {
+        'max_jobs': 50,
+    },
+    'cargojet': {
+        'max_jobs': 50,
+    },
 }
 
 # Site Configurations
@@ -797,6 +845,90 @@ SITES = {
         'description': 'Spirit Airlines careers (API)',
         'class': 'SpiritScraper',
         'module': 'scraper_manager.scrapers.spirit_scraper',
+    },
+    'aar_corp': {
+        'name': 'AAR Corp',
+        'enabled': True,
+        'base_url': 'https://aarcorp.taleo.net',
+        'jobs_url': 'https://aarcorp.taleo.net/careersection/2/jobsearch.ftl?lang=en',
+        'description': 'AAR Corp careers (Taleo)',
+    },
+    'fedex': {
+        'name': 'FedEx',
+        'enabled': True,
+        'base_url': 'https://careers.fedex.com',
+        'jobs_url': 'https://careers.fedex.com/jobs',
+        'description': 'FedEx careers (Phenom People)',
+    },
+    'kalitta_air': {
+        'name': 'Kalitta Air',
+        'enabled': True,
+        'base_url': 'https://workforcenow.adp.com',
+        'jobs_url': 'https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?ccId=19000101_000001&cid=17b87f3e-11d6-434a-b3df-0d83d72f832b&lang=en_US&type=MP',
+        'description': 'Kalitta Air careers (ADP Workforce Now)',
+    },
+    'envoy_air': {
+        'name': 'Envoy Air',
+        'enabled': True,
+        'base_url': 'https://careers-envoyair.icims.com',
+        'jobs_url': 'https://careers-envoyair.icims.com/jobs/search?in_iframe=1',
+        'description': 'Envoy Air careers (iCIMS)',
+    },
+    'atlas_air': {
+        'name': 'Atlas Air Worldwide',
+        'enabled': True,
+        'base_url': 'https://www.atlasairworldwide.com',
+        'jobs_url': 'https://boards-api.greenhouse.io/v1/boards/atlasair/jobs',
+        'description': 'Atlas Air Worldwide careers (Greenhouse API)',
+    },
+    'atlantic_aviation': {
+        'name': 'Atlantic Aviation',
+        'enabled': True,
+        'base_url': 'https://atlanticaviationcareers.com',
+        'jobs_url': 'https://atlanticaviationcareers.com/#jobs',
+        'description': 'Atlantic Aviation careers (Talentcare/WordPress)',
+    },
+    'cargolux': {
+        'name': 'Cargolux',
+        'enabled': True,
+        'base_url': 'https://careers.peopleclick.eu.com',
+        'jobs_url': 'https://careers.peopleclick.eu.com/careerscp/client_cargolux/external/search/search.html',
+        'description': 'Cargolux careers (PeopleClick)',
+    },
+    'netjets': {
+        'name': 'NetJets',
+        'enabled': True,
+        'base_url': 'https://netjets.jobs.hr.cloud.sap',
+        'jobs_url': 'https://netjets.jobs.hr.cloud.sap/us/search/',
+        'description': 'NetJets careers (SuccessFactors)',
+    },
+    'wheels_up': {
+        'name': 'Wheels Up',
+        'enabled': True,
+        'base_url': 'https://careers-wheelsup.icims.com',
+        'jobs_url': 'https://careers-wheelsup.icims.com/jobs/search?in_iframe=1',
+        'description': 'Wheels Up careers (iCIMS)',
+    },
+    'flexjet': {
+        'name': 'Flexjet',
+        'enabled': True,
+        'base_url': 'https://careers.flexjet.com',
+        'jobs_url': 'https://careers.flexjet.com/us/en/search-results',
+        'description': 'Flexjet careers (Phenom People)',
+    },
+    'amerijet': {
+        'name': 'Amerijet',
+        'enabled': True,
+        'base_url': 'https://workforcenow.adp.com',
+        'jobs_url': 'https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=b84c1100-8ca6-49d3-8a35-f06ad8084d26&ccId=19000101_000001&lang=en_US',
+        'description': 'Amerijet careers (ADP Workforce Now)',
+    },
+    'cargojet': {
+        'name': 'Cargojet',
+        'enabled': True,
+        'base_url': 'https://recruiting.ultipro.ca',
+        'jobs_url': 'https://recruiting.ultipro.ca/CAR5000CJT/JobBoard/3bdb0a52-04dc-4fa4-91cd-d80afd88843d/',
+        'description': 'Cargojet careers (UltiPro)',
     },
     'mesa': {
         'name': 'Mesa Airlines',

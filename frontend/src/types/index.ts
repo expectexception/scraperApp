@@ -18,6 +18,18 @@ export type ActiveJob = {
     status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
     started_at: string
     triggered_by?: string
+    completed_at?: string | null
+    execution_time?: number | null
+    jobs_found?: number
+    jobs_new?: number
+    jobs_updated?: number
+    jobs_duplicate?: number
+}
+
+export type ActiveMonitorResponse = {
+    active_jobs: ActiveJob[]
+    recently_finished: ActiveJob[]
+    count: number
 }
 
 export type Stats = {
@@ -120,6 +132,21 @@ export type BulkJobStatusCheckResponse = {
         closed_detected: number
         total_candidates: number
     }
+}
+
+export type TitleFilterGroup = {
+    filter_type: string
+    display_name: string
+    keyword_count: number
+}
+
+export type TitleFiltersResponse = {
+    filter_name: string
+    description: string
+    file_path: string
+    groups: TitleFilterGroup[]
+    keywords: string[]
+    count: number
 }
 
 export type ScrapedRecord = {

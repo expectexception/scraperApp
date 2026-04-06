@@ -16,6 +16,8 @@ import type {
     ScrapedRecordsResponse,
     SchedulerOverview,
     BulkJobStatusCheckResponse,
+    ActiveMonitorResponse,
+    TitleFiltersResponse,
 } from '../types';
 
 type ApiErrorPayload = {
@@ -81,6 +83,19 @@ export const useActiveJobs = (enabled: boolean) => {
     });
 };
 
+export const useActiveMonitor = (enabled: boolean) => {
+    return useQuery({
+        queryKey: ['activeMonitor'],
+        queryFn: async () => {
+            const { data } = await api.get('/active/');
+            return data as ActiveMonitorResponse;
+        },
+        enabled,
+        refetchInterval: 2500,
+        refetchIntervalInBackground: true,
+    });
+};
+
 export const useStats = (enabled: boolean) => {
     return useQuery({
         queryKey: ['stats'],
@@ -126,6 +141,17 @@ export const useConfigs = (enabled: boolean) => {
         queryFn: async () => {
             const { data } = await api.get('/configs/');
             return data.configs as Record<string, ScraperConfig>;
+        },
+        enabled,
+    });
+};
+
+export const useTitleFilters = (enabled: boolean) => {
+    return useQuery({
+        queryKey: ['titleFilters'],
+        queryFn: async () => {
+            const { data } = await api.get('/title-filters/');
+            return data as TitleFiltersResponse;
         },
         enabled,
     });
@@ -205,13 +231,19 @@ export const useScraperActions = () => {
 
     const startAllScrapers = useMutation({
         mutationFn: async () => {
-            await api.post('/start-all/');
+            const { data } = await api.post('/start-all/');
+            return data as { queued_count?: number; message?: string };
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['scrapers'] });
             queryClient.invalidateQueries({ queryKey: ['activeJobs'] });
+            queryClient.invalidateQueries({ queryKey: ['activeMonitor'] });
             queryClient.invalidateQueries({ queryKey: ['stats'] });
             queryClient.invalidateQueries({ queryKey: ['history'] });
+            showToast({
+                level: 'success',
+                message: data?.queued_count ? `Queued ${data.queued_count} scraper(s).` : (data?.message || 'All scrapers queued.'),
+            });
         },
         onError: (error: unknown) => {
             showToast({
@@ -247,6 +279,30 @@ export const useScraperActions = () => {
             queryClient.invalidateQueries({ queryKey: ['configs'] });
             queryClient.invalidateQueries({ queryKey: ['scrapers'] });
             queryClient.invalidateQueries({ queryKey: ['schedulerOverview'] });
+        },
+    });
+
+    const updateTitleFilter = useMutation({
+        mutationFn: async ({ action, keyword, filterType }: { action: 'add' | 'remove'; keyword: string; filterType?: string }) => {
+            const { data } = await api.put('/title-filters/', {
+                action,
+                keyword,
+                filter_type: filterType || '',
+            });
+            return data as { changed?: boolean; message?: string };
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['titleFilters'] });
+            showToast({
+                level: 'success',
+                message: data?.message || `Keyword ${variables.action} operation completed.`,
+            });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to update title filters.'),
+            });
         },
     });
 
@@ -343,6 +399,7 @@ export const useScraperActions = () => {
         startAllScrapers,
         cancelJob,
         updateConfig,
+        updateTitleFilter,
         updateManagedJob,
         checkJobStatus,
         checkJobStatusBulk,
