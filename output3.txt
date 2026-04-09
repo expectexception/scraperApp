@@ -1,0 +1,39 @@
+INFO:scraper_manager.scrapers.base_scraper:[airbus] Initializing scraper (Database-only mode)
+INFO:scraper_manager.scrapers.base_scraper:[airbus] Loaded filter with 369 keywords
+INFO:scraper_manager.scrapers.airbus_scraper:[airbus] Initializing session...
+INFO:scraper_manager.scrapers.airbus_scraper:[airbus] Searching for: 
+INFO:scraper_manager.scrapers.airbus_scraper:[airbus] Found 20 jobs (Offset: 0)
+INFO:scraper_manager.scrapers.airbus_scraper:[airbus] Found 20 jobs (Offset: 20)
+✓ Loaded 7 filter categories
+✓ Total keywords: 369 (343 phrases, 46 single words)
+✓ Patterns precompiled: 399
+Traceback (most recent call last):
+  File "/home/rajat/Desktop/AeroOps Intel/scraper-standalone/test_airbus.py", line 18, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/rajat/Desktop/AeroOps Intel/scraper-standalone/test_airbus.py", line 10, in main
+    jobs = await s.fetch_jobs()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/rajat/Desktop/AeroOps Intel/scraper-standalone/scraper_manager/scrapers/airbus_scraper.py", line 109, in fetch_jobs
+    await browser.close()
+  File "/home/rajat/.local/lib/python3.12/site-packages/playwright/async_api/_generated.py", line 14318, in close
+    return mapping.from_maybe_impl(await self._impl_obj.close(reason=reason))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rajat/.local/lib/python3.12/site-packages/playwright/_impl/_browser.py", line 241, in close
+    raise e
+  File "/home/rajat/.local/lib/python3.12/site-packages/playwright/_impl/_browser.py", line 238, in close
+    await self._channel.send("close", None, {"reason": reason})
+  File "/home/rajat/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rajat/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+Exception: Browser.close: Connection closed while reading from the driver

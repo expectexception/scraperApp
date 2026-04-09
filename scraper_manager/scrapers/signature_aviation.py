@@ -91,7 +91,7 @@ class SignatureAviationScraper(BaseScraper):
             'source': self.site_key,
             'url': f"{self.base_url}/en/sites/{self.site_number}/job/{job_id}",
             'apply_url': f"{self.base_url}/en/sites/{self.site_number}/job/{job_id}",
-            'location': job.get('PrimaryLocation', ''),
+            'location': self.normalize_location(job.get('PrimaryLocation', '')),
             'job_type': job.get('WorkplaceType', ''),
             'department': job.get('Organization', ''),
             'posted_date': posted_date,

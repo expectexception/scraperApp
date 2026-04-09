@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 from .models import ScrapedURL
 from jobs.models import Job, CompanyMapping
+from .location_manager import LocationManager
 
 logger = logging.getLogger(__name__)
 
@@ -230,20 +231,11 @@ class BatchProcessor:
         if not location:
             return None
         
-        location_lower = location.lower()
-        country_map = {
-            'india': 'IN', 'united states': 'US', 'usa': 'US', 'america': 'US',
-            'united kingdom': 'GB', 'uk': 'GB', 'england': 'GB', 'scotland': 'GB',
-            'united arab emirates': 'AE', 'uae': 'AE', 'dubai': 'AE', 'abu dhabi': 'AE',
-            'singapore': 'SG', 'hong kong': 'HK', 'china': 'CN', 'australia': 'AU',
-            'canada': 'CA', 'germany': 'DE', 'france': 'FR', 'netherlands': 'NL',
-        }
-        
-        for pattern, code in country_map.items():
-            if pattern in location_lower:
-                return code
-        
-        return None
+        # Normalize first if it's not already
+        if ',' not in location and len(location) > 2:
+            location = LocationManager.normalize_location(location)
+            
+        return LocationManager.extract_country_code(location)
     
     def _infer_operation_type(self, title: str, company: str, description: str) -> str:
         """Infer operation type from job details"""

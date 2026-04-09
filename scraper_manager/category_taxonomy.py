@@ -3,48 +3,70 @@
 CANONICAL_JOB_CATEGORIES = {
     'operations_control_center': 'Operations Control Center',
     'flight_operations': 'Flight Operations',
-    'passenger_services': 'Passenger Services',
+    'passenger_station_services': 'Passenger & Station Services',
     'ground_operations': 'Ground Operations',
-    'airport_operations': 'Airport Operations',
     'maintenance_engineering': 'Maintenance & Engineering',
     'air_cargo_logistics': 'Air Cargo & Logistics',
     'air_traffic_control': 'Air Traffic Control',
-    'corporate_business': 'Corporate & Business Aviation',
+    'safety_security_quality': 'Safety, Security & Quality',
+    'corporate_support': 'Corporate & Support',
     'training': 'Training',
     'other': 'Other',
 }
 
 LEGACY_CATEGORY_ALIASES = {
-    'operations_control_center': {'operations_control_center', 'Operations Control Center', 'occ', 'dispatcher'},
-    'flight_operations': {'flight_operations', 'Flight Operations', 'flight_crew', 'Flight Crew'},
-    'passenger_services': {'passenger_services', 'Passenger Services', 'cabin_crew', 'Cabin Crew'},
-    'ground_operations': {'ground_operations', 'Ground Operations', 'ground_staff', 'Ground Staff', 'Ground Ops'},
-    'airport_operations': {'airport_operations', 'Airport Operations'},
-    'maintenance_engineering': {'maintenance_engineering', 'Maintenance & Engineering', 'maintenance', 'Engineering'},
-    'air_cargo_logistics': {'air_cargo_logistics', 'Air Cargo & Logistics', 'cargo', 'air cargo'},
-    'air_traffic_control': {'air_traffic_control', 'Air Traffic Control', 'Air Traffic Controller'},
-    'corporate_business': {'corporate_business', 'Corporate & Business Aviation', 'Corporate / Business', 'management', 'Management'},
-    'training': {'training', 'Training'},
+    'operations_control_center': {
+        'operations_control_center', 'OCC', 'IOCC', 'dispatcher', 'dispatch', 'flight dispatch', 
+        'ops control', 'network control', 'crew control', 'load control', 'flight preparation',
+        'régulation des vols', 'préparation des vols', 'répartiteur', 'despacho de vuelos', 'centro de controle'
+    },
+    'flight_operations': {
+        'flight_operations', 'Pilot', 'Captain', 'First Officer', 'flight crew', 'flight deck',
+        'pilote', 'commandant de bord', 'piloto', 'copiloto'
+    },
+    'passenger_station_services': {
+        'passenger_services', 'airport_operations', 'Passenger & Station Services', 'Gate Agent', 'Check-in', 
+        'ticketing', 'station agent', 'customer service agent', 'agent d\'escale', 'agente de tráfico'
+    },
+    'ground_operations': {
+        'ground_operations', 'ground_staff', 'Ramp Agent', 'baggage handler', 'turnaround coordinator', 
+        'TRC', 'marshalling', 'agent de piste', 'agente de rampa', 'gepäckabfertiger'
+    },
+    'maintenance_engineering': {
+        'maintenance_engineering', 'Maintenance & Engineering', 'Maintenance Control', 'MCC', 'Avionics', 
+        'Technician', 'Mechanic', 'Engineer', 'entretien d\'avions', 'mantenimiento'
+    },
+    'air_cargo_logistics': {
+        'air_cargo_logistics', 'Cargo', 'Freight', 'Logistics', 'Warehouse', 'Loadmaster', 
+        'fret aérien', 'logística de carga'
+    },
+    'air_traffic_control': {
+        'air_traffic_control', 'ATC', 'Air Traffic Controller', 'tower controller', 
+        'contrôleur aérien', 'controlador de tráfico aéreo'
+    },
+    'safety_security_quality': {
+        'safety_security_quality', 'Safety', 'Security', 'Quality Assurance', 'Compliance', 'SMS',
+        'sûreté aérienne', 'seguridad operacional'
+    },
+    'corporate_support': {
+        'corporate_business', 'corporate', 'Finance', 'HR', 'Human Resources', 'Legal', 'Marketing', 'Sales', 'IT',
+        'administration', 'gestion'
+    },
+    'training': {'training', 'Training', 'Instructor', 'Trainer', 'formation'},
     'other': {'other', 'Other'},
 }
 
 FILTER_CATEGORY_MAP = {
-    'Core Operations Acronyms': 'operations_control_center',
-    'Core Operational Roles': 'operations_control_center',
-    'Supervisory Level': 'operations_control_center',
-    'Management & Executive': 'operations_control_center',
-    'Flight Crew': 'flight_operations',
-    'Cabin Crew': 'passenger_services',
-    'Ground Operations': 'ground_operations',
-    'Maintenance & Engineering': 'maintenance_engineering',
     'Core_Function_Terms_Only': 'operations_control_center',
     'Operative_Functional_Control_Keywords': 'operations_control_center',
     'Supervisory_Level_Control_Keywords': 'operations_control_center',
     'Management_Executive_Control_Keywords': 'operations_control_center',
+    'Maintenance_Engineering_Control': 'maintenance_engineering',
+    'Operations_Performance_Analytics': 'operations_control_center',
     'Flight_Deck_Crew': 'flight_operations',
-    'Cabin_Crew_Inflight': 'passenger_services',
+    'Cabin_Crew_Inflight': 'passenger_station_services',
     'Ground_Airport_Operations': 'ground_operations',
-    'Maintenance_Engineering': 'maintenance_engineering',
+    'Entry_Level_Operations_Roles': 'operations_control_center',
 }
 
 _ALIASES_CASEFOLDED = {
@@ -83,6 +105,13 @@ def normalize_job_categories(values):
 
 
 def infer_job_category(title='', description='', primary_category=None, matched_categories=None, matched_filter_types=None, existing_category=None):
+    """
+    Intelligent category inference based on title and description.
+    Prioritizes explicit matches but falls back to regex-based keyword analysis.
+    """
+    import re
+    
+    # 1. Check explicit matches from previous stages
     for value in [existing_category, primary_category, *(matched_categories or []), *(matched_filter_types or [])]:
         canonical = normalize_job_category(value)
         if canonical:
@@ -90,26 +119,56 @@ def infer_job_category(title='', description='', primary_category=None, matched_
 
     text = f"{title} {description}".lower()
 
-    if any(token in text for token in ['occ', 'iocc', 'noc', 'mcc', 'dispatcher', 'dispatch officer', 'flight dispatch', 'operations control', 'crew control', 'load control', 'network operations']):
-        return 'operations_control_center'
-    if any(token in text for token in ['pilot', 'captain', 'first officer', 'copilot', 'flight crew']):
-        return 'flight_operations'
-    if any(token in text for token in ['cabin crew', 'flight attendant', 'purser', 'inflight', 'passenger service']):
-        return 'passenger_services'
-    if any(token in text for token in ['air traffic control', 'air traffic controller', 'tower controller', 'approach controller', 'radar controller', 'atc']):
-        return 'air_traffic_control'
-    if any(token in text for token in ['cargo', 'freight', 'airfreight', 'warehouse', 'logistics', 'loadmaster']):
-        return 'air_cargo_logistics'
-    if any(token in text for token in ['airport operations', 'airport agent', 'airside', 'gate agent', 'check-in', 'ticketing', 'station agent', 'terminal operations']):
-        return 'airport_operations'
-    if any(token in text for token in ['ramp', 'baggage', 'ground handler', 'ground ops', 'marshalling', 'pushback', 'turnaround coordinator']):
-        return 'ground_operations'
-    if any(token in text for token in ['technician', 'mechanic', 'mro', 'avionics', 'maintenance engineer', 'line maintenance', 'base maintenance']):
-        return 'maintenance_engineering'
-    if any(token in text for token in ['training', 'trainer', 'instructor', 'simulator instructor', 'ground school']):
-        return 'training'
-    if any(token in text for token in ['director', 'vice president', 'head of', 'general manager', 'corporate', 'business aviation', 'charter', 'vip', 'finance', 'legal', 'marketing', 'sales']):
-        return 'corporate_business'
+    # 2. Define weighted regex patterns for fallback inference
+    # Using word boundaries \b for accuracy
+    inference_patterns = {
+        'operations_control_center': [
+            r'\bocc\b', r'\biocc\b', r'\bnoc\b', r'\bsoc\b', r'\bdispatcher?\b', r'\bdispatch\b',
+            r'\bflight dispatch', r'\bload control', r'\bcrew control', r'\bnetwork operat',
+            r'\brégul', r'\brépartiteur\b', r'\bpréparation des vols\b', r'\bscheduler\b',
+            r'\brostering\b', r'\bflight planning\b', r'\bdespacho\b', r'\bcontrol de vuelo\b'
+        ],
+        'flight_operations': [
+            r'\bpilot\b', r'\bcaptain\b', r'\bfirst officer\b', r'\bcopilot\b', r'\bflight crew\b',
+            r'\bflight deck\b', r'\be-?f-?b\b', r'\bflight operation', r'\bperformance engineer'
+        ],
+        'passenger_station_services': [
+            r'\bgate agent\b', r'\bcheck-?in\b', r'\bticketing\b', r'\bpassenger service',
+            r'\bstation agent\b', r'\bescale\b', r'\bcustomer service\b', r'\bcabin crew\b',
+            r'\bflight attendant\b', r'\bpurser\b', r'\blounge\b'
+        ],
+        'ground_operations': [
+            r'\bramp\b', r'\bbaggage\b', r'\bturnaround\b', r'\btrc\b', r'\bground handler?\b',
+            r'\bground ops\b', r'\bmarshalling\b', r'\bpushback\b'
+        ],
+        'maintenance_engineering': [
+            r'\btechnician\b', r'\bmechanic\b', r'\bmro\b', r'\bavionics\b', r'\bmaintenance control',
+            r'\bmcc\b', r'\bb[12]\b.*engineer' # Matches B1 Engineer, B2 Aircraft Engineer, etc.
+        ],
+        'air_cargo_logistics': [
+            r'\bcargo\b', r'\bfreight\b', r'\bwarehouse\b', r'\blogistics\b', r'\bloadmaster\b'
+        ],
+        'air_traffic_control': [
+            r'\bair traffic control', r'\batc\b', r'\btower controller\b'
+        ],
+        'safety_security_quality': [
+            r'\bsafety\b', r'\bsecurity\b', r'\bquality assurance\b', r'\bcompliance\b',
+            r'\bsms\b', r'\baudit', r'\bregulatory\b'
+        ],
+        'corporate_support': [
+            r'\bfinance\b', r'\bhuman resources\b', r'\bhr\b', r'\bit support\b', r'\blegal\b',
+            r'\baccounting\b', r'\badministration\b'
+        ],
+        'training': [
+            r'\btraining\b', r'\btrainer\b', r'\binstructor\b', r'\bformation\b'
+        ]
+    }
+
+    for category, patterns in inference_patterns.items():
+        for pattern in patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                return category
+
     return 'other'
 
 

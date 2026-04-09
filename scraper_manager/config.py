@@ -209,6 +209,12 @@ SCRAPER_SETTINGS = {
         'flexjet': 'medium',
         'amerijet': 'medium',
         'cargojet': 'medium',
+        'jetblue': 'medium',
+        'qatar': 'medium',
+        'dnatabrasil': 'medium',
+        'emploitic': 'medium',
+        'swissport': 'medium',
+        'menzies': 'medium',
     }
 }
 
@@ -583,10 +589,70 @@ SCRAPERS = {
     'cargojet': {
         'max_jobs': 50,
     },
+    'jetblue': {
+        'max_jobs': 50,
+    },
+    'qatar': {
+        'max_jobs': 50,
+    },
+    'dnatabrasil': {
+        'max_jobs': 50,
+    },
+    'emploitic': {
+        'max_jobs': 50,
+    },
+    'swissport': {
+        'max_jobs': 50,
+    },
+    'menzies': {
+        'max_jobs': 50,
+    },
 }
 
 # Site Configurations
 SITES = {
+    'qatar': {
+        'name': 'Qatar Airways',
+        'enabled': True,
+        'base_url': 'https://careers.qatarairways.com',
+        'jobs_url': 'https://careers.qatarairways.com/global/SearchJobs/?jobRecordsPerPage=6&jobOffset=0',
+        'description': 'Qatar Airways careers',
+    },
+    'dnatabrasil': {
+        'name': 'dnata Brasil',
+        'enabled': True,
+        'base_url': 'https://dnatabrasil.gupy.io',
+        'jobs_url': 'https://dnatabrasil.gupy.io/',
+        'description': 'dnata Brasil careers (Gupy)',
+    },
+    'emploitic': {
+        'name': 'Emploitic',
+        'enabled': True,
+        'base_url': 'https://emploitic.com',
+        'jobs_url': 'https://emploitic.com/offres-d-emploi',
+        'description': 'Emploitic job portal (Algeria)',
+    },
+    'swissport': {
+        'name': 'Swissport',
+        'enabled': True,
+        'base_url': 'https://careers.swissport.com',
+        'jobs_url': 'https://careers.swissport.com/jobs?sortBy=relevance&page=1',
+        'description': 'Swissport careers (iCIMS)',
+    },
+    'menzies': {
+        'name': 'Menzies Aviation',
+        'enabled': True,
+        'base_url': 'https://careers.jmenzies.com',
+        'jobs_url': 'https://careers.jmenzies.com/aviation/vacancy/find/results/',
+        'description': 'Menzies Aviation careers (Oleeo)',
+    },
+    'jetblue': {
+        'name': 'JetBlue Airways',
+        'enabled': True,
+        'base_url': 'https://careers.jetblue.com',
+        'jobs_url': 'https://careers.jetblue.com/search/?createNewAlert=false&q=&locationsearch=',
+        'description': 'JetBlue Airways careers (SuccessFactors)',
+    },
     'absjets': {
         'name': 'ABS Jets',
         'enabled': True,

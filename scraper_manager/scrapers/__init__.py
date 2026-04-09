@@ -110,6 +110,12 @@ from .wheels_up_scraper import WheelsUpScraper
 from .flexjet_scraper import FlexjetScraper
 from .amerijet_scraper import AmerijetScraper
 from .cargojet_scraper import CargojetScraper
+from .jetblue_scraper import JetBlueScraper
+from .qatar_scraper import QatarAirwaysScraper
+from .dnatabrasil_scraper import DnataBrasilScraper
+from .emploitic_scraper import EmploiticScraper
+from .swissport_scraper import SwissportScraper
+from .menzies_scraper import MenziesScraper
 
 
 # Available scrapers
@@ -221,6 +227,12 @@ SCRAPERS = {
     'flexjet': FlexjetScraper,
     'amerijet': AmerijetScraper,
     'cargojet': CargojetScraper,
+    'jetblue': JetBlueScraper,
+    'qatar': QatarAirwaysScraper,
+    'dnatabrasil': DnataBrasilScraper,
+    'emploitic': EmploiticScraper,
+    'swissport': SwissportScraper,
+    'menzies': MenziesScraper,
 }
 
 

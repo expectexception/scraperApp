@@ -102,7 +102,7 @@ class AlsieExpressScraper(BaseScraper):
                             'source': self.site_key,
                             'url': job_url,
                             'apply_url': job_url,
-                            'location': l['location'],
+                            'location': self.normalize_location(l['location']),
                         }
                         jobs.append(job_data)
                     except Exception as e:

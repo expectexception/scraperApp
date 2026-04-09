@@ -73,9 +73,14 @@ class AirWisconsinScraper(BaseScraper):
                     
                     # Get location
                     location = "Unknown"
-                    loc_el = await el.query_selector('[data-automation="job-location"], .opportunity-location')
+                    loc_el = await el.query_selector('[data-automation=\"job-location\"], .opportunity-location')
+                    if not loc_el:
+                        loc_el = await el.query_selector('[data-automation=\"job-address\"]')
+                        
                     if loc_el:
-                        location = (await loc_el.inner_text()).strip()
+                        location_text = (await loc_el.inner_text()).strip()
+                        if location_text:
+                            location = self.normalize_location(location_text)
                         
                     # Early filtering by title
                     if not self.should_process_job(title):

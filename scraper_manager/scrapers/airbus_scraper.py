@@ -83,19 +83,22 @@ class AirbusScraper(BaseScraper):
                                 if len(jobs) >= self.max_jobs:
                                     break
                                     
-                                external_path = item.get('externalPath')
+                                external_path = item.get('externalPath') or ''
+                                if external_path and not external_path.startswith('/'):
+                                    external_path = '/' + external_path
+                                    
                                 job_id = item.get('bulletinId') or (external_path.split('/')[-1] if external_path else None)
                                 title = item.get('title') or "Unknown Title"
                                 
-                                url = f"https://ag.wd3.myworkdayjobs.com{external_path}"
+                                url = f"https://ag.wd3.myworkdayjobs.com/Airbus{external_path}" if external_path else self.base_url
                                 jobs.append({
                                     'company': self.company_name,
-                                    'title': title,
-                                    'location': item.get('locationsText'),
-                                    'url': url,
-                                    'apply_url': url,
-                                    'posted_date': item.get('postedOn'),
-                                    'job_id': job_id
+                                    'title': title.strip(),
+                                    'location': item.get('locationsText', '').strip(),
+                                    'url': url.strip(),
+                                    'apply_url': f"{url.strip()}/apply",
+                                    'posted_date': item.get('postedOn', ''),
+                                    'job_id': job_id.strip() if job_id else None
                                 })
                             
                             offset += limit
@@ -125,7 +128,9 @@ class AirbusScraper(BaseScraper):
                 if not job.get('job_id'):
                     continue
                 try:
-                    desc_url = f"https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/job/{job['job_id']}"
+                    import urllib.parse
+                    safe_job_id = urllib.parse.quote(job['job_id'].strip())
+                    desc_url = f"https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/job/{safe_job_id}"
                     resp = await page.request.get(desc_url)
                     if resp.status == 200:
                         desc_data = await resp.json()

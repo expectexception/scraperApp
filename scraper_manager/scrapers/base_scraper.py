@@ -34,6 +34,15 @@ except (ImportError, ValueError):
         except ImportError:
             JobFilterManager = None
 
+# Import location manager
+try:
+    from ..location_manager import LocationManager
+except (ImportError, ValueError):
+    try:
+        from scraper_manager.location_manager import LocationManager
+    except ImportError:
+        LocationManager = None
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -62,8 +71,9 @@ class BaseScraper:
         self.logger = logging.getLogger(f"{__name__}.{site_key}")
         
         # Limits
-        self.max_jobs = config.get('scrapers', {}).get(site_key, {}).get('max_jobs')
-        self.max_pages = config.get('scrapers', {}).get(site_key, {}).get('max_pages')
+        scraper_config = config.get('scrapers', {}).get(site_key, {})
+        self.max_jobs = scraper_config.get('max_jobs') or config.get('max_jobs', 100)
+        self.max_pages = scraper_config.get('max_pages') or config.get('max_pages', 5)
 
         self.batch_size = config.get('scraper_settings', {}).get('batch_size', 5)
         
@@ -131,6 +141,26 @@ class BaseScraper:
                 logger.error(f"[{site_key}] Failed to load filter: {e}")
 
             self.selected_job_categories = normalize_job_categories(config.get('selected_job_categories'))
+
+    def normalize_location(self, location_text: str) -> str:
+        """Standardize location string using LocationManager with site hints"""
+        if not LocationManager:
+            return location_text or "Unknown"
+
+        # Detect hint country from site name or URL for regionally-focused sites
+        hint_country = None
+        site_context = f"{self.company_name} {self.base_url}".lower()
+        
+        if 'brasil' in site_context:
+            hint_country = "Brazil"
+        elif 'emploitic' in site_context or 'algeria' in site_context:
+            hint_country = "Algeria"
+        elif 'qatar' in site_context:
+            hint_country = "Qatar"
+        elif 'jetblue' in site_context:
+            hint_country = "United States"
+
+        return LocationManager.normalize_location(location_text, hint_country=hint_country)
 
     async def update_progress(self, current: int, total: int):
         """Update job progress in database"""

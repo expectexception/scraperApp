@@ -179,7 +179,7 @@ class WizzAirScraper(BaseScraper):
                                 if not location or location == "Unknown":
                                     loc_el = await detail_page.query_selector('.jobLocation, .facility, .location, span.custom-field')
                                     if loc_el:
-                                        location = (await loc_el.inner_text()).strip()
+                                        location = self.normalize_location((await loc_el.inner_text()).strip())
                                     else:
                                         # Use json-ld if available
                                         try:
@@ -194,31 +194,7 @@ class WizzAirScraper(BaseScraper):
                                                         locality = addr.get('addressLocality', '').strip()
                                                         country  = addr.get('addressCountry', '').strip()
                                                         postal   = addr.get('postalCode', '').strip()
-                                                        # addressLocality may be a postal code ("H-1095") — use
-                                                        # addressRegion or fall back to country name
-                                                        import re as _re
-                                                        if _re.match(r'^[A-Z]{1,3}-\d{3,6}$', locality, _re.IGNORECASE):
-                                                            locality = addr.get('addressRegion', '').strip() or ''
-                                                        # Resolve 2-letter country code → full name
-                                                        if country and len(country) == 2:
-                                                            _CC = {
-                                                                'HU': 'Hungary', 'AT': 'Austria', 'DE': 'Germany',
-                                                                'FR': 'France', 'GB': 'United Kingdom', 'IT': 'Italy',
-                                                                'ES': 'Spain', 'NL': 'Netherlands', 'BE': 'Belgium',
-                                                                'PL': 'Poland', 'CZ': 'Czech Republic', 'RO': 'Romania',
-                                                                'SE': 'Sweden', 'NO': 'Norway', 'DK': 'Denmark',
-                                                                'FI': 'Finland', 'CH': 'Switzerland', 'PT': 'Portugal',
-                                                                'GR': 'Greece', 'UA': 'Ukraine', 'TR': 'Turkey',
-                                                                'AE': 'United Arab Emirates', 'QA': 'Qatar',
-                                                                'SA': 'Saudi Arabia', 'US': 'United States',
-                                                                'CA': 'Canada', 'AU': 'Australia', 'SG': 'Singapore',
-                                                                'RS': 'Serbia', 'HR': 'Croatia', 'BG': 'Bulgaria',
-                                                                'SK': 'Slovakia', 'SI': 'Slovenia', 'SK': 'Slovakia',
-                                                                'AL': 'Albania', 'MK': 'North Macedonia',
-                                                            }
-                                                            country = _CC.get(country.upper(), country)
-                                                        parts = [p for p in [locality, country] if p]
-                                                        location = ', '.join(parts) if parts else location
+                                                        location = self.normalize_location(location)
                                         except Exception:
                                             pass
                                 

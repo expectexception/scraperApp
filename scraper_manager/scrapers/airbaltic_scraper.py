@@ -60,6 +60,11 @@ class AirBalticScraper(BaseScraper):
                         skip_words = ['home', 'news', 'faq', 'cookie', 'login', 'impressum', 'privacy', 'about', 'team']
                         if any(kw == title.lower() for kw in skip_words) or title.lower() in skip_words:
                             continue
+                        if not href.startswith('http'):
+                            if href.startswith('/'):
+                                href = 'https://careers.airbaltic.com' + href
+                            else:
+                                continue
                         seen_urls.add(href)
                         job_urls.append((href, title))
                 

@@ -20,6 +20,8 @@
         "Dispatch",
         "Flight Dispatch",
         "Aircraft Dispatch",
+        "Aviation Operations",
+        "Aviation Safety and Security",
         "Flight Dispatcher",
         "Aircraft Dispatcher",
         "Airline Dispatcher",
@@ -109,7 +111,8 @@
         "Flygoperationer",
         "Operativ koordinator",
         "Driftkontroll",
-        "Operationskoordinator"
+        "Operationskoordinator",
+        "Internship Ground Operations"
       ],
       "NegativeKeywords": [
         "Pilot",

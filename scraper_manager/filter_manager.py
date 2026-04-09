@@ -50,22 +50,22 @@ class JobFilterManager:
         # Exclusion patterns — jobs matching ANY of these are hard-blocked regardless of score.
         # Pattern: pilot/captain/cabin crew/baggage handler/customer service/unrelated industries.
         self.exclusion_patterns = [
-            # Pilots & flight deck (we do NOT want pilot jobs)
-            r'\b(pilot|co-pilot|copilot|first officer|second officer|captain)\b',
+            # Pilots & flight deck (unless specifically looking for flight ops)
+            r'\b(pilot|co-pilot|copilot|first officer|second officer|captain|commander)\b',
             # Cabin crew / inflight service
             r'\b(cabin crew|flight attendant|cabin attendant|steward|stewardess|purser|pnc|hostess|air host)\b',
             # Basic ground handling (unskilled ramp/baggage — NOT controllers)
-            r'\b(baggage handler|ramp agent|ramp handler|ground handler|bagagiste|gepäckabfertiger)\b',
-            # Customer-facing airport roles
-            r'\b(check-in agent|gate agent|ticket agent|passenger service agent|customer service agent)\b',
-            # Generic IT
-            r'\b(software developer|frontend developer|backend developer|fullstack|devops|programmer)\b',
-            # Healthcare / Education / Retail / F&B / Logistics
-            r'\b(nurse|physician|doctor|healthcare|pharmacist)\b',
-            r'\b(teacher|professor|faculty|lecturer|educator)\b',
-            r'\b(cashier|retail associate|store clerk|shop assistant)\b',
-            r'\b(bartender|chef|waiter|waitress)\b',
-            r'\b(delivery driver|truck driver|courier)\b',
+            r'\b(baggage handler|baggage agent|ramp agent|ramp handler|ground handler|bagagiste|gepäckabfertiger)\b',
+            # Customer-facing airport roles (Terminal/Gate)
+            r'\b(check-in agent|gate agent|ticket agent|passenger service agent|customer service agent|reservation agent)\b',
+            # Generic IT & Development
+            r'\b(software developer|frontend developer|backend developer|fullstack|devops|programmer|data scientist|ux researcher)\b',
+            # Unrelated Industries (Healthcare / Retail / F&B / Education)
+            r'\b(nurse|physician|doctor|healthcare|pharmacist|medical)\b',
+            r'\b(teacher|professor|faculty|lecturer|educator|student|internship)\b',
+            r'\b(cashier|retail associate|store clerk|shop assistant|sales associate)\b',
+            r'\b(bartender|chef|waiter|waitress|catering)\b',
+            r'\b(delivery driver|truck driver|courier|warehouse associate)\b',
         ]
         
         # Category weights for scoring (higher = more important)

@@ -2,6 +2,8 @@ import asyncio
 import logging
 import json
 import re
+import random
+import html as html_lib
 from datetime import datetime
 from curl_cffi import requests as curl_requests
 
@@ -95,7 +97,6 @@ class AtlasAirScraper(BaseScraper):
         if not html_content:
             return ""
         
-        import html as html_lib
         # Unescape HTML entities (like &quot;, &lt;, etc.)
         clean = html_lib.unescape(html_content)
         # Remove tags
