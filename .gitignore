@@ -1,4 +1,7 @@
 venv/
+backend/venv/
+backup/venv/
+backups
 .venv/
 env/
 .env
