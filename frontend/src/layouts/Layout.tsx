@@ -10,7 +10,6 @@ import {
     LogOut,
     Activity,
     Menu,
-    Plane,
     Briefcase,
     Database,
 } from 'lucide-react';
@@ -58,6 +57,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                 return 'Managed Jobs';
             case 'scraped':
                 return 'Scraped Records';
+            case 'database':
+                return 'Database';
             default:
                 return activeView;
         }
@@ -119,6 +120,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                     setIsMobileMenuOpen(false);
                 }}
             />
+            <NavItem
+                icon={Database}
+                label="Database"
+                active={activeView === 'database'}
+                onClick={() => {
+                    setActiveView('database');
+                    setIsMobileMenuOpen(false);
+                }}
+            />
         </nav>
     );
 
@@ -140,11 +150,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                 isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
             )}>
                 <div className="flex items-center gap-4 px-2">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center text-primary shadow-glow-primary">
-                        <Plane className="w-5 h-5 rotate-45" />
-                    </div>
+                    
                     <div>
-                        <h1 className="font-black text-xl tracking-tighter text-white">IFOA Scrapers</h1>
+                        <h1 className="font-black text-xl tracking-tighter text-white">IFOA Talent OS</h1>
                         {/* <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] -mt-1 leading-none">Dashboard</p> */}
                     </div>
                 </div>

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "jobs",
     "scraper_manager",
+    "db_manager",
 ]
 
 MIDDLEWARE = [
@@ -86,6 +87,38 @@ TIME_ZONE = os.environ.get("DJANGO_TIME_ZONE", "Asia/Kolkata")
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
+
+REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
+SCRAPER_EVENT_CHANNEL = os.environ.get("SCRAPER_EVENT_CHANNEL", "scraper.events")
+ACTIVE_JOB_MONITOR_INTERVAL_SECONDS = int(os.environ.get("ACTIVE_JOB_MONITOR_INTERVAL_SECONDS", "60"))
+
+# Celery / Redis foundation for queued scraper execution and Beat scheduling.
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL") or REDIS_URL
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND") or CELERY_BROKER_URL
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_DEFAULT_QUEUE = os.environ.get("CELERY_TASK_DEFAULT_QUEUE", "scrapers")
+CELERY_TASK_TIME_LIMIT = int(os.environ.get("CELERY_TASK_TIME_LIMIT", "7200"))
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.environ.get("CELERY_TASK_SOFT_TIME_LIMIT", "6900"))
+CELERY_RESULT_EXPIRES = int(os.environ.get("CELERY_RESULT_EXPIRES", "86400"))
+CELERY_WORKER_PREFETCH_MULTIPLIER = int(os.environ.get("CELERY_WORKER_PREFETCH_MULTIPLIER", "1"))
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_SEND_SENT_EVENT = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY_BEAT_SCHEDULER = (
+    "django_celery_beat.schedulers:DatabaseScheduler"
+    if DATABASES["default"]["ENGINE"] != "django_mongodb_backend"
+    else "celery.beat:PersistentScheduler"
+)
+CELERY_BEAT_SCHEDULE = {
+    "reconcile-stale-scraper-jobs": {
+        "task": "scraper_manager.reconcile_stale_jobs_task",
+        "schedule": ACTIVE_JOB_MONITOR_INTERVAL_SECONDS,
+    }
+}
 
 # Silence MongoDB compatibility system checks so third-party apps (auth,
 # django_celery_beat) that use plain AutoField don't block startup/migrate.

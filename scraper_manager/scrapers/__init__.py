@@ -116,6 +116,8 @@ from .dnatabrasil_scraper import DnataBrasilScraper
 from .emploitic_scraper import EmploiticScraper
 from .swissport_scraper import SwissportScraper
 from .menzies_scraper import MenziesScraper
+from .united_scraper import UnitedScraper
+
 
 
 # Available scrapers
@@ -233,6 +235,8 @@ SCRAPERS = {
     'emploitic': EmploiticScraper,
     'swissport': SwissportScraper,
     'menzies': MenziesScraper,
+    'united': UnitedScraper,
+
 }
 
 

@@ -4,14 +4,13 @@ Usage: python manage.py run_scraper [scraper_name] [options]
 """
 
 import asyncio
-import sys
 import os
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from asgiref.sync import sync_to_async
 from scraper_manager.models import ScraperJob, ScraperConfig
+from scraper_manager.services.job_events import publish_job_event
 from scraper_manager.config import CONFIG
 from scraper_manager.category_taxonomy import normalize_job_categories
 from scraper_manager.db_manager import DjangoDBManager
@@ -175,8 +174,12 @@ class Command(BaseCommand):
                     scraper_job = await sync_to_async(ScraperJob.objects.get)(id=job_id)
                     scraper_job.status = 'running'
                     scraper_job.pid = os.getpid()
-                    scraper_job.started_at = timezone.now()
-                    await sync_to_async(scraper_job.save)()
+                    scraper_job.started_at = scraper_job.started_at or timezone.now()
+                    scraper_job.heartbeat_at = timezone.now()
+                    scraper_job.progress = max(scraper_job.progress or 0, 10)
+                    scraper_job.progress_message = 'Scraper process running'
+                    await sync_to_async(scraper_job.save)(update_fields=['status', 'pid', 'started_at', 'heartbeat_at', 'progress', 'progress_message'])
+                    await sync_to_async(publish_job_event)('job.progress', scraper_job, extra={'message': 'Scraper process started'})
                 except Exception as e:
                     logger.error(f"Provided job_id {job_id} not found: {e}")
                     job_id = None
@@ -187,6 +190,9 @@ class Command(BaseCommand):
                     status='running',
                     pid=os.getpid(),
                     started_at=timezone.now(),
+                    heartbeat_at=timezone.now(),
+                    progress=10,
+                    progress_message='Scraper process running',
                     triggered_by='management_command',
                     parameters={
                         'max_jobs': options.get('max_jobs'),
@@ -194,6 +200,7 @@ class Command(BaseCommand):
                         'job_categories': selected_job_categories,
                     }
                 )
+                await sync_to_async(publish_job_event)('job.started', scraper_job, extra={'source': 'management_command'})
             
             logger.info(f"Created ScraperJob with ID: {scraper_job.id}")
             self.stdout.write(self.style.SUCCESS(f'\n🚀 Starting scraper: {scraper_name} (Job ID: {scraper_job.id})'))
@@ -240,6 +247,7 @@ class Command(BaseCommand):
                 # Update ScraperJob
                 scraper_job.status = 'completed'
                 scraper_job.completed_at = timezone.now()
+                scraper_job.heartbeat_at = timezone.now()
                 scraper_job.jobs_found = len(jobs)
                 
                 # Calculate stats from database
@@ -253,7 +261,10 @@ class Command(BaseCommand):
                 scraper_job.jobs_updated = stats['updated']
                 scraper_job.jobs_duplicate = stats['total'] - stats['new']
                 scraper_job.execution_time = (scraper_job.completed_at - scraper_job.started_at).total_seconds()
+                scraper_job.progress = 100
+                scraper_job.progress_message = 'Completed successfully'
                 await sync_to_async(scraper_job.save)()
+                await sync_to_async(publish_job_event)('job.completed', scraper_job, extra={'source': 'management_command'})
             else:
                 # Output jobs summary in no-db mode
                 self.stdout.write(self.style.SUCCESS(f"Found {len(jobs)} jobs in no-db mode"))
@@ -308,10 +319,20 @@ class Command(BaseCommand):
             logger.error(f"Scraper {scraper_name} failed: {e}", exc_info=True)
             
             if not no_db:
-                scraper_job.status = 'failed'
+                was_cancelled = bool(scraper_job.cancel_requested_at)
+                scraper_job.status = 'cancelled' if was_cancelled else 'failed'
                 scraper_job.completed_at = timezone.now()
-                scraper_job.error_message = str(e)
+                scraper_job.heartbeat_at = timezone.now()
+                scraper_job.error_message = 'Cancelled by user' if was_cancelled else str(e)
+                scraper_job.failure_code = 'cancelled' if was_cancelled else e.__class__.__name__
+                scraper_job.failure_context = {
+                    **(scraper_job.failure_context or {}),
+                    'source': 'management_command',
+                    'message': str(e),
+                }
+                scraper_job.progress_message = 'Cancelled by user' if was_cancelled else 'Execution failed'
                 await sync_to_async(scraper_job.save)()
+                await sync_to_async(publish_job_event)('job.cancelled' if was_cancelled else 'job.failed', scraper_job, extra={'source': 'management_command'})
             
             # Update config stats (ensure config exists)
             if not no_db:

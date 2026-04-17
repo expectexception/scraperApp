@@ -2,9 +2,14 @@
 
 Standalone scraper service with a Django API backend and a React + TypeScript frontend.
 
+Detailed target architecture and migration plan:
+
+- See `docs/target-architecture.md`
+
 ## Architecture
 
 - Backend API: Django + DRF on `:8008`
+- Realtime API: FastAPI SSE gateway on `:8010`
 - Frontend UI: React static build served on `:8501`
 - Scraper jobs: Managed by `manage.py run_scraper` / Celery tasks
 
@@ -24,6 +29,8 @@ Recommended environment variables:
 - `DATABASE_ENGINE` (`mongodb` recommended)
 - `MONGODB_URI` (use same URI as backend)
 - `MONGODB_NAME` (use same DB name as backend)
+- `REDIS_URL` (default: `redis://127.0.0.1:6379/0`)
+- `SCRAPER_EVENT_CHANNEL` (default: `scraper.events`)
 
 ## MongoDB Configuration (Recommended)
 
@@ -41,6 +48,21 @@ Install dependencies after updating requirements:
 pip install -r requirements.txt
 ```
 
+## Celery Foundation
+
+Phase 1 backend wiring now exists for Celery + Redis. Start these separately during development:
+
+```bash
+celery -A scraper_service worker -l info
+celery -A scraper_service beat -l info
+```
+
+Basic worker health task:
+
+```bash
+python manage.py shell -c "from scraper_manager.tasks import worker_ping; print(worker_ping.delay().id)"
+```
+
 ## Start Services
 
 ```bash
@@ -51,7 +73,14 @@ pip install -r requirements.txt
 `service.sh` starts:
 
 - Django API via gunicorn (`:8008`)
+- Celery worker for scraper execution
+- Celery Beat for scheduled jobs
+- FastAPI realtime SSE gateway (`:8010`)
 - React frontend static server (`:8501`)
+
+Prerequisite:
+
+- Redis must be running and reachable through `REDIS_URL`
 
 ## Local Frontend Development
 

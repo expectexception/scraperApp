@@ -60,31 +60,46 @@ def get_scraper_choices():
         ]
 
 
+SCRAPER_JOB_STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('queued', 'Queued'),
+    ('running', 'Running'),
+    ('retrying', 'Retrying'),
+    ('cancelling', 'Cancelling'),
+    ('completed', 'Completed'),
+    ('failed', 'Failed'),
+    ('cancelled', 'Cancelled'),
+]
+
+ACTIVE_JOB_STATUSES = ('pending', 'queued', 'running', 'retrying', 'cancelling')
+FINAL_JOB_STATUSES = ('completed', 'failed', 'cancelled')
+
+
 class ScraperJob(models.Model):
     """Track scraper execution jobs"""
-    
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('running', 'Running'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-        ('cancelled', 'Cancelled'),
-    ]
+
+    STATUS_CHOICES = SCRAPER_JOB_STATUS_CHOICES
     
     scraper_name = models.CharField(
         max_length=50,
         choices=get_scraper_choices(),
         help_text='Select which scraper to run'
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='queued')
+    task_id = models.CharField(max_length=255, blank=True, db_index=True, help_text='Celery task ID')
+    worker_name = models.CharField(max_length=255, blank=True, help_text='Worker hostname')
     pid = models.IntegerField(null=True, blank=True, help_text='OS Process ID')
     progress = models.IntegerField(default=0, help_text='Progress percentage 0-100')
+    progress_message = models.CharField(max_length=255, blank=True, help_text='Latest progress detail')
     
     # Timing
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    heartbeat_at = models.DateTimeField(null=True, blank=True)
+    cancel_requested_at = models.DateTimeField(null=True, blank=True)
     execution_time = models.FloatField(null=True, blank=True, help_text='Execution time in seconds')
+    attempt_count = models.IntegerField(default=0)
     
     # Results
     jobs_found = models.IntegerField(default=0)
@@ -94,7 +109,9 @@ class ScraperJob(models.Model):
     
     # Output
     output_file = models.CharField(max_length=500, blank=True)
+    failure_code = models.CharField(max_length=100, blank=True)
     error_message = models.TextField(blank=True)
+    failure_context = models.JSONField(default=dict, blank=True)
     
     # Metadata
     triggered_by = models.CharField(max_length=100, blank=True)

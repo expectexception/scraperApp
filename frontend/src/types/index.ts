@@ -1,3 +1,5 @@
+export type ScraperJobStatus = 'pending' | 'queued' | 'running' | 'retrying' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
+
 export type Scraper = {
     name: string
     display_name: string
@@ -15,15 +17,37 @@ export type Scraper = {
 export type ActiveJob = {
     id: number | string
     scraper_name: string
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+    status: ScraperJobStatus
     started_at: string
     triggered_by?: string
+    task_id?: string
+    worker_name?: string
+    progress?: number
+    progress_message?: string
+    heartbeat_at?: string | null
+    cancel_requested_at?: string | null
     completed_at?: string | null
     execution_time?: number | null
     jobs_found?: number
     jobs_new?: number
     jobs_updated?: number
     jobs_duplicate?: number
+    liveness?: {
+        is_stale: boolean
+        task_state?: string | null
+        pid_alive?: boolean | null
+        last_seen_at?: string | null
+        heartbeat_age_seconds?: number | null
+        stale_timeout_seconds?: number
+    }
+}
+
+export type RealtimeEvent = {
+    type: string
+    event?: string
+    timestamp: string
+    job?: ActiveJob
+    extra?: Record<string, unknown>
 }
 
 export type ActiveMonitorResponse = {
@@ -115,6 +139,8 @@ export type ManagedJobsResponse = {
 
 export type BulkJobStatusCheckResponse = {
     message: string
+    task_id?: string
+    queued?: boolean
     filters: {
         q: string
         status: string
@@ -123,7 +149,7 @@ export type BulkJobStatusCheckResponse = {
         skip_verified: boolean
         max_checks: number
     }
-    results: {
+    results?: {
         checked: number
         skipped_verified: number
         skipped_no_url: number
@@ -226,4 +252,4 @@ export type SystemMetrics = {
 
 export type HealthStatus = 'ok' | 'checking' | 'unreachable'
 
-export type View = 'dashboard' | 'jobs' | 'scraped' | 'history' | 'configs' | 'catalog'
+export type View = 'dashboard' | 'jobs' | 'scraped' | 'history' | 'configs' | 'catalog' | 'database'

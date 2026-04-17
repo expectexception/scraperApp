@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
-import api from '../services/api';
+import api, { dbApi } from '../services/api';
 import { useToast } from './useToast';
 import type {
     Scraper,
@@ -43,7 +43,7 @@ export const useSystemMetrics = (enabled: boolean) => {
             return data as SystemMetrics;
         },
         enabled,
-        refetchInterval: 2000, // Frequent updates for real-time monitoring
+        refetchInterval: 5000,
     });
 };
 
@@ -54,7 +54,7 @@ export const useScrapers = () => {
             const { data } = await api.get('/list/');
             return data.scrapers as Scraper[];
         },
-        refetchInterval: 5000,
+        refetchInterval: 60000,
         refetchIntervalInBackground: true,
     });
 };
@@ -78,7 +78,7 @@ export const useActiveJobs = (enabled: boolean) => {
             return data.active_jobs as ActiveJob[];
         },
         enabled,
-        refetchInterval: 2500,
+        refetchInterval: 15000,
         refetchIntervalInBackground: true,
     });
 };
@@ -91,7 +91,7 @@ export const useActiveMonitor = (enabled: boolean) => {
             return data as ActiveMonitorResponse;
         },
         enabled,
-        refetchInterval: 2500,
+        refetchInterval: 15000,
         refetchIntervalInBackground: true,
     });
 };
@@ -104,7 +104,7 @@ export const useStats = (enabled: boolean) => {
             return data as Stats;
         },
         enabled,
-        refetchInterval: 10000,
+        refetchInterval: 60000,
     });
 };
 
@@ -131,7 +131,7 @@ export const useRecentJobs = (enabled: boolean, limit = 20) => {
             return data.jobs as RecentJob[];
         },
         enabled,
-        refetchInterval: 15000,
+        refetchInterval: 60000,
     });
 };
 
@@ -195,7 +195,7 @@ export const useSchedulerOverview = (enabled: boolean) => {
             return data as SchedulerOverview;
         },
         enabled,
-        refetchInterval: 30000,
+        refetchInterval: 60000,
     });
 };
 
@@ -242,7 +242,7 @@ export const useScraperActions = () => {
             queryClient.invalidateQueries({ queryKey: ['history'] });
             showToast({
                 level: 'success',
-                message: data?.queued_count ? `Queued ${data.queued_count} scraper(s).` : (data?.message || 'All scrapers queued.'),
+                message: data?.queued_count ? `Queued a sequential run for ${data.queued_count} scraper(s).` : (data?.message || 'Sequential scraper run queued.'),
             });
         },
         onError: (error: unknown) => {
@@ -379,11 +379,20 @@ export const useScraperActions = () => {
             queryClient.invalidateQueries({ queryKey: ['managedJobs'] });
             queryClient.invalidateQueries({ queryKey: ['scrapedRecords'] });
             queryClient.invalidateQueries({ queryKey: ['recentJobs'] });
-            const summary = data.results;
+            if (data.results) {
+                const summary = data.results;
+                showToast({
+                    level: 'success',
+                    message: `Checked ${summary.checked}. Closed ${summary.closed_detected}. Skipped verified ${summary.skipped_verified}.`,
+                    durationMs: 5000,
+                });
+                return;
+            }
+
             showToast({
                 level: 'success',
-                message: `Checked ${summary.checked}. Closed ${summary.closed_detected}. Skipped verified ${summary.skipped_verified}.`,
-                durationMs: 5000,
+                message: data.message || 'Bulk validation queued in the background.',
+                durationMs: 4000,
             });
         },
         onError: (error: unknown) => {
@@ -405,3 +414,100 @@ export const useScraperActions = () => {
         checkJobStatusBulk,
     };
 };
+
+export const useDatabase = (enabled: boolean) => {
+    const queryClient = useQueryClient();
+    const { showToast } = useToast();
+
+    const collections = useQuery({
+        queryKey: ['dbCollections'],
+        queryFn: async () => {
+            const { data } = await dbApi.get('/collections/');
+            return data.collections as string[];
+        },
+        enabled,
+    });
+
+    const backups = useQuery({
+        queryKey: ['dbBackups'],
+        queryFn: async () => {
+            const { data } = await dbApi.get('/backups/');
+            return data.backups as any[];
+        },
+        enabled,
+        refetchInterval: 10000,
+    });
+
+    const createBackup = useMutation({
+        mutationFn: async (selectedCollections?: string[]) => {
+            const { data } = await dbApi.post('/backup/', { collections: selectedCollections });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['dbBackups'] });
+            showToast({
+                level: 'success',
+                message: 'Backup created successfully.',
+            });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to create backup.'),
+            });
+        },
+    });
+
+    const restoreBackup = useMutation({
+        mutationFn: async ({ backupId, collection, dropExisting }: { backupId: string; collection?: string; dropExisting: boolean }) => {
+            const { data } = await dbApi.post('/restore/', { 
+                backup_id: backupId, 
+                collection, 
+                drop_existing: dropExisting 
+            });
+            return data;
+        },
+        onSuccess: () => {
+            showToast({
+                level: 'success',
+                message: 'Database restoration completed.',
+            });
+            // We might want to invalidate everything if a full restore happened
+            queryClient.invalidateQueries();
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Restoration failed.'),
+            });
+        },
+    });
+
+    const deleteBackup = useMutation({
+        mutationFn: async (backupId: string) => {
+            await dbApi.delete(`/backups/${backupId}/`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['dbBackups'] });
+            showToast({
+                level: 'success',
+                message: 'Backup deleted.',
+            });
+        },
+        onError: (error: unknown) => {
+            showToast({
+                level: 'error',
+                message: extractApiError(error, 'Failed to delete backup.'),
+            });
+        },
+    });
+
+    return {
+        collections,
+        backups,
+        createBackup,
+        restoreBackup,
+        deleteBackup,
+    };
+};
+
