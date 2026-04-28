@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 from datetime import datetime
+from typing import Optional, List, Dict
 from playwright.async_api import async_playwright
 
 from .base_scraper import BaseScraper
@@ -136,6 +137,11 @@ class FedexScraper(BaseScraper):
                             job_id_match = re.search(r'/job/([^/]+)/', url)
                             job_id = f"fedex_{job_id_match.group(1)}" if job_id_match else f"fedex_{hash(url)}"
 
+                            # Extract location from detail page as it's more accurate
+                            detail_location = await self.extract_location_from_detail_page(detail_page)
+                            if detail_location:
+                                job_data['location'] = detail_location
+
                             job = get_job_dict(
                                 job_id=job_id,
                                 title=title,
@@ -192,6 +198,54 @@ class FedexScraper(BaseScraper):
 
         await self.save_results(jobs)
         return jobs
+
+    async def extract_location_from_detail_page(self, page) -> Optional[str]:
+        """Try to extract location from the detail page using multiple methods"""
+        try:
+            # 1. Try JSON-LD (most reliable)
+            scripts = await page.query_selector_all('script[type="application/ld+json"]')
+            for s in scripts:
+                try:
+                    txt = await s.inner_text()
+                    import json as _json
+                    data = _json.loads(txt)
+                    items = data if isinstance(data, list) else [data]
+                    for item in items:
+                        if isinstance(item, dict) and item.get('@type') == 'JobPosting':
+                            loc = item.get('jobLocation')
+                            if isinstance(loc, dict):
+                                addr = loc.get('address')
+                                if isinstance(addr, dict):
+                                    parts = []
+                                    if addr.get('addressLocality'): parts.append(addr.get('addressLocality'))
+                                    if addr.get('addressRegion'): parts.append(addr.get('addressRegion'))
+                                    if addr.get('postalCode'): parts.append(addr.get('postalCode'))
+                                    if addr.get('addressCountry'): parts.append(addr.get('addressCountry'))
+                                    if parts:
+                                        return ", ".join(parts)
+                                elif isinstance(addr, str):
+                                    return addr
+                except Exception as e:
+                    logger.debug(f"[{self.site_key}] Error parsing JSON-LD for location: {e}")
+                    continue
+
+            # 2. Try specific CSS selector
+            loc_el = await page.query_selector('li.job-details-brief__list-item--location .job-details-brief__list-item-value')
+            if loc_el:
+                text = await loc_el.inner_text()
+                if text and len(text.strip()) > 2:
+                    return text.strip()
+
+            # 3. Fallback: Search for "Location:" in text
+            body_text = await page.inner_text('body')
+            match = re.search(r'Location\s*:?\s*([^\n]+)', body_text, re.IGNORECASE)
+            if match and len(match.group(1).strip()) > 2:
+                return match.group(1).strip()
+                
+        except Exception as e:
+            logger.error(f"[{self.site_key}] Error extracting location from detail page: {e}")
+            
+        return None
 
     def is_job_link(self, title, url):
         """Helper to validate if a link is actually a job"""

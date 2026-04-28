@@ -269,30 +269,41 @@ class DjangoDBManager:
                 return None, False
             
             # Parse posted_date if it's a string
-            # Parse posted_date if it's a string
             posted_date = job_data.get('posted_date')
             if isinstance(posted_date, str):
                 from dateutil import parser
+                from datetime import datetime as _dt
                 try:
-                    # Clean up common prefixes
-                    clean_date = posted_date.lower().replace('posted', '').strip()
+                    # Clean up common prefixes (e.g., "Posted 4 Days Ago" -> "4 days ago")
+                    clean_date = posted_date.lower()
+                    for prefix in ('posted on', 'posted', 'updated', 'published'):
+                        clean_date = clean_date.replace(prefix, '').strip()
                     
+                    # Use local date (not UTC) for relative dates to avoid timezone-induced
+                    # off-by-one errors (e.g. IST is +5:30 ahead of UTC).
+                    local_today = _dt.now().date()
+
                     # Handle relative dates
                     if 'yesterday' in clean_date:
-                        posted_date = (timezone.now() - timedelta(days=1)).date()
-                    elif 'today' in clean_date:
-                        posted_date = timezone.now().date()
+                        from datetime import timedelta as _td
+                        posted_date = local_today - _td(days=1)
+                    elif 'today' in clean_date or 'just now' in clean_date:
+                        posted_date = local_today
                     elif 'ago' in clean_date:
-                        # "30+ days ago", "2 days ago"
-                        import re
-                        match = re.search(r'(\d+)', clean_date)
-                        if match:
-                            days = int(match.group(1))
-                            posted_date = (timezone.now() - timedelta(days=days)).date()
+                        # "30+ days ago", "2 days ago", "4 Days Ago"
+                        import re as _re
+                        from datetime import timedelta as _td
+                        # Weeks
+                        wm = _re.search(r'(\d+)\s*weeks?', clean_date)
+                        if wm:
+                            posted_date = local_today - _td(weeks=int(wm.group(1)))
                         else:
-                            # Fallback to current date or None? 
-                            # If "30+ days ago", assume 30.
-                            posted_date = None
+                            dm = _re.search(r'(\d+)', clean_date)
+                            if dm:
+                                days = int(dm.group(1))
+                                posted_date = local_today - _td(days=days)
+                            else:
+                                posted_date = None
                     else:
                         posted_date = parser.parse(posted_date).date()
                 except Exception as e:
@@ -632,6 +643,10 @@ class DjangoDBManager:
                 'job has been filled',
                 'job opening filled',
                 'opening has been filled',
+                
+                # --- Specific Job Board / ATS Errors ---
+                'the job that you were looking for either does not exist or is no longer open',
+                'does not exist or is no longer open',
                 'successfully filled',
                 'has already been filled',
                 'already filled',

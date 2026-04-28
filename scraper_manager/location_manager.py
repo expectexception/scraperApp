@@ -135,30 +135,53 @@ class LocationManager:
     CITY_TO_COUNTRY = {
         'sønderborg': 'Denmark', 'billund': 'Denmark', 'aarhus': 'Denmark',
         'appleton': 'United States', 'herndon': 'United States', 'luton': 'United Kingdom',
-        'frankfurt': 'Germany', 'munich': 'Germany', 'berlin': 'Germany',
-        'dubai': 'United Arab Emirates', 'abu dhabi': 'United Arab Emirates',
+        'frankfurt': 'Germany', 'munich': 'Germany', 'berlin': 'Germany', 'hamburg': 'Germany',
+        'düsseldorf': 'Germany', 'dusseldorf': 'Germany', 'cologne': 'Germany', 'koln': 'Germany',
+        'dubai': 'United Arab Emirates', 'abu dhabi': 'United Arab Emirates', 'sharjah': 'United Arab Emirates',
         'budapest': 'Hungary', 'warsaw': 'Poland', 'prague': 'Czech Republic',
-        'bucharest': 'Romania', 'vienna': 'Austria', 'zurich': 'Switzerland',
+        'bucharest': 'Romania', 'vienna': 'Austria', 'zurich': 'Switzerland', 'geneva': 'Switzerland',
+        # France — extensive coverage for Airbus & aviation hubs
         'paris': 'France', 'nice': 'France', 'lyon': 'France',
-        'madrid': 'Spain', 'barcelona': 'Spain', 'malaga': 'Spain',
+        'toulouse': 'France', 'blagnac': 'France', 'colomiers': 'France',
+        'bordeaux': 'France', 'marseille': 'France', 'nantes': 'France',
+        'strasbourg': 'France', 'montpellier': 'France', 'lille': 'France',
+        'rennes': 'France', 'grenoble': 'France', 'saint-nazaire': 'France',
+        'saint nazaire': 'France', 'méaulte': 'France', 'meaulte': 'France',
+        'elancourt': 'France', 'élancourt': 'France', 'velizy': 'France',
+        'marignane': 'France', 'istres': 'France',
+        'madrid': 'Spain', 'barcelona': 'Spain', 'malaga': 'Spain', 'seville': 'Spain',
+        'bilbao': 'Spain', 'puerto real': 'Spain', 'getafe': 'Spain',
         'lisbon': 'Portugal', 'faro': 'Portugal', 'porto': 'Portugal',
-        'rome': 'Italy', 'milan': 'Italy', 'venice': 'Italy',
+        'rome': 'Italy', 'milan': 'Italy', 'venice': 'Italy', 'naples': 'Italy',
+        'turin': 'Italy', 'pomigliano': 'Italy',
         'athens': 'Greece', 'thessaloniki': 'Greece',
         'amsterdam': 'Netherlands', 'rotterdam': 'Netherlands', 'eindhoven': 'Netherlands',
-        'brussels': 'Belgium', 'antwerp': 'Belgium',
+        'brussels': 'Belgium', 'antwerp': 'Belgium', 'liege': 'Belgium',
         'london': 'United Kingdom', 'manchester': 'United Kingdom', 'birmingham': 'United Kingdom',
+        'bristol': 'United Kingdom', 'filton': 'United Kingdom', 'broughton': 'United Kingdom',
+        'stevenage': 'United Kingdom', 'newport': 'United Kingdom',
         'dublin': 'Ireland', 'shannon': 'Ireland',
         'stockholm': 'Sweden', 'gothenburg': 'Sweden', 'malmo': 'Sweden',
         'oslo': 'Norway', 'bergen': 'Norway', 'stavanger': 'Norway',
         'helsinki': 'Finland', 'vantaa': 'Finland', 'tampere': 'Finland',
-        'montreal': 'Canada', 'toronto': 'Canada', 'vancouver': 'Canada', 'calgary': 'Canada', # Canada
-        'sao paulo': 'Brazil', 'rio de janeiro': 'Brazil', 'brasilia': 'Brazil', 'salvador': 'Brazil', # Brazil
-        'aracaju': 'Brazil', 'fortaleza': 'Brazil', 'belo horizonte': 'Brazil', 'porto alegre': 'Brazil', # Brazil
-        'algiers': 'Algeria', 'oran': 'Algeria', 'constantine': 'Algeria', 'annaba': 'Algeria', # Algeria
-        'blida': 'Algeria', 'setif': 'Algeria', 'alger': 'Algeria', # Algeria
-        'philadelphia': 'United States', 'phoenix': 'United States', 'chicago': 'United States', # US
-        'houston': 'United States', 'san antonio': 'United States', 'san diego': 'United States', # US
-        'dallas': 'United States', 'san jose': 'United States', 'austin': 'United States', # US
+        'montreal': 'Canada', 'toronto': 'Canada', 'vancouver': 'Canada', 'calgary': 'Canada',
+        'sao paulo': 'Brazil', 'rio de janeiro': 'Brazil', 'brasilia': 'Brazil', 'salvador': 'Brazil',
+        'aracaju': 'Brazil', 'fortaleza': 'Brazil', 'belo horizonte': 'Brazil', 'porto alegre': 'Brazil',
+        'algiers': 'Algeria', 'oran': 'Algeria', 'constantine': 'Algeria', 'annaba': 'Algeria',
+        'blida': 'Algeria', 'setif': 'Algeria', 'alger': 'Algeria',
+        'philadelphia': 'United States', 'phoenix': 'United States', 'chicago': 'United States',
+        'houston': 'United States', 'san antonio': 'United States', 'san diego': 'United States',
+        'dallas': 'United States', 'san jose': 'United States', 'austin': 'United States',
+        'memphis': 'United States', 'indianapolis': 'United States', 'jacksonville': 'United States',
+        'fort worth': 'United States', 'columbus': 'United States', 'charlotte': 'United States',
+        'riyadh': 'Saudi Arabia', 'jeddah': 'Saudi Arabia', 'dammam': 'Saudi Arabia',
+        'kuwait city': 'Kuwait', 'muscat': 'Oman', 'manama': 'Bahrain',
+        'singapore': 'Singapore', 'kuala lumpur': 'Malaysia', 'jakarta': 'Indonesia',
+        'bangkok': 'Thailand', 'manila': 'Philippines', 'ho chi minh': 'Vietnam', 'hanoi': 'Vietnam',
+        'tokyo': 'Japan', 'osaka': 'Japan', 'seoul': 'South Korea', 'beijing': 'China', 'shanghai': 'China',
+        'hong kong': 'Hong Kong', 'taipei': 'Taiwan',
+        'johannesburg': 'South Africa', 'cape town': 'South Africa', 'cairo': 'Egypt',
+        'addis ababa': 'Ethiopia', 'nairobi': 'Kenya', 'lagos': 'Nigeria', 'casablanca': 'Morocco',
     }
 
     # Map for specific postal codes reported by user
@@ -177,6 +200,12 @@ class LocationManager:
     # Regex for international postal prefixes (e.g., H-1095)
     POSTAL_PREFIX_RE = re.compile(r'^([A-Z]{1,3})-\d{3,6}(?:\s+(.+))?$', re.IGNORECASE)
 
+    # Suffixes added by LinkedIn/job boards that obscure the real city name
+    AREA_SUFFIX_RE = re.compile(
+        r'\s+(area|region|metropolitan area|metro area|greater|district|province|prefecture|county)\s*$',
+        re.IGNORECASE
+    )
+
     @classmethod
     def normalize_location(cls, location_text: str, hint_country: Optional[str] = None) -> str:
         """
@@ -194,6 +223,13 @@ class LocationManager:
         if not cleaned:
             return "Unknown"
 
+        # Step 1b: Strip area/region suffixes added by job boards (e.g. "Toulouse Area" → "Toulouse")
+        # Only strip from single-segment locations (no commas) to avoid stripping valid region names
+        if ',' not in cleaned:
+            cleaned_no_area = cls.AREA_SUFFIX_RE.sub('', cleaned).strip()
+            if cleaned_no_area:
+                cleaned = cleaned_no_area
+
         # Step 2: Handle special identifiers (Postal codes like LU2 9LY)
         identifier_lower = cleaned.lower().strip()
         if identifier_lower in cls.SPECIAL_IDENTIFIERS:
@@ -208,6 +244,12 @@ class LocationManager:
                 iso, country, default_city = cls.POSTAL_PREFIX_MAP[prefix]
                 city = trailing_city if trailing_city else default_city
                 return f"{city}, {country}"
+
+        # Step 3b: Handle Workday style locations (US-TX-Irving)
+        # ^([A-Z]{2})-([A-Z]{2,3})-(.+)$ -> \3, \2, \1
+        workday_match = re.match(r'^([A-Z]{2})-([A-Z]{2,3})-(.+)$', cleaned)
+        if workday_match:
+            cleaned = f"{workday_match.group(3)}, {workday_match.group(2)}, {workday_match.group(1)}"
 
         # Step 4: Split by common delimiters (comma, hyphen, slash)
         # Normalize delimiters to comma for processing
@@ -260,7 +302,12 @@ class LocationManager:
 
             new_parts.append(part_clean)
         
-        parts = new_parts
+        parts = []
+        for p in new_parts:
+            if p.upper() == 'US' and is_us:
+                continue
+            parts.append(p)
+
         if is_us and 'United States' not in [p.strip() for p in parts]:
             parts.append('United States')
 

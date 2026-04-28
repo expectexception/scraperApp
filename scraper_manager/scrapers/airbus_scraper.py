@@ -91,13 +91,18 @@ class AirbusScraper(BaseScraper):
                                 title = item.get('title') or "Unknown Title"
                                 
                                 url = f"https://ag.wd3.myworkdayjobs.com/Airbus{external_path}" if external_path else self.base_url
+                                
+                                # Parse the posted date from the relative string (e.g. "Posted 4 Days Ago")
+                                raw_posted = item.get('postedOn', '')
+                                parsed_posted = self.parse_posted_date(raw_posted) if raw_posted else None
+                                
                                 jobs.append({
                                     'company': self.company_name,
                                     'title': title.strip(),
                                     'location': item.get('locationsText', '').strip(),
                                     'url': url.strip(),
                                     'apply_url': f"{url.strip()}/apply",
-                                    'posted_date': item.get('postedOn', ''),
+                                    'posted_date': parsed_posted,
                                     'job_id': job_id.strip() if job_id else None
                                 })
                             
@@ -136,7 +141,12 @@ class AirbusScraper(BaseScraper):
                         desc_data = await resp.json()
                         info = desc_data.get('jobPostingInfo', {})
                         job['description'] = info.get('jobDescription')
-                        job['posted_date'] = info.get('postedOn') or job['posted_date']
+                        # Prefer the ISO date from the detail API; fall back to listing date
+                        raw_detail_date = info.get('postedOn') or info.get('datePosted')
+                        if raw_detail_date:
+                            parsed = self.parse_posted_date(str(raw_detail_date))
+                            if parsed:
+                                job['posted_date'] = parsed
                         job['employment_type'] = info.get('timeType')
                         job['job_category'] = info.get('jobCategory')
                 except Exception as e:

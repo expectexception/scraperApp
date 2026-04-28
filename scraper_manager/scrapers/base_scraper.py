@@ -559,7 +559,7 @@ class BaseScraper:
         text_raw = date_text.strip()
         text_raw = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', text_raw, flags=re.IGNORECASE)
         text = text_raw.lower()
-        now = datetime.utcnow()
+        now = datetime.now()  # Use local time to avoid UTC off-by-one for non-UTC timezones
         
         # Already ISO format
         if re.match(r'^\d{4}-\d{2}-\d{2}$', text):
