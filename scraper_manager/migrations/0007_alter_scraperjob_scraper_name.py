@@ -4,15 +4,38 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('scraper_manager', '0006_alter_scraperjob_scraper_name'),
+        ("scraper_manager", "0006_alter_scraperjob_scraper_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='scraperjob',
-            name='scraper_name',
-            field=models.CharField(choices=[('aaae', 'Aaae'), ('aap', 'AAP Aviation'), ('airbus', 'Airbus Careers'), ('airindia', 'Air India Careers'), ('allflyingjobs', 'All Flying Jobs'), ('aviationcv', 'AviationCV'), ('aviationindeed', 'Aviation Indeed'), ('aviationjobsearch', 'Aviation Job Search'), ('boeing', 'Boeing Careers'), ('cargolux', 'Cargolux Careers'), ('emirates', 'Emirates Group Careers'), ('flygosh', 'Flygosh Jobs'), ('goose', 'GOOSE Recruitment'), ('indigo', 'IndiGo Airlines'), ('jsfirm', 'JSfirm'), ('linkedin', 'LinkedIn Jobs'), ('signature', 'Signature Aviation'), ('zenon', 'Zenon'), ('all', 'All Scrapers')], help_text='Select which scraper to run', max_length=50),
+            model_name="scraperjob",
+            name="scraper_name",
+            field=models.CharField(
+                choices=[
+                    ("aaae", "Aaae"),
+                    ("aap", "AAP Aviation"),
+                    ("airbus", "Airbus Careers"),
+                    ("airindia", "Air India Careers"),
+                    ("allflyingjobs", "All Flying Jobs"),
+                    ("aviationcv", "AviationCV"),
+                    ("aviationindeed", "Aviation Indeed"),
+                    ("aviationjobsearch", "Aviation Job Search"),
+                    ("boeing", "Boeing Careers"),
+                    ("cargolux", "Cargolux Careers"),
+                    ("emirates", "Emirates Group Careers"),
+                    ("flygosh", "Flygosh Jobs"),
+                    ("goose", "GOOSE Recruitment"),
+                    ("indigo", "IndiGo Airlines"),
+                    ("jsfirm", "JSfirm"),
+                    ("linkedin", "LinkedIn Jobs"),
+                    ("signature", "Signature Aviation"),
+                    ("zenon", "Zenon"),
+                    ("all", "All Scrapers"),
+                ],
+                help_text="Select which scraper to run",
+                max_length=50,
+            ),
         ),
     ]

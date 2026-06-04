@@ -70,7 +70,12 @@ def publish_job_event(event: str, job, extra: dict | None = None) -> dict | None
         client.publish(channel, json.dumps(payload))
         return payload
     except Exception as exc:
-        logger.warning("Unable to publish scraper event %s for job %s: %s", event, getattr(job, "pk", "unknown"), exc)
+        logger.warning(
+            "Unable to publish scraper event %s for job %s: %s",
+            event,
+            getattr(job, "pk", "unknown"),
+            exc,
+        )
         return None
     finally:
         if client is not None:

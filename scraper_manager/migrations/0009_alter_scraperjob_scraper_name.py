@@ -4,15 +4,52 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('scraper_manager', '0008_alter_scraperjob_scraper_name'),
+        ("scraper_manager", "0008_alter_scraperjob_scraper_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='scraperjob',
-            name='scraper_name',
-            field=models.CharField(choices=[('aa', 'American Airlines'), ('aaae', 'AAAE'), ('aap', 'AAP Aviation'), ('airbus', 'Airbus Careers'), ('airindia', 'Air India Careers'), ('aisats', 'Aisats'), ('allflyingjobs', 'All Flying Jobs'), ('avianation', 'AviaNation'), ('aviationcv', 'AviationCV'), ('aviationindeed', 'Aviation Indeed'), ('aviationjobsearch', 'Aviation Job Search'), ('ba', 'British Airways'), ('boeing', 'Boeing Careers'), ('cargolux', 'Cargolux Careers'), ('cathay', 'Cathay Pacific'), ('cpr', 'CPKC (Canadian Pacific)'), ('emirates', 'Emirates Group Careers'), ('flygosh', 'Flygosh Jobs'), ('germanairways', 'German Airways'), ('goose', 'GOOSE Recruitment'), ('iata', 'IATA'), ('indigo', 'IndiGo Airlines'), ('jmc', 'JMC Aviation'), ('jsfirm', 'JSfirm'), ('linkedin', 'LinkedIn Jobs'), ('lufthansa', 'Lufthansa Group'), ('nbaa', 'NBAA'), ('signature', 'Signature Aviation'), ('southwest', 'Southwest Airlines'), ('starair', 'Star Air Careers'), ('wizzair', 'Wizz Air'), ('zenon', 'Zenon Aviation'), ('all', 'All Scrapers')], help_text='Select which scraper to run', max_length=50),
+            model_name="scraperjob",
+            name="scraper_name",
+            field=models.CharField(
+                choices=[
+                    ("aa", "American Airlines"),
+                    ("aaae", "AAAE"),
+                    ("aap", "AAP Aviation"),
+                    ("airbus", "Airbus Careers"),
+                    ("airindia", "Air India Careers"),
+                    ("aisats", "Aisats"),
+                    ("allflyingjobs", "All Flying Jobs"),
+                    ("avianation", "AviaNation"),
+                    ("aviationcv", "AviationCV"),
+                    ("aviationindeed", "Aviation Indeed"),
+                    ("aviationjobsearch", "Aviation Job Search"),
+                    ("ba", "British Airways"),
+                    ("boeing", "Boeing Careers"),
+                    ("cargolux", "Cargolux Careers"),
+                    ("cathay", "Cathay Pacific"),
+                    ("cpr", "CPKC (Canadian Pacific)"),
+                    ("emirates", "Emirates Group Careers"),
+                    ("flygosh", "Flygosh Jobs"),
+                    ("germanairways", "German Airways"),
+                    ("goose", "GOOSE Recruitment"),
+                    ("iata", "IATA"),
+                    ("indigo", "IndiGo Airlines"),
+                    ("jmc", "JMC Aviation"),
+                    ("jsfirm", "JSfirm"),
+                    ("linkedin", "LinkedIn Jobs"),
+                    ("lufthansa", "Lufthansa Group"),
+                    ("nbaa", "NBAA"),
+                    ("signature", "Signature Aviation"),
+                    ("southwest", "Southwest Airlines"),
+                    ("starair", "Star Air Careers"),
+                    ("wizzair", "Wizz Air"),
+                    ("zenon", "Zenon Aviation"),
+                    ("all", "All Scrapers"),
+                ],
+                help_text="Select which scraper to run",
+                max_length=50,
+            ),
         ),
     ]

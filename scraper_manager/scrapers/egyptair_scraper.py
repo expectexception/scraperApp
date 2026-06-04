@@ -1,193 +1,276 @@
+"""
+Egyptair careers scraper.
+
+Strategy (3-tier):
+  1. curl_cffi with Chrome TLS fingerprint (fastest, often bypasses CF turnstile)
+  2. Playwright headless with stealth init scripts
+  3. Playwright headful (headless=False) as last resort — requires display
+
+If all fail we return [] and log a warning so the run continues.
+"""
+
 import asyncio
 import logging
 import re
-from playwright.async_api import async_playwright
+from urllib.parse import urljoin
+
 from .base_scraper import BaseScraper
 from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
-_CF_CHALLENGE_TITLE_PHRASES = ("just a moment", "please wait", "checking your browser", "performing security")
+CAREERS_URL = "https://www.egyptair.com/en/about-egyptair/Pages/careers.aspx"
+CF_PHRASES = (
+    "just a moment",
+    "please wait",
+    "checking your browser",
+    "performing security",
+)
 
-def _is_cloudflare_challenge(title: str) -> bool:
-    return any(p in title.lower() for p in _CF_CHALLENGE_TITLE_PHRASES)
+
+def _is_cf(title: str) -> bool:
+    return any(p in title.lower() for p in CF_PHRASES)
 
 
 class EgyptairScraper(BaseScraper):
     """
-    Scraper for Egyptair.
-    Uses Playwright with headful mode (headless=False) to bypass Cloudflare WAF.
-    Cloudflare auto-solves for real browsers; we wait up to 30 s for the challenge
-    to clear before proceeding to extract job links.
+    Egyptair scraper with 3-tier Cloudflare bypass strategy.
+    Tier-1: curl_cffi (TLS fingerprint spoofing)
+    Tier-2: Playwright headless + stealth
+    Tier-3: Playwright headful (needs display)
     """
 
     def __init__(self, config, db_manager=None):
-        super().__init__(config, site_key='egyptair', db_manager=db_manager)
-        self.base_url = "https://www.egyptair.com/en/about-egyptair/Pages/careers.aspx"
+        super().__init__(config, site_key="egyptair", db_manager=db_manager)
+        self.base_url = CAREERS_URL
         self.company_name = "Egyptair"
-        # Force headful mode – Cloudflare cannot be solved headlessly
-        self.headless = False
 
-    async def _wait_for_cloudflare(self, page, max_wait_ms: int = 30000) -> bool:
-        """
-        Poll page title every second until the Cloudflare challenge clears.
-        Returns True if we passed the challenge, False if timed out.
-        """
-        waited = 0
-        poll_interval = 1000
-        while waited < max_wait_ms:
-            title = await page.title()
-            if not _is_cloudflare_challenge(title):
-                logger.info(f"[{self.site_key}] Cloudflare challenge cleared (title: {title!r})")
-                return True
-            logger.debug(f"[{self.site_key}] Waiting for CF challenge... ({waited // 1000}s, title={title!r})")
-            await page.wait_for_timeout(poll_interval)
-            waited += poll_interval
-        logger.warning(f"[{self.site_key}] Cloudflare challenge did NOT clear after {max_wait_ms // 1000}s")
-        return False
+    # ------------------------------------------------------------------ #
+    #  Tier 1: curl_cffi                                                   #
+    # ------------------------------------------------------------------ #
+    async def _fetch_with_curl_cffi(self) -> list:
+        """Use curl_cffi with Chrome110 TLS impersonation."""
+        try:
+            from curl_cffi import requests as curl_req
 
-    async def fetch_jobs(self) -> list:
-        logger.info(f"[{self.site_key}] Navigating to {self.base_url} (headless={self.headless})...")
+            logger.info(f"[{self.site_key}] Tier-1: curl_cffi attempt...")
+            resp = curl_req.get(
+                CAREERS_URL,
+                impersonate="chrome110",
+                timeout=30,
+                headers={
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Referer": "https://www.google.com/",
+                },
+            )
+            if resp.status_code == 200 and not _is_cf(resp.text[:500].lower()):
+                return self._parse_html(resp.text)
+            logger.warning(
+                f"[{self.site_key}] Tier-1 blocked (status={resp.status_code})"
+            )
+        except Exception as e:
+            logger.warning(f"[{self.site_key}] Tier-1 error: {e}")
+        return []
+
+    # ------------------------------------------------------------------ #
+    #  Tier 2 & 3: Playwright                                              #
+    # ------------------------------------------------------------------ #
+    async def _fetch_with_playwright(self, headless: bool) -> list:
+        from playwright.async_api import async_playwright
+
+        mode = "headless" if headless else "headful"
+        logger.info(
+            f"[{self.site_key}] Tier-{'2' if headless else '3'}: Playwright {mode}..."
+        )
         jobs = []
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=headless)
+                context = await browser.new_context(
+                    user_agent=(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/124.0.0.0 Safari/537.36"
+                    ),
+                    viewport={"width": 1280, "height": 800},
+                    locale="en-US",
+                    timezone_id="Africa/Cairo",
+                    ignore_https_errors=True,
+                )
+                # Stealth init script
+                await context.add_init_script("""
+                    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                    window.chrome = { runtime: {}, loadTimes: ()=>{}, csi: ()=>{}, app: {} };
+                    Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3,4,5] });
+                    Object.defineProperty(navigator, 'languages', { get: () => ['en-US','en'] });
+                """)
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=self.headless)
-            page, context = await self.setup_stealth_page(browser)
+                page = await context.new_page()
+                await page.goto(
+                    CAREERS_URL, wait_until="domcontentloaded", timeout=60000
+                )
 
-            try:
-                await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
-
-                # If Cloudflare challenge appears, wait for auto-solve (works in headful mode)
-                title = await page.title()
-                if _is_cloudflare_challenge(title):
-                    logger.info(f"[{self.site_key}] Cloudflare challenge detected – waiting for auto-solve...")
-                    passed = await self._wait_for_cloudflare(page, max_wait_ms=30000)
-                    if not passed:
-                        logger.error(
-                            f"[{self.site_key}] Blocked by Cloudflare. "
-                            "Run with headless=False on a desktop session to bypass."
-                        )
-                        return []
-                    # Wait a bit more for page content to render after challenge clears
-                    await page.wait_for_load_state('networkidle', timeout=15000)
-
-                await self.simulate_human_behavior(page)
-
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: (a.innerText || '').trim(), h: a.href}))
-                        .filter(a => a.h && (
-                            a.h.includes('job') || a.h.includes('vacancy') ||
-                            a.h.includes('career') || a.h.includes('vacan')
-                        ))
-                }''')
-
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
-
-                seen_urls = set()
-                job_urls = []
-                for link in links:
-                    href = link['h']
-                    title = link['t']
-                    if href and href not in seen_urls and self.is_job_link(title, href):
-                        seen_urls.add(href)
-                        job_urls.append((href, title))
-
-                for url, title in job_urls:
-                    if self.max_jobs and len(jobs) >= self.max_jobs:
+                # Wait up to 30s for CF challenge to clear
+                for _ in range(30):
+                    title = await page.title()
+                    if not _is_cf(title):
                         break
+                    await page.wait_for_timeout(1000)
+                else:
+                    logger.warning(
+                        f"[{self.site_key}] CF challenge timed out in {mode} mode"
+                    )
+                    await browser.close()
+                    return []
 
-                    try:
-                        if not self.should_process_job(title):
-                            continue
-                        if await self.is_url_already_scraped(url):
-                            continue
-
-                        logger.info(f"[{self.site_key}] Fetching details for: {url}")
-                        detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
-                        await self.random_delay(1, 2)
-
-                        description = await self.extract_description_from_page(detail_page)
-                        job_id = f"{self.site_key}_{re.sub(r'[^a-zA-Z0-9]', '', url)[-10:]}"
-
-                        job = get_job_dict(
-                            job_id=job_id,
-                            title=title,
-                            company=self.company_name,
-                            location="Cairo, Egypt",
-                            url=url,
-                            source_url=self.base_url,
-                            description=description,
-                            source=self.site_key,
-                        )
-                        jobs.append(job)
-                        await detail_page.close()
-                    except Exception as e:
-                        logger.warning(f"[{self.site_key}] Error on detail page {url}: {e}")
-
-            except Exception as e:
-                logger.error(f"[{self.site_key}] Main page error: {e}")
-            finally:
-                await context.close()
+                await page.wait_for_load_state("networkidle", timeout=10000)
+                html = await page.content()
+                jobs = self._parse_html(html)
                 await browser.close()
+        except Exception as e:
+            logger.warning(f"[{self.site_key}] Playwright {mode} error: {e}")
+        return jobs
 
+    # ------------------------------------------------------------------ #
+    #  HTML parser                                                         #
+    # ------------------------------------------------------------------ #
+    def _parse_html(self, html: str) -> list:
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "html.parser")
+        jobs = []
+        seen = set()
+
+        # Try structured job containers first
+        for container in soup.select(".job-item, .vacancy, .career-item, article.job"):
+            link = container.find("a")
+            if not link:
+                continue
+            title = link.text.strip()
+            href = urljoin("https://www.egyptair.com", link.get("href", ""))
+            if href in seen or not title:
+                continue
+            seen.add(href)
+            loc = container.select_one(".location")
+            jobs.append(
+                self._make_job(title, href, loc.text.strip() if loc else "Cairo, Egypt")
+            )
+
+        # Fallback: scan all links for job/vacancy patterns
+        if not jobs:
+            for a in soup.find_all("a", href=True):
+                href = a.get("href", "")
+                if not any(
+                    kw in href.lower() for kw in ("job", "vacanc", "career", "recruit")
+                ):
+                    continue
+                full_url = urljoin("https://www.egyptair.com", href)
+                title = a.text.strip()
+                if not title or len(title) < 5 or full_url in seen:
+                    continue
+                seen.add(full_url)
+                jobs.append(self._make_job(title, full_url, "Cairo, Egypt"))
+
+        logger.info(f"[{self.site_key}] Parsed {len(jobs)} job links from HTML")
+        return jobs
+
+    def _make_job(self, title: str, url: str, location: str) -> dict:
+        job_id = f"egyptair_{re.sub(r'[^a-zA-Z0-9]', '', url)[-12:]}"
+        return get_job_dict(
+            job_id=job_id,
+            title=title,
+            company=self.company_name,
+            location=location,
+            url=url,
+            source_url=CAREERS_URL,
+            description="",
+            source=self.site_key,
+        )
+
+    # ------------------------------------------------------------------ #
+    #  Main fetch with fallback chain                                      #
+    # ------------------------------------------------------------------ #
+    async def fetch_jobs(self) -> list:
+        logger.info(
+            f"[{self.site_key}] Starting Egyptair fetch with CF bypass chain..."
+        )
+
+        # Tier 1 — curl_cffi (no browser needed)
+        jobs = await self._fetch_with_curl_cffi()
+        if jobs:
+            logger.info(f"[{self.site_key}] Tier-1 succeeded: {len(jobs)} jobs")
+            return jobs
+
+        # Tier 2 — Playwright headless + stealth
+        jobs = await self._fetch_with_playwright(headless=True)
+        if jobs:
+            logger.info(f"[{self.site_key}] Tier-2 succeeded: {len(jobs)} jobs")
+            return jobs
+
+        # Tier 3 — Playwright headful (needs display; skip if DISPLAY not set)
+        import os
+
+        if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+            jobs = await self._fetch_with_playwright(headless=False)
+            if jobs:
+                logger.info(f"[{self.site_key}] Tier-3 succeeded: {len(jobs)} jobs")
+                return jobs
+        else:
+            logger.warning(
+                f"[{self.site_key}] No display available — skipping Tier-3 headful mode"
+            )
+
+        logger.warning(
+            f"[{self.site_key}] All CF bypass tiers failed — returning empty"
+        )
+        return []
+
+    async def fetch_job_descriptions(self, jobs) -> list:
+        """Fetch full description from each job detail page using curl_cffi."""
+        from curl_cffi import requests as curl_req
+
+        for job in jobs:
+            try:
+                resp = curl_req.get(
+                    job["url"],
+                    impersonate="chrome110",
+                    timeout=20,
+                )
+                if resp.status_code == 200:
+                    from bs4 import BeautifulSoup
+
+                    soup = BeautifulSoup(resp.text, "html.parser")
+                    content = (
+                        soup.find("div", class_="job-description")
+                        or soup.find("div", id="mainContent")
+                        or soup.find("main")
+                        or soup.find("article")
+                    )
+                    if content:
+                        job["description"] = content.get_text(" ", strip=True)[:3000]
+            except Exception as e:
+                logger.warning(
+                    f"[{self.site_key}] Desc error for {job.get('url')}: {e}"
+                )
+            await asyncio.sleep(1)
         return jobs
 
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
+        if not jobs:
+            return []
 
-        if self.use_filter and self.filter_manager and jobs:
-            logger.info(f"[{self.site_key}] Applying final filter check...")
+        if self.use_filter and self.filter_manager:
             jobs, _, filter_stats = self.apply_title_filter(jobs)
             self.filter_manager.print_filter_stats(filter_stats)
+            if not jobs:
+                return []
 
+        jobs, _ = await self.filter_new_jobs(jobs)
+        if not jobs:
+            return []
+
+        jobs = await self.fetch_job_descriptions(jobs)
         await self.save_results(jobs)
         return jobs
-
-    async def setup_stealth_page(self, browser):
-        """Create a stealthy browser context to reduce bot-detection signals."""
-        context = await browser.new_context(
-            user_agent=(
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/124.0.0.0 Safari/537.36'
-            ),
-            viewport={'width': 1280, 'height': 800},
-            locale='en-US',
-            timezone_id='Africa/Cairo',
-            ignore_https_errors=True,
-        )
-
-        await context.add_init_script("""
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            window.chrome = { runtime: {}, loadTimes: function() {}, csi: function() {}, app: {} };
-            const originalQuery = window.navigator.permissions.query;
-            window.navigator.permissions.query = (parameters) => (
-                parameters.name === 'notifications'
-                    ? Promise.resolve({ state: 'denied' })
-                    : originalQuery(parameters)
-            );
-            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-        """)
-
-        page = await context.new_page()
-
-        try:
-            cdp = await context.new_cdp_session(page)
-            await cdp.send("Network.setUserAgentOverride", {
-                "userAgent": (
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/124.0.0.0 Safari/537.36'
-                ),
-                "platform": "Win32",
-                "acceptLanguage": "en-US,en;q=0.9",
-            })
-        except Exception as e:
-            logger.warning(f"[{self.site_key}] CDP stealth error: {e}")
-
-        return page, context
-

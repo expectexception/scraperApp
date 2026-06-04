@@ -5,15 +5,16 @@ from .base_scraper import BaseScraper
 from .job_schema import get_job_dict
 import re
 
+
 class AegeanScraper(BaseScraper):
     """Scraper for Aegean Airlines Careers (SuccessFactors)"""
 
     def __init__(self, config, db_manager=None):
-        super().__init__(config, 'aegean', db_manager=db_manager)
-        self.site_config = config.get('sites', {}).get('aegean', {})
-        self.base_url = self.site_config.get('base_url', 'https://jobs.aegeanair.com')
+        super().__init__(config, "aegean", db_manager=db_manager)
+        self.site_config = config.get("sites", {}).get("aegean", {})
+        self.base_url = self.site_config.get("base_url", "https://jobs.aegeanair.com")
         # Point to the View All Jobs page for Aegean SuccessFactors
-        self.jobs_url = self.base_url + '/go/All-Jobs/8966755/'
+        self.jobs_url = self.base_url + "/go/All-Jobs/8966755/"
         self.company_name = "Aegean Airlines"
 
     async def run(self):
@@ -34,7 +35,7 @@ class AegeanScraper(BaseScraper):
 
         # Apply title filtering BEFORE fetching descriptions
         if self.use_filter and self.filter_manager:
-            print(f"\n🔍 Applying title filter...")
+            print("\n🔍 Applying title filter...")
             matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
             self.filter_manager.print_filter_stats(filter_stats)
 
@@ -68,31 +69,33 @@ class AegeanScraper(BaseScraper):
             try:
                 print(f"Loading {self.company_name} careers page...")
                 await self.random_delay(1, 2)
-                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=45000)
+                await page.goto(
+                    self.jobs_url, wait_until="domcontentloaded", timeout=45000
+                )
 
                 await self.random_delay(4, 6)
                 await self.simulate_human_behavior(page)
 
                 # Wait for job list links matching SuccessFactors pattern
                 try:
-                    await page.wait_for_selector('a.jobTitle-link', timeout=20000)
+                    await page.wait_for_selector("a.jobTitle-link", timeout=20000)
                 except Exception:
                     pass
 
                 # Grab anything linking to a /job/ path as a fallback
-                job_links = await page.evaluate('''() => {
+                job_links = await page.evaluate("""() => {
                     let links = Array.from(document.querySelectorAll('a'));
                     return links.filter(a => a.href.includes('/job/') && a.innerText.trim().length > 3).map(a => ({
                         href: a.href,
                         title: a.innerText.trim()
                     }));
-                }''')
-                
+                }""")
+
                 # Remove duplicates by href
                 unique_links = {}
                 for l in job_links:
-                    if l['href'] not in unique_links:
-                        unique_links[l['href']] = l['title']
+                    if l["href"] not in unique_links:
+                        unique_links[l["href"]] = l["title"]
 
                 print(f"✓ Found {len(unique_links)} jobs:")
                 for i, (href, title) in enumerate(unique_links.items(), 1):
@@ -101,29 +104,37 @@ class AegeanScraper(BaseScraper):
                 if not unique_links:
                     return jobs
 
-                for href, title in list(unique_links.items())[:self.max_jobs] if self.max_jobs else unique_links.items():
+                for href, title in (
+                    list(unique_links.items())[: self.max_jobs]
+                    if self.max_jobs
+                    else unique_links.items()
+                ):
                     try:
-                        job_url = href if href.startswith('http') else f"{self.base_url}{href}"
-                        
+                        job_url = (
+                            href
+                            if href.startswith("http")
+                            else f"{self.base_url}{href}"
+                        )
+
                         job_id = None
-                        match = re.search(r'/(\d+)/?$', job_url)
+                        match = re.search(r"/(\d+)/?$", job_url)
                         if match:
                             job_id = match.group(1)
                         if not job_id:
                             job_id = f"aegean_{len(jobs) + 1}"
 
                         job_data = {
-                            'job_id': f"aegean_{job_id}",
-                            'title': title,
-                            'company': self.company_name,
-                            'source': self.site_key,
-                            'url': job_url,
-                            'apply_url': job_url,
-                            'location': 'Unknown',
-                            'timestamp': datetime.now().isoformat(),
+                            "job_id": f"aegean_{job_id}",
+                            "title": title,
+                            "company": self.company_name,
+                            "source": self.site_key,
+                            "url": job_url,
+                            "apply_url": job_url,
+                            "location": "Unknown",
+                            "timestamp": datetime.now().isoformat(),
                         }
                         jobs.append(job_data)
-                    except Exception as e:
+                    except Exception:
                         continue
 
             except Exception as e:
@@ -141,21 +152,23 @@ class AegeanScraper(BaseScraper):
             browser = await p.chromium.launch(headless=self.headless)
 
             for i in range(0, len(jobs), self.batch_size):
-                batch = jobs[i:i + self.batch_size]
+                batch = jobs[i : i + self.batch_size]
                 tasks = []
 
                 for job in batch:
-                    if job.get('url'):
+                    if job.get("url"):
                         tasks.append(self._extract_description(browser, job))
 
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
 
-                print(f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs")
+                print(
+                    f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs"
+                )
 
             await browser.close()
 
-        with_desc = sum(1 for job in jobs if job.get('description'))
+        with_desc = sum(1 for job in jobs if job.get("description"))
         print(f"✓ Successfully extracted {with_desc}/{len(jobs)} descriptions")
 
         return jobs
@@ -164,34 +177,48 @@ class AegeanScraper(BaseScraper):
         try:
             page, context = await self.setup_stealth_page(browser)
             await self.random_delay(1, 2)
-            await page.goto(job['url'], wait_until='load', timeout=30000)
+            await page.goto(job["url"], wait_until="load", timeout=30000)
             await self.random_delay(2, 4)
             await self.simulate_human_behavior(page)
 
             # SuccessFactors typically has .job-location or similar
-            location_selectors = ['span.jobLocation', 'span.job-location', 'li.job-location', '.job-location', '[data-location]', '[itemprop="jobLocation"]']
+            location_selectors = [
+                "span.jobLocation",
+                "span.job-location",
+                "li.job-location",
+                ".job-location",
+                "[data-location]",
+                '[itemprop="jobLocation"]',
+            ]
             for selector in location_selectors:
                 try:
                     loc_elem = await page.query_selector(selector)
                     if loc_elem:
                         loc_text = await loc_elem.inner_text()
                         if loc_text and len(loc_text) > 2:
-                            job['location'] = loc_text.strip()
+                            job["location"] = loc_text.strip()
                             break
                 except Exception:
                     continue
-            
-            if job.get('location', 'Unknown') == 'Unknown':
+
+            if job.get("location", "Unknown") == "Unknown":
                 try:
-                    body_text = await page.inner_text('body')
-                    m = re.search(r'Location:\s*([^\n]+)', body_text)
+                    body_text = await page.inner_text("body")
+                    m = re.search(r"Location:\s*([^\n]+)", body_text)
                     if m:
-                        job['location'] = m.group(1).strip()
+                        job["location"] = m.group(1).strip()
                 except Exception:
                     pass
 
-            desc_selectors = ['#jobDescription', '.job-description', '[itemprop="description"]', '.content', 'article', 'main']
-            description = ''
+            desc_selectors = [
+                "#jobDescription",
+                ".job-description",
+                '[itemprop="description"]',
+                ".content",
+                "article",
+                "main",
+            ]
+            description = ""
             for selector in desc_selectors:
                 try:
                     elem = await page.query_selector(selector)
@@ -209,13 +236,13 @@ class AegeanScraper(BaseScraper):
             # Extract posted date
             posted_date_meta = await page.query_selector('meta[itemprop="datePosted"]')
             if posted_date_meta:
-                 posted_date = await posted_date_meta.get_attribute('content')
+                posted_date = await posted_date_meta.get_attribute("content")
             else:
-                 posted_date = await self.extract_posted_date_from_page(page)
+                posted_date = await self.extract_posted_date_from_page(page)
             if posted_date:
-                job['posted_date'] = posted_date
+                job["posted_date"] = posted_date
 
-            job['description'] = description
+            job["description"] = description
 
             await page.close()
             await context.close()

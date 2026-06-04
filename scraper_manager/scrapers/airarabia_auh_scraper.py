@@ -5,6 +5,7 @@ Extracts aviation job listings for Air Arabia Abu Dhabi
 
 from .airarabia_scraper import AirArabiaScraper
 
+
 class AirArabiaAuhScraper(AirArabiaScraper):
     """Scraper for Air Arabia Abu Dhabi Careers"""
 

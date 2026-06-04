@@ -19,7 +19,7 @@ def active_job_reference_time(job: ScraperJob):
 
 
 def get_task_runtime_state(job: ScraperJob) -> str | None:
-    task_id = job.task_id or (job.parameters or {}).get('celery_task_id')
+    task_id = job.task_id or (job.parameters or {}).get("celery_task_id")
     if not task_id:
         return None
 
@@ -46,7 +46,7 @@ def is_job_stale(job: ScraperJob) -> bool:
             pass
 
     task_state = get_task_runtime_state(job)
-    if task_state in {'PENDING', 'RECEIVED', 'STARTED', 'RETRY'}:
+    if task_state in {"PENDING", "RECEIVED", "STARTED", "RETRY"}:
         return False
 
     return True
@@ -67,16 +67,18 @@ def describe_job_liveness(job: ScraperJob) -> dict:
             pid_alive = None
 
     return {
-        'is_stale': is_job_stale(job),
-        'task_state': get_task_runtime_state(job),
-        'pid_alive': pid_alive,
-        'last_seen_at': reference_time.isoformat() if reference_time else None,
-        'heartbeat_age_seconds': heartbeat_age_seconds,
-        'stale_timeout_seconds': ACTIVE_JOB_STALE_TIMEOUT.total_seconds(),
+        "is_stale": is_job_stale(job),
+        "task_state": get_task_runtime_state(job),
+        "pid_alive": pid_alive,
+        "last_seen_at": reference_time.isoformat() if reference_time else None,
+        "heartbeat_age_seconds": heartbeat_age_seconds,
+        "stale_timeout_seconds": ACTIVE_JOB_STALE_TIMEOUT.total_seconds(),
     }
 
 
-def finalize_stale_active_jobs(scraper_name: str | None = None, source: str = 'job_monitor') -> int:
+def finalize_stale_active_jobs(
+    scraper_name: str | None = None, source: str = "job_monitor"
+) -> int:
     queryset = ScraperJob.objects.filter(status__in=ACTIVE_JOB_STATUSES)
     if scraper_name:
         queryset = queryset.filter(scraper_name=scraper_name)
@@ -87,34 +89,38 @@ def finalize_stale_active_jobs(scraper_name: str | None = None, source: str = 'j
             continue
 
         reference_time = active_job_reference_time(job)
-        job.status = 'failed'
+        job.status = "failed"
         job.completed_at = timezone.now()
         job.heartbeat_at = job.heartbeat_at or reference_time
-        job.failure_code = 'stale_job'
+        job.failure_code = "stale_job"
         job.failure_context = {
             **(job.failure_context or {}),
-            'source': source,
-            'reason': 'active job exceeded stale timeout without a live worker identity',
-            'reference_time': reference_time.isoformat() if reference_time else None,
+            "source": source,
+            "reason": "active job exceeded stale timeout without a live worker identity",
+            "reference_time": reference_time.isoformat() if reference_time else None,
         }
-        job.error_message = 'Job marked failed after stale active state reconciliation.'
-        job.progress_message = 'Marked stale by monitor reconciliation'
+        job.error_message = "Job marked failed after stale active state reconciliation."
+        job.progress_message = "Marked stale by monitor reconciliation"
         if job.started_at and job.completed_at:
             job.execution_time = (job.completed_at - job.started_at).total_seconds()
-        job.save(update_fields=[
-            'status',
-            'completed_at',
-            'heartbeat_at',
-            'failure_code',
-            'failure_context',
-            'error_message',
-            'progress_message',
-            'execution_time',
-        ])
-        publish_job_event('job.failed', job, extra={'source': source, 'reason': 'stale_job'})
+        job.save(
+            update_fields=[
+                "status",
+                "completed_at",
+                "heartbeat_at",
+                "failure_code",
+                "failure_context",
+                "error_message",
+                "progress_message",
+                "execution_time",
+            ]
+        )
+        publish_job_event(
+            "job.failed", job, extra={"source": source, "reason": "stale_job"}
+        )
         updated += 1
 
     if updated:
-        logger.info('Reconciled %s stale scraper job(s)', updated)
+        logger.info("Reconciled %s stale scraper job(s)", updated)
 
     return updated

@@ -1,15 +1,12 @@
-import asyncio
 import logging
 from playwright.async_api import async_playwright
 import re
-from datetime import datetime
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 
 from .base_scraper import BaseScraper
 from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
+
 
 class AustrianAirlinesScraper(BaseScraper):
     """
@@ -17,33 +14,39 @@ class AustrianAirlinesScraper(BaseScraper):
     URL: https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_company%5B%5D=5909&language=2
     Lufthansa Group structure.
     """
-    
+
     def __init__(self, config, db_manager=None):
-        super().__init__(config, site_key='austrianairlines', db_manager=db_manager)
+        super().__init__(config, site_key="austrianairlines", db_manager=db_manager)
         # Direct division filter: 5909, 5975, 5974 for Austrian Airlines
         self.base_url = "https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_division%5B%5D=5909&search_criterion_division%5B%5D=5975&search_criterion_division%5B%5D=5974&search_criterion_channel%5B%5D=12&language=2"
         self.company_name = "Austrian Airlines"
 
     async def fetch_jobs(self) -> list:
-        logger.info(f"[{self.site_key}] Navigating to Lufthansa group careers portal...")
+        logger.info(
+            f"[{self.site_key}] Navigating to Lufthansa group careers portal..."
+        )
         jobs = []
-        
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
             page, context = await self.setup_stealth_page(browser)
-            
+
             try:
                 try:
                     # Using domcontentloaded as the site can be slow with tracking scripts
-                    await page.goto(self.base_url, wait_until='domcontentloaded', timeout=60000)
+                    await page.goto(
+                        self.base_url, wait_until="domcontentloaded", timeout=60000
+                    )
                     await page.wait_for_timeout(3000)
                 except Exception as e:
                     logger.error(f"[{self.site_key}] Navigation failed: {e}")
                     return []
-                
+
                 # Handling cookie consent
                 try:
-                    cookie_btn = page.locator('text=Select all, text=Accept all, text=Zustimmen, id=cmplz-accept-all').first
+                    cookie_btn = page.locator(
+                        "text=Select all, text=Accept all, text=Zustimmen, id=cmplz-accept-all"
+                    ).first
                     if await cookie_btn.is_visible():
                         await cookie_btn.click()
                         await page.wait_for_timeout(1000)
@@ -52,85 +55,111 @@ class AustrianAirlinesScraper(BaseScraper):
 
                 # Wait for results to load
                 try:
-                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=25000)
+                    await page.wait_for_selector("a.jobad-link-wrapper", timeout=25000)
                 except:
                     logger.warning(f"[{self.site_key}] No job links found after wait.")
 
-                links = await page.evaluate('''() => {
+                links = await page.evaluate("""() => {
                     return Array.from(document.querySelectorAll('a.jobad-link-wrapper'))
                         .map(a => {
                             let h2 = a.querySelector('h2');
                             return {t: h2 ? h2.innerText.trim() : (a.title || a.innerText.trim()), h: a.href};
                         })
                         .filter(a => a.h && a.h.includes('job'))
-                }''')
-                
+                }""")
+
                 logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
-                
+
                 seen_urls = set()
                 job_urls = []
                 for link in links:
-                    href = link['h']
-                    title = link['t']
+                    href = link["h"]
+                    title = link["t"]
                     if href and href not in seen_urls and self.is_job_link(title, href):
                         if not self.should_process_job(title):
                             continue
                         seen_urls.add(href)
                         job_urls.append((href, title))
-                
+
                 logger.info(f"[{self.site_key}] {len(job_urls)} jobs passed filtering")
 
                 for i, (url, title) in enumerate(job_urls):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
-                        
+
                     try:
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
-                        await detail_page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                        await detail_page.goto(
+                            url, wait_until="domcontentloaded", timeout=30000
+                        )
                         await detail_page.wait_for_timeout(2000)
-                        
+
                         real_title = title
-                        h1 = detail_page.locator('h1').first
+                        h1 = detail_page.locator("h1").first
                         if await h1.is_visible():
                             extracted = await h1.inner_text()
                             if len(extracted) > 5:
                                 real_title = extracted
 
                         description = ""
-                        desc_selectors = ['.lh-jobad-content-details', '.lh-jobad-collapsible-content-todos-text', '.lh-jobad', '.jobad-content', 'main']
+                        desc_selectors = [
+                            ".lh-jobad-content-details",
+                            ".lh-jobad-collapsible-content-todos-text",
+                            ".lh-jobad",
+                            ".jobad-content",
+                            "main",
+                        ]
                         for selector in desc_selectors:
                             elem = detail_page.locator(selector).first
                             if await elem.is_visible():
                                 description = await elem.inner_html()
                                 break
-                                
+
                         if not description:
-                            description = await self.extract_description_from_page(detail_page)
+                            description = await self.extract_description_from_page(
+                                detail_page
+                            )
 
                         location = "Vienna, Austria"
                         # Try the value span inside the first facts list item first
-                        loc_value_elem = detail_page.locator('.lh-jobad-content-facts li .lh-jobad-content-facts-item').first
+                        loc_value_elem = detail_page.locator(
+                            ".lh-jobad-content-facts li .lh-jobad-content-facts-item"
+                        ).first
                         if await loc_value_elem.is_visible():
                             loc_text = await loc_value_elem.inner_text()
                             if loc_text:
                                 location = loc_text.strip() + ", Austria"
                         else:
                             # Fallback: read the whole li and strip the label prefix
-                            loc_elem = detail_page.locator('.lh-jobad-content-facts li').first
+                            loc_elem = detail_page.locator(
+                                ".lh-jobad-content-facts li"
+                            ).first
                             if await loc_elem.is_visible():
                                 loc_text = await loc_elem.inner_text()
                                 if loc_text:
                                     # Strip "Location" / "LOCATION" label prefix if present
                                     import re as _re
-                                    cleaned = _re.sub(r'^(?:Location|LOCATION|Standort|Lieu|Ubicación)\s*[:\-]?\s*', '', loc_text.strip(), flags=_re.IGNORECASE)
-                                    location = (cleaned + ", Austria") if cleaned else "Vienna, Austria"
-                        posted_date = await self.extract_posted_date_from_page(detail_page)
-                        
-                        job_id = f"austrian_{i+1}"
-                        match = re.search(r'id=(\d+)', url)
+
+                                    cleaned = _re.sub(
+                                        r"^(?:Location|LOCATION|Standort|Lieu|Ubicación)\s*[:\-]?\s*",
+                                        "",
+                                        loc_text.strip(),
+                                        flags=_re.IGNORECASE,
+                                    )
+                                    location = (
+                                        (cleaned + ", Austria")
+                                        if cleaned
+                                        else "Vienna, Austria"
+                                    )
+                        posted_date = await self.extract_posted_date_from_page(
+                            detail_page
+                        )
+
+                        job_id = f"austrian_{i + 1}"
+                        match = re.search(r"id=(\d+)", url)
                         if not match:
-                            match = re.search(r'job/(\d+)', url)
+                            match = re.search(r"job/(\d+)", url)
                         if match:
                             job_id = f"austrian_{match.group(1)}"
 
@@ -144,29 +173,31 @@ class AustrianAirlinesScraper(BaseScraper):
                             description=description,
                             apply_url=url,
                             posted_date=posted_date,
-                            source=self.site_key
+                            source=self.site_key,
                         )
-                        
+
                         jobs.append(job)
                         await detail_page.close()
-                        
+
                     except Exception as e:
-                        logger.error(f"[{self.site_key}] Error parsing job {i} ({url}): {e}")
+                        logger.error(
+                            f"[{self.site_key}] Error parsing job {i} ({url}): {e}"
+                        )
                         continue
-                        
+
             except Exception as e:
                 logger.error(f"[{self.site_key}] Global error: {e}")
             finally:
                 await context.close()
                 await browser.close()
-                
+
         return jobs
 
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
         jobs = [j for j in jobs if j is not None]
-        
+
         if self.use_filter and self.filter_manager and jobs:
             logger.info(f"[{self.site_key}] Applying final filter check...")
             jobs, _, filter_stats = self.apply_title_filter(jobs)

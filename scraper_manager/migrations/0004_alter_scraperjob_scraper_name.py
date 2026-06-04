@@ -4,15 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('scraper_manager', '0003_create_scraper_periodic_task'),
+        ("scraper_manager", "0003_create_scraper_periodic_task"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='scraperjob',
-            name='scraper_name',
-            field=models.CharField(choices=[('signature', 'Signature Aviation'), ('flygosh', 'Flygosh Jobs'), ('aviationindeed', 'Aviation Indeed'), ('aap', 'AAP Aviation'), ('indigo', 'IndiGo Airlines'), ('aviationjobsearch', 'Aviation Job Search'), ('goose', 'GOOSE Recruitment'), ('linkedin', 'LinkedIn Jobs'), ('all', 'All Scrapers')], max_length=50),
+            model_name="scraperjob",
+            name="scraper_name",
+            field=models.CharField(
+                choices=[
+                    ("signature", "Signature Aviation"),
+                    ("flygosh", "Flygosh Jobs"),
+                    ("aviationindeed", "Aviation Indeed"),
+                    ("aap", "AAP Aviation"),
+                    ("indigo", "IndiGo Airlines"),
+                    ("aviationjobsearch", "Aviation Job Search"),
+                    ("goose", "GOOSE Recruitment"),
+                    ("linkedin", "LinkedIn Jobs"),
+                    ("all", "All Scrapers"),
+                ],
+                max_length=50,
+            ),
         ),
     ]

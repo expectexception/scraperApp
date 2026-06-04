@@ -8,15 +8,16 @@ from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
+
 class AlsieExpressScraper(BaseScraper):
     """
     Scraper for Alsie Express.
-    Currently, they do not have an active ATS or published careers section, 
+    Currently, they do not have an active ATS or published careers section,
     only a spontaneous contact page. Safely returns empty.
     """
-    
+
     def __init__(self, config, db_manager=None):
-        super().__init__(config, site_key='alsieexpress', db_manager=db_manager)
+        super().__init__(config, site_key="alsieexpress", db_manager=db_manager)
         self.jobs_url = "https://candidate.hr-manager.net/vacancies/list.aspx?customer=alsie_tr&nocookie=true&uiculture=en"
         self.domain = "https://candidate.hr-manager.net"
         self.company_name = "Alsie Express"
@@ -35,7 +36,7 @@ class AlsieExpressScraper(BaseScraper):
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
-        
+
         if self.use_filter and self.filter_manager:
             matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
             self.filter_manager.print_filter_stats(filter_stats)
@@ -56,13 +57,15 @@ class AlsieExpressScraper(BaseScraper):
             try:
                 print(f"Loading {self.company_name} careers page...")
                 await self.random_delay(1, 2)
-                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=45000)
+                await page.goto(
+                    self.jobs_url, wait_until="domcontentloaded", timeout=45000
+                )
 
                 await self.random_delay(2, 4)
                 await self.simulate_human_behavior(page)
 
                 # Extract from HR manager header rows
-                job_links = await page.evaluate('''() => {
+                job_links = await page.evaluate("""() => {
                     let rows = Array.from(document.querySelectorAll('.header_row'));
                     return rows.map(r => {
                         let title = r.getAttribute('data-position') || '';
@@ -72,37 +75,41 @@ class AlsieExpressScraper(BaseScraper):
                         let href = urlMatch ? urlMatch[1] : '';
                         return { title: title.trim(), location: loc.trim(), href: href };
                     }).filter(x => x.href && x.title);
-                }''')
-                
+                }""")
+
                 print(f"✓ Found {len(job_links)} jobs")
 
                 if not job_links:
                     return jobs
 
-                for l in job_links[:self.max_jobs] if self.max_jobs else job_links:
+                for l in job_links[: self.max_jobs] if self.max_jobs else job_links:
                     try:
-                        title = l['title']
+                        title = l["title"]
                         if not self.should_process_job(title):
                             continue
-                            
-                        href = l['href']
-                        job_url = href if href.startswith('http') else f"https://candidate.hr-manager.net/vacancies/{href.lstrip('/')}"
-                        
+
+                        href = l["href"]
+                        job_url = (
+                            href
+                            if href.startswith("http")
+                            else f"https://candidate.hr-manager.net/vacancies/{href.lstrip('/')}"
+                        )
+
                         job_id = None
-                        match = re.search(r'vacancyId=(\d+)', job_url)
+                        match = re.search(r"vacancyId=(\d+)", job_url)
                         if match:
                             job_id = match.group(1)
                         if not job_id:
                             job_id = f"alsie_{len(jobs) + 1}"
 
                         job_data = {
-                            'job_id': f"alsie_{job_id}",
-                            'title': l['title'],
-                            'company': self.company_name,
-                            'source': self.site_key,
-                            'url': job_url,
-                            'apply_url': job_url,
-                            'location': self.normalize_location(l['location']),
+                            "job_id": f"alsie_{job_id}",
+                            "title": l["title"],
+                            "company": self.company_name,
+                            "source": self.site_key,
+                            "url": job_url,
+                            "apply_url": job_url,
+                            "location": self.normalize_location(l["location"]),
                         }
                         jobs.append(job_data)
                     except Exception as e:
@@ -123,21 +130,23 @@ class AlsieExpressScraper(BaseScraper):
             browser = await p.chromium.launch(headless=self.headless)
 
             for i in range(0, len(jobs), self.batch_size):
-                batch = jobs[i:i + self.batch_size]
+                batch = jobs[i : i + self.batch_size]
                 tasks = []
 
                 for job in batch:
-                    if job.get('url'):
+                    if job.get("url"):
                         tasks.append(self._extract_description(browser, job))
 
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
 
-                print(f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs")
+                print(
+                    f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs"
+                )
 
             await browser.close()
 
-        with_desc = sum(1 for job in jobs if job.get('description'))
+        with_desc = sum(1 for job in jobs if job.get("description"))
         print(f"✓ Successfully extracted {with_desc}/{len(jobs)} descriptions")
 
         return jobs
@@ -146,19 +155,19 @@ class AlsieExpressScraper(BaseScraper):
         try:
             page, context = await self.setup_stealth_page(browser)
             await self.random_delay(1, 2)
-            await page.goto(job['url'], wait_until='domcontentloaded', timeout=45000)
+            await page.goto(job["url"], wait_until="domcontentloaded", timeout=45000)
             await self.random_delay(2, 4)
             await self.simulate_human_behavior(page)
 
             # Detail title
-            title_elem = await page.query_selector('.ProjectName')
+            title_elem = await page.query_selector(".ProjectName")
             if title_elem:
                 title_text = await title_elem.inner_text()
                 if title_text and len(title_text) > 3:
-                    job['title'] = title_text.strip()
+                    job["title"] = title_text.strip()
 
-            desc_selectors = ['.layer', 'main', '.content']
-            description = ''
+            desc_selectors = [".layer", "main", ".content"]
+            description = ""
             for selector in desc_selectors:
                 try:
                     elem = await page.query_selector(selector)
@@ -175,9 +184,9 @@ class AlsieExpressScraper(BaseScraper):
 
             posted_date = await self.extract_posted_date_from_page(page)
             if posted_date:
-                job['posted_date'] = posted_date
+                job["posted_date"] = posted_date
 
-            job['description'] = description
+            job["description"] = description
 
             await page.close()
             await context.close()

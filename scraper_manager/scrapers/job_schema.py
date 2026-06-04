@@ -1,6 +1,7 @@
 # Shared job schema for all scrapers
 # Use this template to ensure all output dicts are consistent
 
+
 def get_job_dict(
     title=None,
     company=None,
@@ -23,7 +24,7 @@ def get_job_dict(
     raw_json=None,
     salary_min=None,
     salary_max=None,
-    salary_currency='USD',
+    salary_currency="USD",
     posted_by=None,
     created_at=None,
     updated_at=None,
@@ -40,11 +41,12 @@ def get_job_dict(
     travel_required=None,
     shift_work=None,
     responsibilities=None,
-    **extra_fields
+    **extra_fields,
 ):
     base = {
         "title": title or "Unknown Title",
-        "normalized_title": normalized_title or (title.lower().strip() if title else None),
+        "normalized_title": normalized_title
+        or (title.lower().strip() if title else None),
         "company": company or "Unknown Company",
         "company_id": company_id,
         "country_code": country_code or "Unknown",
@@ -54,7 +56,9 @@ def get_job_dict(
         "source": source or "Unknown",
         "senior_flag": senior_flag if senior_flag is not None else False,
         "senior_override": senior_override,
-        "is_senior_position": is_senior_position if is_senior_position is not None else False,
+        "is_senior_position": is_senior_position
+        if is_senior_position is not None
+        else False,
         "posted_date": posted_date,
         "retrieved_date": retrieved_date,
         "last_checked": last_checked,

@@ -18,19 +18,38 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.paginator import Paginator
 
-from .auth import TOKEN_TTL_SECONDS, dashboard_credentials, issue_dashboard_token, validate_dashboard_token
-from .models import ACTIVE_JOB_STATUSES, FINAL_JOB_STATUSES, ScraperJob, ScraperConfig, ScrapedURL
+from .auth import (
+    TOKEN_TTL_SECONDS,
+    dashboard_credentials,
+    issue_dashboard_token,
+    validate_dashboard_token,
+)
+from .models import (
+    ACTIVE_JOB_STATUSES,
+    FINAL_JOB_STATUSES,
+    ScraperJob,
+    ScraperConfig,
+    ScrapedURL,
+)
 from .config import CONFIG
 from .scrapers import list_scrapers
 from .services.job_events import publish_job_event
-from .services.job_monitoring import describe_job_liveness, finalize_stale_active_jobs as _finalize_stale_active_jobs
+from .services.job_monitoring import (
+    describe_job_liveness,
+    finalize_stale_active_jobs as _finalize_stale_active_jobs,
+)
 from .services.job_url_checks import check_job_url as _check_job_url
-from .tasks import bulk_check_job_url_status_task, queue_scraper_sequence_task, run_scraper_task
+from .tasks import (
+    bulk_check_job_url_status_task,
+    queue_scraper_sequence_task,
+    run_scraper_task,
+)
 from jobs.models import Job
 from .category_taxonomy import normalize_job_categories
 
 try:
     from django_celery_beat.models import PeriodicTask, CrontabSchedule
+
     CELERY_BEAT_AVAILABLE = True
 except Exception:
     PeriodicTask = None
@@ -48,7 +67,7 @@ def _json_safe(value):
         return [_json_safe(item) for item in value]
     if isinstance(value, tuple):
         return [_json_safe(item) for item in value]
-    if value.__class__.__name__ == 'ObjectId':
+    if value.__class__.__name__ == "ObjectId":
         return str(value)
     return value
 
@@ -56,26 +75,35 @@ def _json_safe(value):
 def _celery_beat_query_enabled() -> bool:
     if not CELERY_BEAT_AVAILABLE:
         return False
-    default_db = settings.DATABASES.get('default', {})
-    return default_db.get('ENGINE') != 'django_mongodb_backend'
+    default_db = settings.DATABASES.get("default", {})
+    return default_db.get("ENGINE") != "django_mongodb_backend"
 
 
 def _require_dashboard_auth(request):
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
-        return Response({"error": "Authorization bearer token required"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {"error": "Authorization bearer token required"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
     token = auth_header.split(" ", 1)[1].strip()
     try:
         return validate_dashboard_token(token, max_age=TOKEN_TTL_SECONDS)
     except Exception as exc:
         exc_name = exc.__class__.__name__
-        if exc_name == 'SignatureExpired':
-            return Response({"error": "Token expired"}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response({"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED)
+        if exc_name == "SignatureExpired":
+            return Response(
+                {"error": "Token expired"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+        return Response(
+            {"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
-def _dispatch_scraper_job(scraper_name: str, job_id: str, max_jobs=None, max_pages=None, job_categories=None) -> str:
+def _dispatch_scraper_job(
+    scraper_name: str, job_id: str, max_jobs=None, max_pages=None, job_categories=None
+) -> str:
     """Queue scraper execution through Celery instead of spawning a subprocess."""
     normalized_categories = normalize_job_categories(job_categories)
     async_result = run_scraper_task.delay(
@@ -107,23 +135,25 @@ def _serialize_schedule_snapshot(config: ScraperConfig) -> dict:
             periodic_task = None
 
     return {
-        'scraper_name': config.scraper_name,
-        'schedule_enabled': config.schedule_enabled,
-        'schedule_cron': config.schedule_cron,
-        'task_name': task_name,
-        'celery_beat_available': beat_query_enabled,
-        'periodic_task_enabled': bool(periodic_task.enabled) if periodic_task else False,
-        'periodic_task_exists': periodic_task is not None,
-        'last_run': config.last_run,
+        "scraper_name": config.scraper_name,
+        "schedule_enabled": config.schedule_enabled,
+        "schedule_cron": config.schedule_cron,
+        "task_name": task_name,
+        "celery_beat_available": beat_query_enabled,
+        "periodic_task_enabled": bool(periodic_task.enabled)
+        if periodic_task
+        else False,
+        "periodic_task_exists": periodic_task is not None,
+        "last_run": config.last_run,
     }
 
 
 def _sync_scraper_schedule(config: ScraperConfig) -> dict:
     if not _celery_beat_query_enabled():
         return {
-            'celery_beat_available': False,
-            'synced': False,
-            'reason': 'django_celery_beat dashboard sync is disabled for this database backend',
+            "celery_beat_available": False,
+            "synced": False,
+            "reason": "django_celery_beat dashboard sync is disabled for this database backend",
         }
     assert PeriodicTask is not None
     assert CrontabSchedule is not None
@@ -132,15 +162,17 @@ def _sync_scraper_schedule(config: ScraperConfig) -> dict:
     if not config.schedule_enabled or not config.schedule_cron:
         PeriodicTask.objects.filter(name=task_name).update(enabled=False)
         return {
-            'celery_beat_available': True,
-            'synced': True,
-            'task_name': task_name,
-            'enabled': False,
+            "celery_beat_available": True,
+            "synced": True,
+            "task_name": task_name,
+            "enabled": False,
         }
 
     cron_parts = config.schedule_cron.split()
     if len(cron_parts) != 5:
-        raise ValueError('schedule_cron must have 5 parts: minute hour day month weekday')
+        raise ValueError(
+            "schedule_cron must have 5 parts: minute hour day month weekday"
+        )
 
     minute, hour, day_of_month, month_of_year, day_of_week = cron_parts
     schedule, _ = CrontabSchedule.objects.get_or_create(
@@ -149,48 +181,50 @@ def _sync_scraper_schedule(config: ScraperConfig) -> dict:
         day_of_month=day_of_month,
         month_of_year=month_of_year,
         day_of_week=day_of_week,
-        timezone=getattr(settings, 'TIME_ZONE', 'UTC'),
+        timezone=getattr(settings, "TIME_ZONE", "UTC"),
     )
     enabled = bool(config.is_enabled and config.schedule_enabled)
     task, _ = PeriodicTask.objects.update_or_create(
         name=task_name,
         defaults={
-            'task': 'scraper_manager.run_single_scraper',
-            'crontab': schedule,
-            'enabled': enabled,
-            'kwargs': json.dumps({
-                'scraper_name': config.scraper_name,
-                'max_jobs': config.max_jobs,
-                'max_pages': config.max_pages,
-            }),
-            'description': f'Managed schedule for {config.scraper_name}',
-        }
+            "task": "scraper_manager.run_single_scraper",
+            "crontab": schedule,
+            "enabled": enabled,
+            "kwargs": json.dumps(
+                {
+                    "scraper_name": config.scraper_name,
+                    "max_jobs": config.max_jobs,
+                    "max_pages": config.max_pages,
+                }
+            ),
+            "description": f"Managed schedule for {config.scraper_name}",
+        },
     )
 
     return {
-        'celery_beat_available': True,
-        'synced': True,
-        'task_name': task.name,
-        'enabled': enabled,
+        "celery_beat_available": True,
+        "synced": True,
+        "task_name": task.name,
+        "enabled": enabled,
     }
 
 
 def _build_job_summary(queryset):
     return queryset.aggregate(
-        total=Count('id'),
-        new=Count('id', filter=Q(status='new')),
-        active=Count('id', filter=Q(status='active')),
-        closed=Count('id', filter=Q(status='closed')),
-        verified=Count('id', filter=Q(is_verified=True)),
+        total=Count("id"),
+        new=Count("id", filter=Q(status="new")),
+        active=Count("id", filter=Q(status="active")),
+        closed=Count("id", filter=Q(status="closed")),
+        verified=Count("id", filter=Q(is_verified=True)),
     )
 
 
 def _is_truthy(value) -> bool:
-    return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _filter_file_path() -> str:
-    filter_file = CONFIG.get('filtering', {}).get('filter_file', 'filter_title.json')
+    filter_file = CONFIG.get("filtering", {}).get("filter_file", "filter_title.json")
     if os.path.isabs(filter_file):
         return filter_file
     return os.path.join(os.path.dirname(__file__), filter_file)
@@ -198,84 +232,104 @@ def _filter_file_path() -> str:
 
 def _load_filter_payload() -> dict:
     file_path = _filter_file_path()
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def _save_filter_payload(payload: dict) -> None:
     file_path = _filter_file_path()
-    with open(file_path, 'w', encoding='utf-8') as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def dashboard_login(request):
     """Authenticate dashboard user and return short-lived bearer token."""
     expected_user, expected_password = dashboard_credentials()
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
+    username = request.data.get("username")
+    password = request.data.get("password")
+
     expected_user, expected_password = dashboard_credentials()
-    username = request.data.get('username')
-    password = request.data.get('password')
+    username = request.data.get("username")
+    password = request.data.get("password")
 
     if not expected_password:
-        return Response({'error': 'Dashboard password is not configured'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(
+            {"error": "Dashboard password is not configured"},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
     if username != expected_user or password != expected_password:
-        return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {"error": "Invalid username or password"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
     token = issue_dashboard_token(username)
-    return Response({
-        'token': token,
-        'expires_in': TOKEN_TTL_SECONDS,
-        'username': username,
-    })
+    return Response(
+        {
+            "token": token,
+            "expires_in": TOKEN_TTL_SECONDS,
+            "username": username,
+        }
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def list_available_scrapers(request):
     """List all available scrapers"""
-    _finalize_stale_active_jobs(source='api_reconciliation')
+    _finalize_stale_active_jobs(source="api_reconciliation")
     config_map = {cfg.scraper_name: cfg for cfg in ScraperConfig.objects.all()}
     active_map = dict(
         ScraperJob.objects.filter(status__in=ACTIVE_JOB_STATUSES)
-        .values_list('scraper_name')
-        .annotate(count=Count('id'))
+        .values_list("scraper_name")
+        .annotate(count=Count("id"))
     )
     scrapers = []
-    
+
     for scraper_name in list_scrapers():
-        site_config = CONFIG['sites'].get(scraper_name, {})
-        scraper_config = CONFIG['scrapers'].get(scraper_name, {})
+        site_config = CONFIG["sites"].get(scraper_name, {})
+        scraper_config = CONFIG["scrapers"].get(scraper_name, {})
         db_config = config_map.get(scraper_name)
-        schedule_snapshot = _serialize_schedule_snapshot(db_config) if db_config else {
-            'schedule_enabled': False,
-            'schedule_cron': '',
-            'periodic_task_enabled': False,
-            'periodic_task_exists': False,
-            'celery_beat_available': _celery_beat_query_enabled(),
-        }
-        
-        scrapers.append({
-            'name': scraper_name,
-            'display_name': site_config.get('name', scraper_name),
-            'description': site_config.get('description', ''),
-            'enabled': db_config.is_enabled if db_config else site_config.get('enabled', False),
-            'base_url': site_config.get('base_url', ''),
-            'max_jobs': db_config.max_jobs if db_config else scraper_config.get('max_jobs'),
-            'max_pages': db_config.max_pages if db_config else scraper_config.get('max_pages'),
-            'timeout': db_config.timeout if db_config else 300,
-            'retry_count': db_config.retry_count if db_config else 3,
-            'active_jobs': active_map.get(scraper_name, 0),
-            'schedule': schedule_snapshot,
-        })
-    
-    return Response({'scrapers': scrapers})
+        schedule_snapshot = (
+            _serialize_schedule_snapshot(db_config)
+            if db_config
+            else {
+                "schedule_enabled": False,
+                "schedule_cron": "",
+                "periodic_task_enabled": False,
+                "periodic_task_exists": False,
+                "celery_beat_available": _celery_beat_query_enabled(),
+            }
+        )
+
+        scrapers.append(
+            {
+                "name": scraper_name,
+                "display_name": site_config.get("name", scraper_name),
+                "description": site_config.get("description", ""),
+                "enabled": db_config.is_enabled
+                if db_config
+                else site_config.get("enabled", False),
+                "base_url": site_config.get("base_url", ""),
+                "max_jobs": db_config.max_jobs
+                if db_config
+                else scraper_config.get("max_jobs"),
+                "max_pages": db_config.max_pages
+                if db_config
+                else scraper_config.get("max_pages"),
+                "timeout": db_config.timeout if db_config else 300,
+                "retry_count": db_config.retry_count if db_config else 3,
+                "active_jobs": active_map.get(scraper_name, 0),
+                "schedule": schedule_snapshot,
+            }
+        )
+
+    return Response({"scrapers": scrapers})
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scraper_configs(request):
     """Return all scraper configs for dashboard editing."""
@@ -287,24 +341,26 @@ def scraper_configs(request):
     configs = {}
     for scraper_name in list_scrapers():
         cfg = existing_configs.get(scraper_name)
-        site_config = CONFIG['sites'].get(scraper_name, {})
-        scraper_config = CONFIG['scrapers'].get(scraper_name, {})
+        site_config = CONFIG["sites"].get(scraper_name, {})
+        scraper_config = CONFIG["scrapers"].get(scraper_name, {})
         configs[scraper_name] = {
-            'scraper_name': scraper_name,
-            'is_enabled': cfg.is_enabled if cfg else site_config.get('enabled', False),
-            'max_jobs': cfg.max_jobs if cfg else scraper_config.get('max_jobs'),
-            'max_pages': cfg.max_pages if cfg else scraper_config.get('max_pages'),
-            'timeout': cfg.timeout if cfg else 300,
-            'retry_count': cfg.retry_count if cfg else 3,
-            'schedule_enabled': cfg.schedule_enabled if cfg else False,
-            'schedule_cron': cfg.schedule_cron if cfg else '',
-            'description': cfg.description if cfg else site_config.get('description', ''),
-            'last_run': cfg.last_run if cfg else None,
+            "scraper_name": scraper_name,
+            "is_enabled": cfg.is_enabled if cfg else site_config.get("enabled", False),
+            "max_jobs": cfg.max_jobs if cfg else scraper_config.get("max_jobs"),
+            "max_pages": cfg.max_pages if cfg else scraper_config.get("max_pages"),
+            "timeout": cfg.timeout if cfg else 300,
+            "retry_count": cfg.retry_count if cfg else 3,
+            "schedule_enabled": cfg.schedule_enabled if cfg else False,
+            "schedule_cron": cfg.schedule_cron if cfg else "",
+            "description": cfg.description
+            if cfg
+            else site_config.get("description", ""),
+            "last_run": cfg.last_run if cfg else None,
         }
-    return Response({'configs': configs})
+    return Response({"configs": configs})
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def start_scraper(request):
     """Start a scraper job"""
@@ -312,71 +368,77 @@ def start_scraper(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    scraper_name = request.data.get('scraper_name')
-    max_jobs = request.data.get('max_jobs')
-    max_pages = request.data.get('max_pages')
-    job_categories = normalize_job_categories(request.data.get('job_categories'))
-    
+    scraper_name = request.data.get("scraper_name")
+    max_jobs = request.data.get("max_jobs")
+    max_pages = request.data.get("max_pages")
+    job_categories = normalize_job_categories(request.data.get("job_categories"))
+
     logger.info(f"API request to start scraper: {scraper_name} by {auth_user}")
-    
+
     if not scraper_name:
         logger.warning("Scraper start request missing scraper_name")
         return Response(
-            {'error': 'scraper_name is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    if scraper_name not in list_scrapers() and scraper_name != 'all':
-        logger.warning(f"Unknown scraper requested: {scraper_name}")
-        return Response(
-            {'error': f'Unknown scraper: {scraper_name}'},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "scraper_name is required"}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    if scraper_name != 'all':
+    if scraper_name not in list_scrapers() and scraper_name != "all":
+        logger.warning(f"Unknown scraper requested: {scraper_name}")
+        return Response(
+            {"error": f"Unknown scraper: {scraper_name}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if scraper_name != "all":
         scraper_config = ScraperConfig.objects.filter(scraper_name=scraper_name).first()
-        is_enabled = scraper_config.is_enabled if scraper_config else CONFIG['sites'].get(scraper_name, {}).get('enabled', False)
+        is_enabled = (
+            scraper_config.is_enabled
+            if scraper_config
+            else CONFIG["sites"].get(scraper_name, {}).get("enabled", False)
+        )
         if not is_enabled:
             return Response(
-                {'error': f'Scraper {scraper_name} is disabled in configuration'},
+                {"error": f"Scraper {scraper_name} is disabled in configuration"},
                 status=status.HTTP_409_CONFLICT,
             )
-    
+
     _finalize_stale_active_jobs(
-        scraper_name=None if scraper_name == 'all' else scraper_name,
-        source='api_reconciliation',
+        scraper_name=None if scraper_name == "all" else scraper_name,
+        source="api_reconciliation",
     )
 
     # Check if scraper is already running
     active_jobs = ScraperJob.objects.filter(
-        scraper_name=scraper_name,
-        status__in=ACTIVE_JOB_STATUSES
+        scraper_name=scraper_name, status__in=ACTIVE_JOB_STATUSES
     ).count()
-    
+
     if active_jobs > 0:
-        logger.warning(f"Scraper {scraper_name} already has {active_jobs} active job(s)")
-        return Response(
-            {'error': f'Scraper {scraper_name} is already running ({active_jobs} active job(s))', 
-             'active_jobs': active_jobs},
-            status=status.HTTP_409_CONFLICT
+        logger.warning(
+            f"Scraper {scraper_name} already has {active_jobs} active job(s)"
         )
-    
+        return Response(
+            {
+                "error": f"Scraper {scraper_name} is already running ({active_jobs} active job(s))",
+                "active_jobs": active_jobs,
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
+
     # Create job
     scraper_job = ScraperJob.objects.create(
         scraper_name=scraper_name,
-        status='queued',
-        progress_message='Queued for Celery worker',
+        status="queued",
+        progress_message="Queued for Celery worker",
         triggered_by=auth_user,
         parameters={
-            'max_jobs': max_jobs,
-            'max_pages': max_pages,
-            'job_categories': job_categories,
-        }
+            "max_jobs": max_jobs,
+            "max_pages": max_pages,
+            "job_categories": job_categories,
+        },
     )
     scraper_job_id = _job_pk(scraper_job)
-    
+
     logger.info(f"Created ScraperJob {scraper_job_id} for {scraper_name}")
-    
+
     try:
         task_id = _dispatch_scraper_job(
             scraper_name,
@@ -387,38 +449,41 @@ def start_scraper(request):
         )
         scraper_job.parameters = {
             **(scraper_job.parameters or {}),
-            'celery_task_id': task_id,
+            "celery_task_id": task_id,
         }
         scraper_job.task_id = task_id
-        scraper_job.save(update_fields=['parameters', 'task_id'])
-        publish_job_event('job.queued', scraper_job, extra={'source': 'api'})
+        scraper_job.save(update_fields=["parameters", "task_id"])
+        publish_job_event("job.queued", scraper_job, extra={"source": "api"})
         logger.info(f"Queued ScraperJob {scraper_job_id} as Celery task {task_id}")
-        
-        return Response({
-            'job_id': scraper_job_id,
-            'scraper_name': scraper_name,
-            'status': 'queued',
-            'task_id': task_id,
-            'message': 'Scraper job queued'
-        }, status=status.HTTP_202_ACCEPTED)
-        
+
+        return Response(
+            {
+                "job_id": scraper_job_id,
+                "scraper_name": scraper_name,
+                "status": "queued",
+                "task_id": task_id,
+                "message": "Scraper job queued",
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
     except Exception as e:
         logger.error(f"Failed to dispatch scraper {scraper_name}: {e}", exc_info=True)
-        scraper_job.status = 'failed'
-        scraper_job.progress_message = 'Queue dispatch failed'
+        scraper_job.status = "failed"
+        scraper_job.progress_message = "Queue dispatch failed"
         scraper_job.failure_code = e.__class__.__name__
-        scraper_job.failure_context = {'source': 'api_dispatch', 'message': str(e)}
+        scraper_job.failure_context = {"source": "api_dispatch", "message": str(e)}
         scraper_job.error_message = f"Dispatch failed: {str(e)}"
         scraper_job.save()
-        publish_job_event('job.failed', scraper_job, extra={'source': 'api_dispatch'})
-        
+        publish_job_event("job.failed", scraper_job, extra={"source": "api_dispatch"})
+
         return Response(
-            {'error': f"Failed to queue job: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"error": f"Failed to queue job: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scraper_status(request, job_id):
     """Get status of a scraper job"""
@@ -429,116 +494,129 @@ def scraper_status(request, job_id):
     try:
         job = ScraperJob.objects.get(pk=job_id)
         response_job_id = _job_pk(job)
-        
-        return Response({
-            'job_id': response_job_id,
-            'scraper_name': job.scraper_name,
-            'status': job.status,
-            'pid': job.pid,
-            'progress': job.progress,
-            'started_at': job.started_at,
-            'completed_at': job.completed_at,
-            'execution_time': job.execution_time,
-            'jobs_found': job.jobs_found,
-            'jobs_new': job.jobs_new,
-            'jobs_updated': job.jobs_updated,
-            'jobs_duplicate': job.jobs_duplicate,
-            'error_message': job.error_message,
-            'output_file': job.output_file,
-            'parameters': job.parameters,
-            'triggered_by': job.triggered_by,
-        })
-        
-    except ScraperJob.DoesNotExist:
+
         return Response(
-            {'error': 'Job not found'},
-            status=status.HTTP_404_NOT_FOUND
+            {
+                "job_id": response_job_id,
+                "scraper_name": job.scraper_name,
+                "status": job.status,
+                "pid": job.pid,
+                "progress": job.progress,
+                "started_at": job.started_at,
+                "completed_at": job.completed_at,
+                "execution_time": job.execution_time,
+                "jobs_found": job.jobs_found,
+                "jobs_new": job.jobs_new,
+                "jobs_updated": job.jobs_updated,
+                "jobs_duplicate": job.jobs_duplicate,
+                "error_message": job.error_message,
+                "output_file": job.output_file,
+                "parameters": job.parameters,
+                "triggered_by": job.triggered_by,
+            }
         )
 
+    except ScraperJob.DoesNotExist:
+        return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scraper_stats(request):
     """Get overall scraper statistics with optimized queries"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-    
+
     # Try to get stats from cache (5 min TTL)
-    cache_key = 'scraper_stats_summary'
+    cache_key = "scraper_stats_summary"
     cached_stats = cache.get(cache_key)
-    if cached_stats and not request.query_params.get('fresh'):
+    if cached_stats and not request.query_params.get("fresh"):
         logger.debug("Returning cached scraper stats")
         return Response(cached_stats)
-    
+
     # Aggregate all stats in single query
     job_stats = ScraperJob.objects.aggregate(
-        total_runs=Count('id'),
-        completed_runs=Count('id', filter=Q(status='completed')),
-        failed_runs=Count('id', filter=Q(status='failed')),
-        avg_time=Avg('execution_time', filter=Q(status='completed', execution_time__isnull=False)),
-        total_new=Sum('jobs_new'),
-        total_found=Sum('jobs_found')
+        total_runs=Count("id"),
+        completed_runs=Count("id", filter=Q(status="completed")),
+        failed_runs=Count("id", filter=Q(status="failed")),
+        avg_time=Avg(
+            "execution_time", filter=Q(status="completed", execution_time__isnull=False)
+        ),
+        total_new=Sum("jobs_new"),
+        total_found=Sum("jobs_found"),
     )
-    
+
     # Get source distribution
     jobs_by_source = dict(
-        ScrapedURL.objects.values('source')
-        .annotate(count=Count('id'))
-        .values_list('source', 'count')
+        ScrapedURL.objects.values("source")
+        .annotate(count=Count("id"))
+        .values_list("source", "count")
     )
-    
+
     # Get recent jobs efficiently
     recent_jobs = list(
-        ScraperJob.objects
-        .only('id', 'scraper_name', 'status', 'started_at', 'jobs_found')
-        .order_by('-created_at')[:10]
-        .values('id', 'scraper_name', 'status', 'started_at', 'jobs_found')
+        ScraperJob.objects.only(
+            "id", "scraper_name", "status", "started_at", "jobs_found"
+        )
+        .order_by("-created_at")[:10]
+        .values("id", "scraper_name", "status", "started_at", "jobs_found")
     )
-    
+
     # Convert ObjectIds to strings for JSON serialization
     for rj in recent_jobs:
-        if 'id' in rj:
-            rj['id'] = str(rj['id'])
-    
+        if "id" in rj:
+            rj["id"] = str(rj["id"])
+
     stats_response = {
-        'total_runs': job_stats['total_runs'] or 0,
-        'completed_runs': job_stats['completed_runs'] or 0,
-        'failed_runs': job_stats['failed_runs'] or 0,
-        'success_rate': (job_stats['completed_runs'] / job_stats['total_runs'] * 100) if job_stats['total_runs'] > 0 else 0,
-        'total_jobs_scraped': job_stats['total_found'] or 0,
-        'total_new_jobs': job_stats['total_new'] or 0,
-        'jobs_by_source': jobs_by_source,
-        'avg_execution_time': round(job_stats['avg_time'] or 0, 2),
-        'recent_jobs': recent_jobs,
-        'job_status_summary': _build_job_summary(Job.objects.all()),
+        "total_runs": job_stats["total_runs"] or 0,
+        "completed_runs": job_stats["completed_runs"] or 0,
+        "failed_runs": job_stats["failed_runs"] or 0,
+        "success_rate": (job_stats["completed_runs"] / job_stats["total_runs"] * 100)
+        if job_stats["total_runs"] > 0
+        else 0,
+        "total_jobs_scraped": job_stats["total_found"] or 0,
+        "total_new_jobs": job_stats["total_new"] or 0,
+        "jobs_by_source": jobs_by_source,
+        "avg_execution_time": round(job_stats["avg_time"] or 0, 2),
+        "recent_jobs": recent_jobs,
+        "job_status_summary": _build_job_summary(Job.objects.all()),
     }
-    
+
     # Cache for 5 minutes
     cache.set(cache_key, stats_response, 300)
     return Response(stats_response)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scraper_history(request):
     """Get scraper execution history with pagination and filtering"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-    
-    scraper_name = request.query_params.get('scraper')
-    search = (request.query_params.get('q') or '').strip()
-    page = max(int(request.query_params.get('page', 1)), 1)
-    limit = min(max(int(request.query_params.get('limit', 20)), 1), 100)
-    
+
+    scraper_name = request.query_params.get("scraper")
+    search = (request.query_params.get("q") or "").strip()
+    page = max(int(request.query_params.get("page", 1)), 1)
+    limit = min(max(int(request.query_params.get("limit", 20)), 1), 100)
+
     # Build optimized query with only needed fields
     queryset = ScraperJob.objects.only(
-        'id', 'scraper_name', 'status', 'started_at', 'completed_at',
-        'execution_time', 'jobs_found', 'jobs_new', 'jobs_updated',
-        'jobs_duplicate', 'triggered_by', 'created_at'
+        "id",
+        "scraper_name",
+        "status",
+        "started_at",
+        "completed_at",
+        "execution_time",
+        "jobs_found",
+        "jobs_new",
+        "jobs_updated",
+        "jobs_duplicate",
+        "triggered_by",
+        "created_at",
     )
-    
+
     if scraper_name:
         queryset = queryset.filter(scraper_name=scraper_name)
     if search:
@@ -548,229 +626,245 @@ def scraper_history(request):
             | Q(triggered_by__icontains=search)
             | Q(error_message__icontains=search)
         )
-    
-    queryset = queryset.order_by('-created_at')
-    
+
+    queryset = queryset.order_by("-created_at")
+
     # Paginate results
     paginator = Paginator(queryset, limit)
     paginated_jobs = paginator.get_page(page)
-    
+
     jobs = []
     for job in paginated_jobs.object_list.values(
-        'id', 'scraper_name', 'status', 'started_at', 'completed_at',
-        'execution_time', 'jobs_found', 'jobs_new', 'jobs_updated',
-        'jobs_duplicate', 'triggered_by'
+        "id",
+        "scraper_name",
+        "status",
+        "started_at",
+        "completed_at",
+        "execution_time",
+        "jobs_found",
+        "jobs_new",
+        "jobs_updated",
+        "jobs_duplicate",
+        "triggered_by",
     ):
-        if 'id' in job:
-            job['id'] = str(job['id'])
+        if "id" in job:
+            job["id"] = str(job["id"])
         jobs.append(job)
-    
-    return Response({
-        'jobs': jobs,
-        'pagination': {
-            'page': page,
-            'page_size': limit,
-            'total': paginator.count,
-            'pages': paginator.num_pages
+
+    return Response(
+        {
+            "jobs": jobs,
+            "pagination": {
+                "page": page,
+                "page_size": limit,
+                "total": paginator.count,
+                "pages": paginator.num_pages,
+            },
         }
-    })
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scraper_config(request, scraper_name):
     """Get configuration for a specific scraper"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-    
+
     if scraper_name not in list_scrapers():
         return Response(
-            {'error': f'Unknown scraper: {scraper_name}'},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": f"Unknown scraper: {scraper_name}"},
+            status=status.HTTP_404_NOT_FOUND,
         )
-    
-    site_config = CONFIG['sites'].get(scraper_name, {})
-    scraper_config = CONFIG['scrapers'].get(scraper_name, {})
-    
+
+    site_config = CONFIG["sites"].get(scraper_name, {})
+    scraper_config = CONFIG["scrapers"].get(scraper_name, {})
+
     # Get database config if exists
     try:
         db_config = ScraperConfig.objects.get(scraper_name=scraper_name)
         config_data = {
-            'name': scraper_name,
-            'scraper_name': scraper_name,
-            'display_name': site_config.get('name', scraper_name),
-            'description': site_config.get('description', ''),
-            'is_enabled': db_config.is_enabled,
-            'base_url': site_config.get('base_url', ''),
-            'max_jobs': db_config.max_jobs,
-            'max_pages': db_config.max_pages,
-            'timeout': db_config.timeout,
-            'retry_count': db_config.retry_count,
-            'schedule_enabled': db_config.schedule_enabled,
-            'schedule_cron': db_config.schedule_cron,
-            'last_run': db_config.last_run,
-            'total_runs': db_config.total_runs,
-            'successful_runs': db_config.successful_runs,
-            'failed_runs': db_config.failed_runs,
-            'schedule': _serialize_schedule_snapshot(db_config),
+            "name": scraper_name,
+            "scraper_name": scraper_name,
+            "display_name": site_config.get("name", scraper_name),
+            "description": site_config.get("description", ""),
+            "is_enabled": db_config.is_enabled,
+            "base_url": site_config.get("base_url", ""),
+            "max_jobs": db_config.max_jobs,
+            "max_pages": db_config.max_pages,
+            "timeout": db_config.timeout,
+            "retry_count": db_config.retry_count,
+            "schedule_enabled": db_config.schedule_enabled,
+            "schedule_cron": db_config.schedule_cron,
+            "last_run": db_config.last_run,
+            "total_runs": db_config.total_runs,
+            "successful_runs": db_config.successful_runs,
+            "failed_runs": db_config.failed_runs,
+            "schedule": _serialize_schedule_snapshot(db_config),
         }
     except ScraperConfig.DoesNotExist:
         config_data = {
-            'name': scraper_name,
-            'scraper_name': scraper_name,
-            'display_name': site_config.get('name', scraper_name),
-            'description': site_config.get('description', ''),
-            'is_enabled': site_config.get('enabled', False),
-            'base_url': site_config.get('base_url', ''),
-            'max_jobs': scraper_config.get('max_jobs'),
-            'max_pages': scraper_config.get('max_pages'),
-            'timeout': 300,
-            'retry_count': 3,
-            'schedule_enabled': False,
-            'schedule_cron': '',
-            'last_run': None,
-            'total_runs': 0,
-            'successful_runs': 0,
-            'failed_runs': 0,
-            'schedule': {
-                'scraper_name': scraper_name,
-                'schedule_enabled': False,
-                'schedule_cron': '',
-                'task_name': f'scraper_{scraper_name}_managed',
-                'celery_beat_available': CELERY_BEAT_AVAILABLE,
-                'periodic_task_enabled': False,
-                'periodic_task_exists': False,
-                'last_run': None,
+            "name": scraper_name,
+            "scraper_name": scraper_name,
+            "display_name": site_config.get("name", scraper_name),
+            "description": site_config.get("description", ""),
+            "is_enabled": site_config.get("enabled", False),
+            "base_url": site_config.get("base_url", ""),
+            "max_jobs": scraper_config.get("max_jobs"),
+            "max_pages": scraper_config.get("max_pages"),
+            "timeout": 300,
+            "retry_count": 3,
+            "schedule_enabled": False,
+            "schedule_cron": "",
+            "last_run": None,
+            "total_runs": 0,
+            "successful_runs": 0,
+            "failed_runs": 0,
+            "schedule": {
+                "scraper_name": scraper_name,
+                "schedule_enabled": False,
+                "schedule_cron": "",
+                "task_name": f"scraper_{scraper_name}_managed",
+                "celery_beat_available": CELERY_BEAT_AVAILABLE,
+                "periodic_task_enabled": False,
+                "periodic_task_exists": False,
+                "last_run": None,
             },
         }
-    
+
     return Response(config_data)
 
 
-@api_view(['PUT', 'PATCH'])
+@api_view(["PUT", "PATCH"])
 @permission_classes([AllowAny])
 def update_scraper_config(request, scraper_name):
     """Update scraper configuration"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-    
+
     if scraper_name not in list_scrapers():
         return Response(
-            {'error': f'Unknown scraper: {scraper_name}'},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": f"Unknown scraper: {scraper_name}"},
+            status=status.HTTP_404_NOT_FOUND,
         )
-    
+
     # Get or create config
     config, created = ScraperConfig.objects.get_or_create(
         scraper_name=scraper_name,
         defaults={
-            'is_enabled': CONFIG['sites'].get(scraper_name, {}).get('enabled', False),
-            'max_jobs': CONFIG['scrapers'].get(scraper_name, {}).get('max_jobs'),
-            'max_pages': CONFIG['scrapers'].get(scraper_name, {}).get('max_pages'),
-        }
+            "is_enabled": CONFIG["sites"].get(scraper_name, {}).get("enabled", False),
+            "max_jobs": CONFIG["scrapers"].get(scraper_name, {}).get("max_jobs"),
+            "max_pages": CONFIG["scrapers"].get(scraper_name, {}).get("max_pages"),
+        },
     )
-    
+
     # Update fields
-    if 'is_enabled' in request.data:
-        config.is_enabled = bool(request.data['is_enabled'])
-    if 'enabled' in request.data:
-        config.is_enabled = bool(request.data['enabled'])
-    if 'max_jobs' in request.data:
-        config.max_jobs = request.data['max_jobs'] or None
-    if 'max_pages' in request.data:
-        config.max_pages = request.data['max_pages'] or None
-    if 'timeout' in request.data:
-        config.timeout = int(request.data['timeout'])
-    if 'retry_count' in request.data:
-        config.retry_count = int(request.data['retry_count'])
-    if 'schedule_enabled' in request.data:
-        config.schedule_enabled = bool(request.data['schedule_enabled'])
-    if 'schedule_cron' in request.data:
-        config.schedule_cron = (request.data['schedule_cron'] or '').strip()
-    if 'description' in request.data:
-        config.description = request.data['description'] or ''
-    
+    if "is_enabled" in request.data:
+        config.is_enabled = bool(request.data["is_enabled"])
+    if "enabled" in request.data:
+        config.is_enabled = bool(request.data["enabled"])
+    if "max_jobs" in request.data:
+        config.max_jobs = request.data["max_jobs"] or None
+    if "max_pages" in request.data:
+        config.max_pages = request.data["max_pages"] or None
+    if "timeout" in request.data:
+        config.timeout = int(request.data["timeout"])
+    if "retry_count" in request.data:
+        config.retry_count = int(request.data["retry_count"])
+    if "schedule_enabled" in request.data:
+        config.schedule_enabled = bool(request.data["schedule_enabled"])
+    if "schedule_cron" in request.data:
+        config.schedule_cron = (request.data["schedule_cron"] or "").strip()
+    if "description" in request.data:
+        config.description = request.data["description"] or ""
+
     config.save()
 
     try:
         schedule_sync = _sync_scraper_schedule(config)
     except ValueError as exc:
-        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-    
-    return Response({
-        'message': 'Configuration updated successfully',
-        'scraper_name': scraper_name,
-        'is_enabled': config.is_enabled,
-        'max_jobs': config.max_jobs,
-        'max_pages': config.max_pages,
-        'timeout': config.timeout,
-        'retry_count': config.retry_count,
-        'schedule_enabled': config.schedule_enabled,
-        'schedule_cron': config.schedule_cron,
-        'schedule_sync': schedule_sync,
-    })
+        return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response(
+        {
+            "message": "Configuration updated successfully",
+            "scraper_name": scraper_name,
+            "is_enabled": config.is_enabled,
+            "max_jobs": config.max_jobs,
+            "max_pages": config.max_pages,
+            "timeout": config.timeout,
+            "retry_count": config.retry_count,
+            "schedule_enabled": config.schedule_enabled,
+            "schedule_cron": config.schedule_cron,
+            "schedule_sync": schedule_sync,
+        }
+    )
 
 
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @permission_classes([AllowAny])
 def cancel_scraper_job(request, job_id):
     """Cancel a running scraper job"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-    
+
     try:
         job = ScraperJob.objects.get(pk=job_id)
         response_job_id = _job_pk(job)
-        
+
         if job.status in FINAL_JOB_STATUSES:
             return Response(
-                {'error': f'Cannot cancel job with status: {job.status}'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Cannot cancel job with status: {job.status}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         process_stopped = False
         task_revoked = False
-        task_id = (job.parameters or {}).get('celery_task_id')
+        task_id = (job.parameters or {}).get("celery_task_id")
         if task_id:
             try:
-                current_app.control.revoke(task_id, terminate=True, signal='SIGTERM')
+                current_app.control.revoke(task_id, terminate=True, signal="SIGTERM")
                 task_revoked = True
                 process_stopped = True
             except Exception as exc:
-                logger.error(f"Error revoking Celery task {task_id} for job {job.pk}: {exc}")
+                logger.error(
+                    f"Error revoking Celery task {task_id} for job {job.pk}: {exc}"
+                )
 
         if job.pid:
             try:
                 # Use psutil for robust recursive termination
                 parent = psutil.Process(job.pid)
                 children = parent.children(recursive=True)
-                
+
                 # Terminate children first
                 for child in children:
                     try:
                         child.terminate()
                     except psutil.NoSuchProcess:
                         pass
-                
+
                 # Terminate parent
                 parent.terminate()
-                
+
                 # Wait for processes to terminate gracefully
                 gone, alive = psutil.wait_procs(children + [parent], timeout=3)
-                
+
                 # Force kill any survivors
                 for p in alive:
                     try:
                         p.kill()
                     except psutil.NoSuchProcess:
                         pass
-                
+
                 process_stopped = True
             except psutil.NoSuchProcess:
-                logger.warning(f"PID {job.pid} not found for job {job.pk} during cancellation")
+                logger.warning(
+                    f"PID {job.pid} not found for job {job.pk} during cancellation"
+                )
                 process_stopped = False
             except Exception as e:
                 logger.error(f"Error terminating PID {job.pid} for job {job.pk}: {e}")
@@ -781,33 +875,40 @@ def cancel_scraper_job(request, job_id):
                 except:
                     process_stopped = False
 
-        is_queued_job = job.status in ['pending', 'queued']
-        job.status = 'cancelled' if is_queued_job else 'cancelling'
+        is_queued_job = job.status in ["pending", "queued"]
+        job.status = "cancelled" if is_queued_job else "cancelling"
         job.cancel_requested_at = timezone.now()
         job.completed_at = timezone.now() if is_queued_job else None
-        job.error_message = 'Cancelled by user'
+        job.error_message = "Cancelled by user"
         job.progress = job.progress or 0
-        job.progress_message = 'Cancelled before execution' if is_queued_job else 'Cancellation requested'
+        job.progress_message = (
+            "Cancelled before execution" if is_queued_job else "Cancellation requested"
+        )
         job.save()
-        publish_job_event('job.cancelled' if is_queued_job else 'job.cancelling', job, extra={'source': 'api_cancel'})
-        
-        return Response({
-            'message': 'Job cancelled successfully' if is_queued_job else 'Cancellation requested',
-            'job_id': response_job_id,
-            'status': job.status,
-            'process_stopped': process_stopped,
-            'task_revoked': task_revoked,
-            'task_id': task_id,
-        })
-        
-    except ScraperJob.DoesNotExist:
-        return Response(
-            {'error': 'Job not found'},
-            status=status.HTTP_404_NOT_FOUND
+        publish_job_event(
+            "job.cancelled" if is_queued_job else "job.cancelling",
+            job,
+            extra={"source": "api_cancel"},
         )
 
+        return Response(
+            {
+                "message": "Job cancelled successfully"
+                if is_queued_job
+                else "Cancellation requested",
+                "job_id": response_job_id,
+                "status": job.status,
+                "process_stopped": process_stopped,
+                "task_revoked": task_revoked,
+                "task_id": task_id,
+            }
+        )
 
-@api_view(['GET'])
+    except ScraperJob.DoesNotExist:
+        return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def active_jobs(request):
     """Get list of currently running jobs"""
@@ -815,80 +916,102 @@ def active_jobs(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    _finalize_stale_active_jobs(source='api_reconciliation')
-    
-    active = ScraperJob.objects.filter(
-        status__in=ACTIVE_JOB_STATUSES
-    ).order_by('-started_at')
-    
+    _finalize_stale_active_jobs(source="api_reconciliation")
+
+    active = ScraperJob.objects.filter(status__in=ACTIVE_JOB_STATUSES).order_by(
+        "-started_at"
+    )
+
     jobs = []
     for job in active:
-        jobs.append(_json_safe({
-            'id': str(job.pk),
-            'scraper_name': job.scraper_name,
-            'status': job.status,
-            'started_at': job.started_at,
-            'created_at': job.created_at,
-            'parameters': job.parameters,
-            'triggered_by': job.triggered_by,
-            'progress': job.progress,
-            'progress_message': job.progress_message,
-            'pid': job.pid,
-            'task_id': job.task_id,
-            'worker_name': job.worker_name,
-            'heartbeat_at': job.heartbeat_at,
-            'cancel_requested_at': job.cancel_requested_at,
-            'jobs_found': job.jobs_found,
-            'liveness': describe_job_liveness(job),
-        }))
+        jobs.append(
+            _json_safe(
+                {
+                    "id": str(job.pk),
+                    "scraper_name": job.scraper_name,
+                    "status": job.status,
+                    "started_at": job.started_at,
+                    "created_at": job.created_at,
+                    "parameters": job.parameters,
+                    "triggered_by": job.triggered_by,
+                    "progress": job.progress,
+                    "progress_message": job.progress_message,
+                    "pid": job.pid,
+                    "task_id": job.task_id,
+                    "worker_name": job.worker_name,
+                    "heartbeat_at": job.heartbeat_at,
+                    "cancel_requested_at": job.cancel_requested_at,
+                    "jobs_found": job.jobs_found,
+                    "liveness": describe_job_liveness(job),
+                }
+            )
+        )
 
     recent_finished = []
     finished_queryset = ScraperJob.objects.filter(
         status__in=FINAL_JOB_STATUSES
-    ).order_by('-completed_at', '-created_at')[:20]
+    ).order_by("-completed_at", "-created_at")[:20]
     for job in finished_queryset.values(
-        'id', 'scraper_name', 'status', 'started_at', 'completed_at', 'execution_time',
-        'jobs_found', 'jobs_new', 'jobs_updated', 'jobs_duplicate', 'triggered_by'
+        "id",
+        "scraper_name",
+        "status",
+        "started_at",
+        "completed_at",
+        "execution_time",
+        "jobs_found",
+        "jobs_new",
+        "jobs_updated",
+        "jobs_duplicate",
+        "triggered_by",
     ):
-        if 'id' in job:
-            job['id'] = str(job['id'])
+        if "id" in job:
+            job["id"] = str(job["id"])
         recent_finished.append(_json_safe(job))
 
-    return Response({
-        'active_jobs': jobs,
-        'recently_finished': recent_finished,
-        'count': len(jobs),
-    })
+    return Response(
+        {
+            "active_jobs": jobs,
+            "recently_finished": recent_finished,
+            "count": len(jobs),
+        }
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def recent_jobs(request):
     """Get recently scraped jobs"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-    
-    limit = int(request.query_params.get('limit', 50))
-    source = request.query_params.get('source')
-    
+
+    limit = int(request.query_params.get("limit", 50))
+    source = request.query_params.get("source")
+
     queryset = ScrapedURL.objects.filter(is_active=True)
     if source:
         queryset = queryset.filter(source=source)
-    
+
     jobs = []
-    for job in queryset.order_by('-last_scraped')[:limit].values(
-        'id', 'job_id', 'url', 'source', 'title', 'company',
-        'scrape_count', 'first_scraped', 'last_scraped'
+    for job in queryset.order_by("-last_scraped")[:limit].values(
+        "id",
+        "job_id",
+        "url",
+        "source",
+        "title",
+        "company",
+        "scrape_count",
+        "first_scraped",
+        "last_scraped",
     ):
-        if 'id' in job:
-            job['id'] = str(job['id'])
+        if "id" in job:
+            job["id"] = str(job["id"])
         jobs.append(job)
-    
-    return Response({'jobs': jobs, 'count': len(jobs)})
+
+    return Response({"jobs": jobs, "count": len(jobs)})
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def managed_jobs(request):
     """List scraped jobs stored in the main jobs table."""
@@ -896,12 +1019,12 @@ def managed_jobs(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    page = max(int(request.query_params.get('page', 1)), 1)
-    limit = min(max(int(request.query_params.get('limit', 20)), 1), 100)
-    search = (request.query_params.get('q') or '').strip()
-    status_filter = (request.query_params.get('status') or '').strip()
-    source_filter = (request.query_params.get('source') or '').strip()
-    verified_filter = (request.query_params.get('verified') or 'all').strip().lower()
+    page = max(int(request.query_params.get("page", 1)), 1)
+    limit = min(max(int(request.query_params.get("limit", 20)), 1), 100)
+    search = (request.query_params.get("q") or "").strip()
+    status_filter = (request.query_params.get("status") or "").strip()
+    source_filter = (request.query_params.get("source") or "").strip()
+    verified_filter = (request.query_params.get("verified") or "all").strip().lower()
 
     queryset = Job.objects.all()
     if search:
@@ -917,40 +1040,63 @@ def managed_jobs(request):
         queryset = queryset.filter(status=status_filter)
     if source_filter:
         queryset = queryset.filter(source=source_filter)
-    if verified_filter == 'verified':
+    if verified_filter == "verified":
         queryset = queryset.filter(is_verified=True)
-    elif verified_filter == 'unverified':
+    elif verified_filter == "unverified":
         queryset = queryset.filter(is_verified=False)
 
-    queryset = queryset.order_by('-retrieved_date', '-created_at')
+    queryset = queryset.order_by("-retrieved_date", "-created_at")
     paginator = Paginator(queryset, limit)
     page_obj = paginator.get_page(page)
 
     jobs = []
     for job in page_obj.object_list.values(
-        'id', 'title', 'company', 'location', 'source', 'status', 'url',
-        'operation_type', 'job_category', 'sub_role', 'country_code',
-        'is_verified', 'posted_date', 'retrieved_date', 'description',
-        'salary_currency', 'is_remote', 'last_checked'
+        "id",
+        "title",
+        "company",
+        "location",
+        "source",
+        "status",
+        "url",
+        "operation_type",
+        "job_category",
+        "sub_role",
+        "country_code",
+        "is_verified",
+        "posted_date",
+        "retrieved_date",
+        "description",
+        "salary_currency",
+        "is_remote",
+        "last_checked",
     ):
-        if 'id' in job:
-            job['id'] = str(job['id'])
+        if "id" in job:
+            job["id"] = str(job["id"])
         jobs.append(job)
 
-    return Response({
-        'jobs': jobs,
-        'pagination': {
-            'page': page,
-            'page_size': limit,
-            'total': paginator.count,
-            'pages': paginator.num_pages,
-        },
-        'summary': _build_job_summary(queryset),
-        'sources': sorted(filter(None, Job.objects.exclude(source__isnull=True).values_list('source', flat=True).distinct())),
-    })
+    return Response(
+        {
+            "jobs": jobs,
+            "pagination": {
+                "page": page,
+                "page_size": limit,
+                "total": paginator.count,
+                "pages": paginator.num_pages,
+            },
+            "summary": _build_job_summary(queryset),
+            "sources": sorted(
+                filter(
+                    None,
+                    Job.objects.exclude(source__isnull=True)
+                    .values_list("source", flat=True)
+                    .distinct(),
+                )
+            ),
+        }
+    )
 
 
-@api_view(['PATCH', 'DELETE'])
+@api_view(["PATCH", "DELETE"])
 @permission_classes([AllowAny])
 def update_managed_job(request, job_id):
     auth_user = _require_dashboard_auth(request)
@@ -960,65 +1106,76 @@ def update_managed_job(request, job_id):
     try:
         job = Job.objects.get(pk=job_id)
     except Job.DoesNotExist:
-        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'DELETE':
+    if request.method == "DELETE":
         job_title = job.title
         job.delete()
-        return Response({'message': f'Job "{job_title}" deleted successfully', 'job_id': job_id})
+        return Response(
+            {"message": f'Job "{job_title}" deleted successfully', "job_id": job_id}
+        )
 
     field_names = [
-        'title', 'company', 'location', 'status', 'operation_type',
-        'job_category', 'sub_role', 'country_code', 'description',
+        "title",
+        "company",
+        "location",
+        "status",
+        "operation_type",
+        "job_category",
+        "sub_role",
+        "country_code",
+        "description",
     ]
     for field_name in field_names:
         if field_name in request.data:
             setattr(job, field_name, request.data.get(field_name) or None)
 
-    if 'title' in request.data and request.data.get('title'):
-        job.title = request.data['title']
-    if 'company' in request.data and request.data.get('company'):
-        job.company = request.data['company']
-    if 'is_verified' in request.data:
-        job.is_verified = bool(request.data['is_verified'])
-    if 'is_remote' in request.data:
-        job.is_remote = bool(request.data['is_remote'])
-    if 'posted_date' in request.data:
-        job.posted_date = request.data['posted_date'] or None
-    if 'expiration_date' in request.data:
-        job.expiration_date = request.data['expiration_date'] or None
-    if 'salary_currency' in request.data and request.data.get('salary_currency'):
-        job.salary_currency = request.data['salary_currency']
+    if "title" in request.data and request.data.get("title"):
+        job.title = request.data["title"]
+    if "company" in request.data and request.data.get("company"):
+        job.company = request.data["company"]
+    if "is_verified" in request.data:
+        job.is_verified = bool(request.data["is_verified"])
+    if "is_remote" in request.data:
+        job.is_remote = bool(request.data["is_remote"])
+    if "posted_date" in request.data:
+        job.posted_date = request.data["posted_date"] or None
+    if "expiration_date" in request.data:
+        job.expiration_date = request.data["expiration_date"] or None
+    if "salary_currency" in request.data and request.data.get("salary_currency"):
+        job.salary_currency = request.data["salary_currency"]
 
     job.last_checked = timezone.now()
     job.save()
 
-    return Response({
-        'message': 'Job updated successfully',
-        'job': {
-            'id': str(job.pk),
-            'title': job.title,
-            'company': job.company,
-            'location': job.location,
-            'source': job.source,
-            'status': job.status,
-            'url': job.url,
-            'operation_type': job.operation_type,
-            'job_category': job.job_category,
-            'sub_role': job.sub_role,
-            'country_code': job.country_code,
-            'is_verified': job.is_verified,
-            'posted_date': job.posted_date,
-            'retrieved_date': job.retrieved_date,
-            'description': job.description,
-            'salary_currency': job.salary_currency,
-            'is_remote': job.is_remote,
-            'last_checked': job.last_checked,
+    return Response(
+        {
+            "message": "Job updated successfully",
+            "job": {
+                "id": str(job.pk),
+                "title": job.title,
+                "company": job.company,
+                "location": job.location,
+                "source": job.source,
+                "status": job.status,
+                "url": job.url,
+                "operation_type": job.operation_type,
+                "job_category": job.job_category,
+                "sub_role": job.sub_role,
+                "country_code": job.country_code,
+                "is_verified": job.is_verified,
+                "posted_date": job.posted_date,
+                "retrieved_date": job.retrieved_date,
+                "description": job.description,
+                "salary_currency": job.salary_currency,
+                "is_remote": job.is_remote,
+                "last_checked": job.last_checked,
+            },
         }
-    })
+    )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def check_job_url_status(request, job_id):
     """Perform a live check on a job URL to see if it's still active."""
@@ -1029,35 +1186,42 @@ def check_job_url_status(request, job_id):
     try:
         job = Job.objects.get(pk=job_id)
         if job.is_verified:
-            return Response({
-                'job_id': str(job.pk),
-                'status': job.status,
-                'result': 'skipped_verified',
-                'message': 'Verified jobs are skipped for automated URL checks.',
-            })
+            return Response(
+                {
+                    "job_id": str(job.pk),
+                    "status": job.status,
+                    "result": "skipped_verified",
+                    "message": "Verified jobs are skipped for automated URL checks.",
+                }
+            )
 
         result_payload = _check_job_url(job)
-        if result_payload['result'] == 'request_failed':
-            return Response({
-                'error': f"Request failed: {result_payload['error']}",
-                'job_id': str(job.pk),
-                'status': job.status,
-                'last_checked': job.last_checked
-            }, status=status.HTTP_502_BAD_GATEWAY)
-        
-        return Response({
-            'job_id': str(job.pk),
-            'status': job.status,
-            'last_checked': job.last_checked,
-            'result': result_payload['result'],
-            'message': f"Job status check completed: {result_payload['result']}"
-        })
+        if result_payload["result"] == "request_failed":
+            return Response(
+                {
+                    "error": f"Request failed: {result_payload['error']}",
+                    "job_id": str(job.pk),
+                    "status": job.status,
+                    "last_checked": job.last_checked,
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(
+            {
+                "job_id": str(job.pk),
+                "status": job.status,
+                "last_checked": job.last_checked,
+                "result": result_payload["result"],
+                "message": f"Job status check completed: {result_payload['result']}",
+            }
+        )
 
     except Job.DoesNotExist:
-        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def bulk_check_job_url_status(request):
     """Bulk validate job URLs with guardrails for verified jobs."""
@@ -1065,14 +1229,14 @@ def bulk_check_job_url_status(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    search = (request.data.get('q') or '').strip()
-    status_filter = (request.data.get('status') or '').strip()
-    source_filter = (request.data.get('source') or '').strip()
+    search = (request.data.get("q") or "").strip()
+    status_filter = (request.data.get("status") or "").strip()
+    source_filter = (request.data.get("source") or "").strip()
     # Enforce platform policy for bulk automated checks:
     # only scraped records are checked, and verified jobs are always skipped.
     only_scraped = True
     skip_verified = True
-    max_checks = min(max(int(request.data.get('max_checks', 200)), 1), 500)
+    max_checks = min(max(int(request.data.get("max_checks", 200)), 1), 500)
 
     task = bulk_check_job_url_status_task.delay(
         search=search,
@@ -1083,22 +1247,25 @@ def bulk_check_job_url_status(request):
         only_scraped=only_scraped,
     )
 
-    return Response({
-        'message': 'Bulk URL validation queued in the background',
-        'task_id': task.id,
-        'queued': True,
-        'filters': {
-            'q': search,
-            'status': status_filter,
-            'source': source_filter,
-            'only_scraped': only_scraped,
-            'skip_verified': skip_verified,
-            'max_checks': max_checks,
+    return Response(
+        {
+            "message": "Bulk URL validation queued in the background",
+            "task_id": task.id,
+            "queued": True,
+            "filters": {
+                "q": search,
+                "status": status_filter,
+                "source": source_filter,
+                "only_scraped": only_scraped,
+                "skip_verified": skip_verified,
+                "max_checks": max_checks,
+            },
         },
-    }, status=status.HTTP_202_ACCEPTED)
+        status=status.HTTP_202_ACCEPTED,
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scraped_records(request):
     """Paginated scraped URL records for auditing feed output."""
@@ -1106,10 +1273,10 @@ def scraped_records(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    page = max(int(request.query_params.get('page', 1)), 1)
-    limit = min(max(int(request.query_params.get('limit', 20)), 1), 100)
-    search = (request.query_params.get('q') or '').strip()
-    source = (request.query_params.get('source') or '').strip()
+    page = max(int(request.query_params.get("page", 1)), 1)
+    limit = min(max(int(request.query_params.get("limit", 20)), 1), 100)
+    search = (request.query_params.get("q") or "").strip()
+    source = (request.query_params.get("source") or "").strip()
 
     queryset = ScrapedURL.objects.all()
     if search:
@@ -1122,33 +1289,49 @@ def scraped_records(request):
     if source:
         queryset = queryset.filter(source=source)
 
-    queryset = queryset.order_by('-last_scraped')
+    queryset = queryset.order_by("-last_scraped")
     paginator = Paginator(queryset, limit)
     page_obj = paginator.get_page(page)
 
-    records = list(page_obj.object_list.values(
-        'id', 'job_id', 'url', 'source', 'title', 'company',
-        'scrape_count', 'is_active', 'first_scraped', 'last_scraped'
-    ))
+    records = list(
+        page_obj.object_list.values(
+            "id",
+            "job_id",
+            "url",
+            "source",
+            "title",
+            "company",
+            "scrape_count",
+            "is_active",
+            "first_scraped",
+            "last_scraped",
+        )
+    )
 
     for record in records:
         normalized = _json_safe(record)
         record.clear()
         record.update(normalized)
 
-    return Response({
-        'records': records,
-        'pagination': {
-            'page': page,
-            'page_size': limit,
-            'total': paginator.count,
-            'pages': paginator.num_pages,
-        },
-        'sources': sorted(filter(None, ScrapedURL.objects.values_list('source', flat=True).distinct())),
-    })
+    return Response(
+        {
+            "records": records,
+            "pagination": {
+                "page": page,
+                "page_size": limit,
+                "total": paginator.count,
+                "pages": paginator.num_pages,
+            },
+            "sources": sorted(
+                filter(
+                    None, ScrapedURL.objects.values_list("source", flat=True).distinct()
+                )
+            ),
+        }
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def scheduler_overview(request):
     """Return scheduling state for scraper configs and beat tasks."""
@@ -1156,23 +1339,29 @@ def scheduler_overview(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    configs = list(ScraperConfig.objects.order_by('scraper_name'))
+    configs = list(ScraperConfig.objects.order_by("scraper_name"))
     schedules = [_serialize_schedule_snapshot(config) for config in configs]
     active_periodic_tasks = 0
     beat_query_enabled = _celery_beat_query_enabled()
     if beat_query_enabled and PeriodicTask is not None:
-        active_periodic_tasks = PeriodicTask.objects.filter(name__startswith='scraper_', enabled=True).count()
+        active_periodic_tasks = PeriodicTask.objects.filter(
+            name__startswith="scraper_", enabled=True
+        ).count()
 
-    return Response({
-        'celery_beat_available': beat_query_enabled,
-        'configured_scrapers': len(configs),
-        'scheduled_scrapers': sum(1 for item in schedules if item['schedule_enabled']),
-        'active_periodic_tasks': active_periodic_tasks,
-        'schedules': schedules,
-    })
+    return Response(
+        {
+            "celery_beat_available": beat_query_enabled,
+            "configured_scrapers": len(configs),
+            "scheduled_scrapers": sum(
+                1 for item in schedules if item["schedule_enabled"]
+            ),
+            "active_periodic_tasks": active_periodic_tasks,
+            "schedules": schedules,
+        }
+    )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def run_all_scrapers(request):
     """Start all enabled scrapers"""
@@ -1180,50 +1369,56 @@ def run_all_scrapers(request):
     if isinstance(auth_user, Response):
         return auth_user
 
-    _finalize_stale_active_jobs(source='api_reconciliation')
-    
-    max_jobs = request.data.get('max_jobs')
-    max_pages = request.data.get('max_pages')
-    job_categories = normalize_job_categories(request.data.get('job_categories'))
+    _finalize_stale_active_jobs(source="api_reconciliation")
+
+    max_jobs = request.data.get("max_jobs")
+    max_pages = request.data.get("max_pages")
+    job_categories = normalize_job_categories(request.data.get("job_categories"))
 
     config_map = {cfg.scraper_name: cfg for cfg in ScraperConfig.objects.all()}
     active_counts = {
-        item['scraper_name']: item['count']
+        item["scraper_name"]: item["count"]
         for item in ScraperJob.objects.filter(status__in=ACTIVE_JOB_STATUSES)
-        .values('scraper_name')
-        .annotate(count=Count('id'))
+        .values("scraper_name")
+        .annotate(count=Count("id"))
     }
     eligible_scrapers = []
     skipped = {
-        'disabled': [],
-        'already_running': [],
+        "disabled": [],
+        "already_running": [],
     }
 
     for scraper_name in list_scrapers():
         scraper_config = config_map.get(scraper_name)
-        is_enabled = scraper_config.is_enabled if scraper_config else CONFIG['sites'].get(scraper_name, {}).get('enabled', False)
+        is_enabled = (
+            scraper_config.is_enabled
+            if scraper_config
+            else CONFIG["sites"].get(scraper_name, {}).get("enabled", False)
+        )
         if not is_enabled:
-            skipped['disabled'].append(scraper_name)
+            skipped["disabled"].append(scraper_name)
             continue
 
         active_count = active_counts.get(scraper_name, 0)
         if active_count > 0:
-            skipped['already_running'].append({
-                'scraper_name': scraper_name,
-                'active_jobs': active_count,
-            })
+            skipped["already_running"].append(
+                {
+                    "scraper_name": scraper_name,
+                    "active_jobs": active_count,
+                }
+            )
             continue
         eligible_scrapers.append(scraper_name)
 
     if not eligible_scrapers:
         return Response(
             {
-                'error': 'No scrapers were eligible to queue',
-                'queued_count': 0,
-                'jobs': [],
-                'skipped': skipped,
+                "error": "No scrapers were eligible to queue",
+                "queued_count": 0,
+                "jobs": [],
+                "skipped": skipped,
             },
-            status=status.HTTP_409_CONFLICT
+            status=status.HTTP_409_CONFLICT,
         )
 
     try:
@@ -1235,22 +1430,25 @@ def run_all_scrapers(request):
             job_categories=job_categories,
         )
     except Exception as exc:
-        logger.error('Failed to queue start-all sequence: %s', exc, exc_info=True)
+        logger.error("Failed to queue start-all sequence: %s", exc, exc_info=True)
         return Response(
-            {'error': f'Failed to queue start-all sequence: {exc}'},
+            {"error": f"Failed to queue start-all sequence: {exc}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    return Response({
-        'message': f'Sequential run queued for {len(eligible_scrapers)} scraper(s)',
-        'queued_count': len(eligible_scrapers),
-        'sequence_task_id': sequence_task.id,
-        'jobs': [],
-        'skipped': skipped,
-    }, status=status.HTTP_202_ACCEPTED)
+    return Response(
+        {
+            "message": f"Sequential run queued for {len(eligible_scrapers)} scraper(s)",
+            "queued_count": len(eligible_scrapers),
+            "sequence_task_id": sequence_task.id,
+            "jobs": [],
+            "skipped": skipped,
+        },
+        status=status.HTTP_202_ACCEPTED,
+    )
 
 
-@api_view(['GET', 'PUT'])
+@api_view(["GET", "PUT"])
 @permission_classes([AllowAny])
 def title_filters(request):
     """View and edit title-filter keywords from filter_title.json."""
@@ -1261,133 +1459,162 @@ def title_filters(request):
     try:
         payload = _load_filter_payload()
     except Exception as exc:
-        return Response({'error': f'Failed to load filter file: {exc}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"error": f"Failed to load filter file: {exc}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    filters = payload.get('Filters', [])
+    filters = payload.get("Filters", [])
 
-    if request.method == 'GET':
+    if request.method == "GET":
         all_keywords = []
         for group in filters:
-            all_keywords.extend(group.get('Keywords', []))
-        return Response({
-            'filter_name': payload.get('FilterName', ''),
-            'description': payload.get('Description', ''),
-            'file_path': _filter_file_path(),
-            'groups': [
-                {
-                    'filter_type': group.get('FilterType', ''),
-                    'display_name': group.get('DisplayName', ''),
-                    'keyword_count': len(group.get('Keywords', [])),
-                }
-                for group in filters
-            ],
-            'keywords': sorted(set(all_keywords), key=lambda item: item.lower()),
-            'count': len(set(all_keywords)),
-        })
+            all_keywords.extend(group.get("Keywords", []))
+        return Response(
+            {
+                "filter_name": payload.get("FilterName", ""),
+                "description": payload.get("Description", ""),
+                "file_path": _filter_file_path(),
+                "groups": [
+                    {
+                        "filter_type": group.get("FilterType", ""),
+                        "display_name": group.get("DisplayName", ""),
+                        "keyword_count": len(group.get("Keywords", [])),
+                    }
+                    for group in filters
+                ],
+                "keywords": sorted(set(all_keywords), key=lambda item: item.lower()),
+                "count": len(set(all_keywords)),
+            }
+        )
 
-    action = (request.data.get('action') or '').strip().lower()
-    keyword_raw = str(request.data.get('keyword') or '').strip()
-    filter_type = str(request.data.get('filter_type') or '').strip()
+    action = (request.data.get("action") or "").strip().lower()
+    keyword_raw = str(request.data.get("keyword") or "").strip()
+    filter_type = str(request.data.get("filter_type") or "").strip()
 
-    if action not in {'add', 'remove'}:
-        return Response({'error': "action must be 'add' or 'remove'"}, status=status.HTTP_400_BAD_REQUEST)
+    if action not in {"add", "remove"}:
+        return Response(
+            {"error": "action must be 'add' or 'remove'"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     if not keyword_raw:
-        return Response({'error': 'keyword is required'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "keyword is required"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     changed = False
-    if action == 'add':
+    if action == "add":
         target_group = None
         if filter_type:
             for group in filters:
-                if str(group.get('FilterType', '')).strip().lower() == filter_type.lower():
+                if (
+                    str(group.get("FilterType", "")).strip().lower()
+                    == filter_type.lower()
+                ):
                     target_group = group
                     break
         if target_group is None and filters:
             target_group = filters[0]
         if target_group is None:
-            return Response({'error': 'No filter groups found in filter file'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": "No filter groups found in filter file"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        keywords = target_group.setdefault('Keywords', [])
-        if not any(str(item).strip().lower() == keyword_raw.lower() for item in keywords):
+        keywords = target_group.setdefault("Keywords", [])
+        if not any(
+            str(item).strip().lower() == keyword_raw.lower() for item in keywords
+        ):
             keywords.append(keyword_raw)
             changed = True
     else:
         for group in filters:
-            keywords = group.get('Keywords', [])
-            remaining = [item for item in keywords if str(item).strip().lower() != keyword_raw.lower()]
+            keywords = group.get("Keywords", [])
+            remaining = [
+                item
+                for item in keywords
+                if str(item).strip().lower() != keyword_raw.lower()
+            ]
             if len(remaining) != len(keywords):
-                group['Keywords'] = remaining
+                group["Keywords"] = remaining
                 changed = True
 
     if changed:
         try:
             _save_filter_payload(payload)
         except Exception as exc:
-            return Response({'error': f'Failed to save filter file: {exc}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": f"Failed to save filter file: {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-    return Response({
-        'message': f"Keyword {'updated' if changed else 'unchanged'} successfully",
-        'action': action,
-        'keyword': keyword_raw,
-        'changed': changed,
-    })
+    return Response(
+        {
+            "message": f"Keyword {'updated' if changed else 'unchanged'} successfully",
+            "action": action,
+            "keyword": keyword_raw,
+            "changed": changed,
+        }
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def health_check(request):
     """Health check endpoint (no authentication required)"""
-    
+
     try:
-        ScraperJob.objects.only('id').first()
-        ScrapedURL.objects.only('id').first()
-        
-        return Response({
-            'status': 'healthy',
-            'database': 'connected',
-            'scrapers_available': len(list_scrapers()),
-        })
+        ScraperJob.objects.only("id").first()
+        ScrapedURL.objects.only("id").first()
+
+        return Response(
+            {
+                "status": "healthy",
+                "database": "connected",
+                "scrapers_available": len(list_scrapers()),
+            }
+        )
     except Exception as e:
-        return Response({
-            'status': 'unhealthy',
-            'error': str(e)
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(
+            {"status": "unhealthy", "error": str(e)},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def system_metrics(request):
     """Get real-time system metrics (CPU, RAM, Disk)"""
     auth_user = _require_dashboard_auth(request)
     if isinstance(auth_user, Response):
         return auth_user
-        
+
     try:
         metrics = {
-            'cpu': {
-                'percent': psutil.cpu_percent(interval=None),
-                'count': psutil.cpu_count(),
-                'freq': psutil.cpu_freq().current if psutil.cpu_freq() else 0,
+            "cpu": {
+                "percent": psutil.cpu_percent(interval=None),
+                "count": psutil.cpu_count(),
+                "freq": psutil.cpu_freq().current if psutil.cpu_freq() else 0,
             },
-            'memory': {
-                'total': psutil.virtual_memory().total,
-                'available': psutil.virtual_memory().available,
-                'percent': psutil.virtual_memory().percent,
-                'used': psutil.virtual_memory().used,
+            "memory": {
+                "total": psutil.virtual_memory().total,
+                "available": psutil.virtual_memory().available,
+                "percent": psutil.virtual_memory().percent,
+                "used": psutil.virtual_memory().used,
             },
-            'disk': {
-                'total': psutil.disk_usage('/').total,
-                'used': psutil.disk_usage('/').used,
-                'free': psutil.disk_usage('/').free,
-                'percent': psutil.disk_usage('/').percent,
+            "disk": {
+                "total": psutil.disk_usage("/").total,
+                "used": psutil.disk_usage("/").used,
+                "free": psutil.disk_usage("/").free,
+                "percent": psutil.disk_usage("/").percent,
             },
-            'process': {
-                'memory_info': psutil.Process().memory_info().rss,
-                'threads': psutil.Process().num_threads(),
+            "process": {
+                "memory_info": psutil.Process().memory_info().rss,
+                "threads": psutil.Process().num_threads(),
             },
-            'timestamp': timezone.now().isoformat()
+            "timestamp": timezone.now().isoformat(),
         }
         return Response(metrics)
     except Exception as e:
         logger.error(f"Failed to fetch system metrics: {e}")
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

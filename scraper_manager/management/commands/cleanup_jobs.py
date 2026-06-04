@@ -2,6 +2,7 @@
 Django management command to clean up expired/old jobs.
 Usage: python manage.py cleanup_jobs [--days N] [--dry-run]
 """
+
 import logging
 from datetime import timedelta
 
@@ -43,19 +44,19 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        days          = options["days"]
-        history_days  = options["purge_scraper_history"]
-        dry_run       = options["dry_run"]
-        hard_delete   = options["delete"]
-        cutoff        = timezone.now() - timedelta(days=days)
-        hist_cutoff   = timezone.now() - timedelta(days=history_days)
+        days = options["days"]
+        history_days = options["purge_scraper_history"]
+        dry_run = options["dry_run"]
+        hard_delete = options["delete"]
+        cutoff = timezone.now() - timedelta(days=days)
+        hist_cutoff = timezone.now() - timedelta(days=history_days)
 
         prefix = "[DRY-RUN] " if dry_run else ""
 
         # ── 1. Handle old jobs ────────────────────────────────────────────
-        old_jobs = Job.objects.filter(
-            retrieved_date__lt=cutoff
-        ).exclude(status="expired")
+        old_jobs = Job.objects.filter(retrieved_date__lt=cutoff).exclude(
+            status="expired"
+        )
 
         count = old_jobs.count()
         self.stdout.write(
@@ -65,10 +66,14 @@ class Command(BaseCommand):
         if count > 0 and not dry_run:
             if hard_delete:
                 old_jobs.delete()
-                self.stdout.write(self.style.SUCCESS(f"✓ Hard-deleted {count} expired jobs."))
+                self.stdout.write(
+                    self.style.SUCCESS(f"✓ Hard-deleted {count} expired jobs.")
+                )
             else:
                 updated = old_jobs.update(status="expired")
-                self.stdout.write(self.style.SUCCESS(f"✓ Marked {updated} jobs as expired."))
+                self.stdout.write(
+                    self.style.SUCCESS(f"✓ Marked {updated} jobs as expired.")
+                )
         elif dry_run:
             sample = list(old_jobs.values_list("title", "company")[:5])
             for title, company in sample:
@@ -87,7 +92,9 @@ class Command(BaseCommand):
         )
         if rec_count > 0 and not dry_run:
             old_records.delete()
-            self.stdout.write(self.style.SUCCESS(f"✓ Purged {rec_count} old scraper history records."))
+            self.stdout.write(
+                self.style.SUCCESS(f"✓ Purged {rec_count} old scraper history records.")
+            )
 
         self.stdout.write(self.style.SUCCESS("\n✅ Cleanup complete."))
         logger.info(

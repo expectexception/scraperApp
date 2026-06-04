@@ -1,0 +1,299 @@
+aa: Blocked by WAF (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+[aa] Initializing scraper (Database-only mode)
+[aa] Loaded filter with 372 keywords
+Created scraper instance for aa
+Starting scraper execution for aa
+[aa] Starting scraper: American Airlines
+[aa] Database tracking: DISABLED
+[aa] Title filtering: ENABLED
+[aa] Max jobs limit: 3
+[aa] Max pages limit: 5
+[aa] Navigating to https://jobs.aa.com/search/?q=&locationsearch=...
+[aa] Page Title: Access Denied
+[aa] Browser blocked or results not found. Trying to use make_request fallback...
+[aa] Fallback request status: 200
+[aa] Saved fallback HTML to aa_fallback.html
+[aa] Fallback returned 200 but no jobs found in HTML.
+[aa] Saving 0 jobs to database...
+[aa] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=1.6s
+
+========================================
+southwest: Success (Layout OK! Found: 10, Matched Filter: 0)
+RAW OUTPUT EXTRACT:
+  Duration: 10.9s
+Starting scraper command: southwest
+Preparing to run scraper: southwest
+Effective limits: max_jobs=3, max_pages=None
+Skipping DjangoDBManager (no-db mode)
+[southwest] Initializing scraper (Database-only mode)
+[southwest] Loaded filter with 372 keywords
+Created scraper instance for southwest
+Starting scraper execution for southwest
+[southwest] Starting scraper: Southwest Airlines
+[southwest] Database tracking: DISABLED
+[southwest] Title filtering: ENABLED
+[southwest] Max jobs limit: 3
+[southwest] Max pages limit: 5
+[southwest] Navigating to https://careers.southwestair.com/us/en/search-results...
+[southwest] Found 10 jobs on current page
+[southwest] Applying pre-filter...
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=10.9s
+
+========================================
+united: Success (Layout OK! Found: 10, Matched Filter: 0)
+RAW OUTPUT EXTRACT:
+  Duration: 11.0s
+Starting scraper command: united
+Preparing to run scraper: united
+Effective limits: max_jobs=3, max_pages=None
+Skipping DjangoDBManager (no-db mode)
+[united] Initializing scraper (Database-only mode)
+[united] Loaded filter with 372 keywords
+Created scraper instance for united
+Starting scraper execution for united
+[united] Starting scraper: United Airlines
+[united] Database tracking: DISABLED
+[united] Title filtering: ENABLED
+[united] Max jobs limit: 3
+[united] Max pages limit: 5
+[united] Navigating to https://careers.united.com/us/en/search-results...
+[united] Found 10 jobs on current page
+[united] Applying pre-filter...
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=11.0s
+
+========================================
+atlas_air: Success (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+  Duration: 12.8s
+Starting scraper command: atlas_air
+Preparing to run scraper: atlas_air
+Effective limits: max_jobs=3, max_pages=None
+Skipping DjangoDBManager (no-db mode)
+[atlas_air] Initializing scraper (Database-only mode)
+[atlas_air] Loaded filter with 372 keywords
+Created scraper instance for atlas_air
+Starting scraper execution for atlas_air
+[atlas_air] Fetching Greenhouse API: https://boards-api.greenhouse.io/v1/boards/atlasair/jobs
+[atlas_air] Found 58 jobs in total API.
+[atlas_air] Fetching detail for: 4214375009
+[atlas_air] Fetching detail for: 4260059009
+[atlas_air] Fetching detail for: 4227492009
+[atlas_air] Applying final filter check...
+[atlas_air] Saving 0 jobs to database...
+[atlas_air] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=12.8s
+
+========================================
+delta: Success (Layout OK! Found: 3, Matched Filter: 0)
+RAW OUTPUT EXTRACT:
+[delta] Skipping job: 'Aircraft Maintenance Technician 2' (Title doesn't match filter)
+[delta] Skipping job: 'Aircraft Maintenance Technician' (Title doesn't match filter)
+[delta] Skipping job: 'Aircraft Maintenance Technician' (Title doesn't match filter)
+[delta] Skipping job: 'Aircraft Support Mechanic' (Title doesn't match filter)
+[delta] Skipping job: 'Aircraft Support Mechanic' (Title doesn't match filter)
+[delta] Skipping job: 'Aircraft Support Mechanic' (Title doesn't match filter)
+[delta] Navigating to https://delta.avature.net/en_US/careers/SearchJobs/?listFilterMode=1&jobOffset=10...
+[delta] Found 10 job items at offset 10
+[delta] Skipping job: 'Aircraft Maintenance Technician' (Title doesn't match filter)
+[delta] Skipping job: 'Co-op - Flight Operations - Pilot Learning Experience and Strategy (Fall 2026)' (Title doesn't match filter)
+[delta] Successfully extracted: Co-op, Crew Planning - Pairings and Bid-Award (Fall 2026)
+[delta] Successfully extracted: Co-op, Crew Planning - Pairings and Bid-Award (Spring 2027)
+[delta] Skipping job: 'Co-op, Crew Resources - Data Analyst (Fall 2026)' (Title doesn't match filter)
+[delta] Skipping job: 'Co-op, Crew Resources - Pilot Resources (Fall 2026)' (Title doesn't match filter)
+[delta] Successfully extracted: Co-Op, Crew Resources – Flight Operations Learning - Media Production Support (Fall 2026)
+[delta] Saving 3 jobs to database...
+[delta] Database manager not available (skipping save)
+Scraper execution completed, found 3 jobs
+Updated ScraperJob 0: found=3, new=3, updated=0, time=22.1s
+
+========================================
+ryanair: Success (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+Starting scraper command: ryanair
+Preparing to run scraper: ryanair
+Effective limits: max_jobs=3, max_pages=None
+Skipping DjangoDBManager (no-db mode)
+[ryanair] Initializing scraper (Database-only mode)
+[ryanair] Loaded filter with 372 keywords
+Created scraper instance for ryanair
+Starting scraper execution for ryanair
+[ryanair] Starting scraper: Ryanair
+[ryanair] Database tracking: DISABLED
+[ryanair] Title filtering: ENABLED
+[ryanair] Max jobs limit: 3
+[ryanair] Max pages limit: 5
+[ryanair] Navigating to https://careers.ryanair.com/search/...
+[ryanair] Found 0 potential job links
+[ryanair] Saving 0 jobs to database...
+[ryanair] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=4.9s
+
+========================================
+ba: Success (Layout OK! Found: 15, Matched Filter: 0)
+RAW OUTPUT EXTRACT:
+Created scraper instance for ba
+Starting scraper execution for ba
+[ba] Starting scraper: British Airways
+[ba] Database tracking: DISABLED
+[ba] Title filtering: ENABLED
+[ba] Max jobs limit: 3
+[ba] Max pages limit: 5
+[ba] Navigating to https://careers.ba.com/search-jobs...
+[ba] Found 15 jobs on current page
+[ba] No next button found. Reached end.
+[ba] Extracting details for 3 jobs...
+[ba] Skipping job: 'Aircraft Cleaner (Non-driver) - Fixed Term' (Title doesn't match filter)
+[ba] Skipping job: 'Aircraft Cleaner (Driver) - Fixed Term' (Title doesn't match filter)
+[ba] Skipping job: 'BA Cityflyer Direct Entry Captain' (Title doesn't match filter)
+[ba] Applying final filter check...
+[ba] Saving 0 jobs to database...
+[ba] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=4.7s
+
+========================================
+ups: Success (Timeout/Blocked)
+RAW OUTPUT EXTRACT:
+Preparing to run scraper: ups
+Effective limits: max_jobs=3, max_pages=None
+Skipping DjangoDBManager (no-db mode)
+[ups] Initializing scraper (Database-only mode)
+[ups] Loaded filter with 372 keywords
+Created scraper instance for ups
+Starting scraper execution for ups
+[ups] Starting scraper: UPS Airlines
+[ups] Database tracking: DISABLED
+[ups] Title filtering: ENABLED
+[ups] Max jobs limit: 3
+[ups] Max pages limit: 5
+[ups] Navigating to https://www.jobs-ups.com/search-jobs...
+[ups] Navigation/Loading failed: Page.wait_for_selector: Timeout 20000ms exceeded.
+Call log:
+  - waiting for locator("section#search-results-list ul li, .job-result-item") to be visible
+
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=27.4s
+
+========================================
+easyjet: Success (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+[easyjet] Skipping job: 'Airport Operation Steering Officer' (Title doesn't match filter)
+[easyjet] Skipping job: 'B1 Licensed Engineer' (Title doesn't match filter)
+[easyjet] Skipping job: 'B1 Licensed Engineer - LGW' (Title doesn't match filter)
+[easyjet] Skipping job: 'B2 Licensed Engineer - LGW' (Title doesn't match filter)
+[easyjet] Skipping job: 'B2 Licensed Engineer - DD NN' (Title doesn't match filter)
+[easyjet] Skipping job: 'Business Analyst - Web & Content Management Systems' (Title doesn't match filter)
+[easyjet] Skipping job: 'Co-Pilots: A320 Rated – UK BASES (2026/2027)' (Title doesn't match filter)
+[easyjet] Skipping job: 'Co-Pilots: Non-Type Rated – UK BASES (2026/2027)' (Title doesn't match filter)
+[easyjet] Skipping job: 'Customer Insight Analyst' (Title doesn't match filter)
+[easyjet] Skipping job: 'Data Engineer' (Title doesn't match filter)
+[easyjet] Skipping job: 'Data Scientist Senior Manager' (Title doesn't match filter)
+[easyjet] Skipping job: 'Direct Tax Analyst' (Title doesn't match filter)
+[easyjet] Skipping job: 'Establishment Planning Manager' (Title doesn't match filter)
+[easyjet] Skipping job: 'Finance Manager - Disruption and Contact Centre' (Title doesn't match filter)
+[easyjet] Skipping job: 'Finance Manager – Inflight Retail' (Title doesn't match filter)
+[easyjet] Saving 0 jobs to database...
+[easyjet] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=17.3s
+
+========================================
+airfrance: Success (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+[airfrance] Loaded filter with 372 keywords
+Created scraper instance for airfrance
+Starting scraper execution for airfrance
+[airfrance] Starting scraper: Air France
+[airfrance] Database tracking: DISABLED
+[airfrance] Title filtering: ENABLED
+[airfrance] Max jobs limit: 3
+[airfrance] Max pages limit: 5
+[airfrance] Fetching jobs from listing...
+[airfrance] Loading Air France careers page...
+[airfrance] ✓ Found 50 jobs
+[airfrance] Skipping job: 'Analyste de Vols - Revenue Management Cargo F/H' (Title doesn't match filter)
+[airfrance] Skipping job: 'Stagiaire Analyste Performance & Data F/H' (Title doesn't match filter)
+[airfrance] Skipping job: 'APPRENTI(E) Assistant(e) Sécurité des vols F/H' (Title doesn't match filter)
+[airfrance] Database not available, cannot filter duplicates
+[airfrance] Saving 0 jobs to database...
+[airfrance] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=11.7s
+
+========================================
+fedex: Success (Timeout/Blocked)
+RAW OUTPUT EXTRACT:
+      - element is not stable
+    - retrying click action
+      - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is not stable
+  55 × retrying click action
+       - waiting 500ms
+       - waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - <aside data-nosnippet="1" keyboard-events="true" id="usercentrics-cmp-ui"></aside> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+[fedex] Saving 0 jobs to database...
+[fedex] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=43.7s
+
+========================================
+klm: Success (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+Effective limits: max_jobs=3, max_pages=None
+Skipping DjangoDBManager (no-db mode)
+[klm] Initializing scraper (Database-only mode)
+[klm] Loaded filter with 372 keywords
+Created scraper instance for klm
+Starting scraper execution for klm
+[klm] Starting scraper: KLM Royal Dutch Airlines
+[klm] Database tracking: DISABLED
+[klm] Title filtering: ENABLED
+[klm] Max jobs limit: 3
+[klm] Max pages limit: 5
+[klm] Navigating to https://careers.klm.com/en/jobs/?page=1 (Headless=False)...
+[klm] Found 5 potential job links
+[klm] Found 5 potential jobs. Applying pre-filter...
+[klm] 0 jobs passed pre-filtering. Fetching details...
+[klm] Saving 0 jobs to database...
+[klm] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=14.3s
+
+========================================
+lufthansa: Success (No Initial Jobs - LAYOUT LIKELY BROKEN)
+RAW OUTPUT EXTRACT:
+Starting scraper execution for lufthansa
+[lufthansa] Starting scraper: Lufthansa Group
+[lufthansa] Database tracking: DISABLED
+[lufthansa] Title filtering: ENABLED
+[lufthansa] Max jobs limit: 3
+[lufthansa] Max pages limit: 5
+[lufthansa] Navigating to https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_channel%5B%5D=12&language=2...
+[lufthansa] Job cards not found after waiting.
+[lufthansa] Visible jobs: 0
+[lufthansa] Visible jobs: 0
+[lufthansa] Visible jobs: 0
+[lufthansa] Reached end of list or no new jobs loading.
+[lufthansa] Extracting data from 0 job cards...
+[lufthansa] 0 potential jobs. Applying pre-filter...
+[lufthansa] 0 jobs passed pre-filtering. Fetching details...
+[lufthansa] Saving 0 jobs to database...
+[lufthansa] No new jobs to save (all duplicates or filtered out)
+Scraper execution completed, found 0 jobs
+Updated ScraperJob 0: found=0, new=0, updated=0, time=70.2s
+
+========================================

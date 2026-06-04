@@ -15,17 +15,21 @@ class SwissportScraper(BaseScraper):
     """Scraper for Swissport Careers"""
 
     def __init__(self, config, db_manager=None):
-        super().__init__(config, 'swissport', db_manager=db_manager)
-        self.site_config = config.get('sites', {}).get('swissport', {})
-        self.base_url = self.site_config.get('base_url', 'https://careers.swissport.com')
-        self.jobs_url = self.site_config.get('jobs_url', 'https://careers.swissport.com/jobs?sortBy=relevance&page=1')
+        super().__init__(config, "swissport", db_manager=db_manager)
+        self.site_config = config.get("sites", {}).get("swissport", {})
+        self.base_url = self.site_config.get(
+            "base_url", "https://careers.swissport.com"
+        )
+        self.jobs_url = self.site_config.get(
+            "jobs_url", "https://careers.swissport.com/jobs?sortBy=relevance&page=1"
+        )
 
     async def run(self):
         """Main execution method"""
         self.print_header()
 
         print(f"Fetching jobs from {self.company_name}...")
-        
+
         jobs_raw = await self.fetch_jobs_from_listing()
         jobs = [get_job_dict(**job) for job in jobs_raw]
 
@@ -37,14 +41,16 @@ class SwissportScraper(BaseScraper):
 
         # Apply title filtering BEFORE fetching descriptions
         if self.use_filter and self.filter_manager:
-            print(f"\n🔍 Applying title filter...")
+            print("\n🔍 Applying title filter...")
             matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
 
             if not matched_jobs:
                 print("❌ No jobs matched the filter criteria")
                 return []
 
-            print(f"✓ {len(matched_jobs)} jobs matched filter (will fetch descriptions)")
+            print(
+                f"✓ {len(matched_jobs)} jobs matched filter (will fetch descriptions)"
+            )
             print(f"✗ {len(rejected_jobs)} jobs rejected (not relevant)")
             jobs = matched_jobs
 
@@ -75,20 +81,25 @@ class SwissportScraper(BaseScraper):
 
             try:
                 for p_num in range(1, self.max_pages + 1):
-                    # Swissport uses &page=N
-                    current_url = re.sub(r'page=\d+', f'page={p_num}', self.jobs_url)
+                    if "page=" in self.jobs_url:
+                        current_url = re.sub(r"page=\d+", f"page={p_num}", self.jobs_url)
+                    else:
+                        sep = "&" if "?" in self.jobs_url else "?"
+                        current_url = f"{self.jobs_url}{sep}page={p_num}"
                     print(f"Loading page {p_num}: {current_url}")
-                    
-                    await page.goto(current_url, wait_until='networkidle', timeout=60000)
+
+                    await page.goto(
+                        current_url, wait_until="networkidle", timeout=60000
+                    )
                     await self.random_delay(3, 5)
-                    
+
                     # Wait for the listing to load
-                    await page.wait_for_selector('a.job-title-link', timeout=20000)
+                    await page.wait_for_selector("a.job-title-link", timeout=20000)
                     await self.simulate_human_behavior(page)
 
                     # Get all job title links
-                    job_elements = await page.query_selector_all('a.job-title-link')
-                    
+                    job_elements = await page.query_selector_all("a.job-title-link")
+
                     if not job_elements:
                         print("⚠️ No job elements found on page")
                         break
@@ -96,35 +107,49 @@ class SwissportScraper(BaseScraper):
                     for el in job_elements:
                         try:
                             title = (await el.inner_text()).strip()
-                            href = await el.get_attribute('href')
-                            if not href: continue
-                            
-                            job_url = f"{self.base_url}{href}" if href.startswith('/') else href
-                            
-                            # Extract ID from URL /jobs/8486
-                            job_id_match = re.search(r'/jobs/(\d+)', href)
-                            job_id = job_id_match.group(1) if job_id_match else f"swp_{len(jobs)+1}"
+                            href = await el.get_attribute("href")
+                            if not href:
+                                continue
 
-                            # Extract location from the panel (if possible without expanding, 
+                            job_url = (
+                                f"{self.base_url}{href}"
+                                if href.startswith("/")
+                                else href
+                            )
+
+                            # Extract ID from URL /jobs/8486
+                            job_id_match = re.search(r"/jobs/(\d+)", href)
+                            job_id = (
+                                job_id_match.group(1)
+                                if job_id_match
+                                else f"swp_{len(jobs) + 1}"
+                            )
+
+                            # Extract location from the panel (if possible without expanding,
                             # usually it's in a mat-panel-description)
                             location = "Global"
-                            parent_panel = await el.evaluate_handle('el => el.closest("mat-expansion-panel")')
+                            parent_panel = await el.evaluate_handle(
+                                'el => el.closest("mat-expansion-panel")'
+                            )
                             if parent_panel:
-                                loc_el = await parent_panel.query_selector('.location, mat-panel-description span')
+                                loc_el = await parent_panel.query_selector(
+                                    ".location, mat-panel-description span"
+                                )
                                 if loc_el:
                                     loc_text = (await loc_el.inner_text()).strip()
-                                    if loc_text: location = loc_text
+                                    if loc_text:
+                                        location = loc_text
 
                             job_data = {
-                                'job_id': f"swissport_{job_id}",
-                                'title': title,
-                                'company': self.company_name,
-                                'source': self.site_key,
-                                'url': job_url,
-                                'apply_url': job_url,
-                                'location': self.normalize_location(location),
-                                'timestamp': datetime.now().isoformat(),
-                                'description': '',
+                                "job_id": f"swissport_{job_id}",
+                                "title": title,
+                                "company": self.company_name,
+                                "source": self.site_key,
+                                "url": job_url,
+                                "apply_url": job_url,
+                                "location": self.normalize_location(location),
+                                "timestamp": datetime.now().isoformat(),
+                                "description": "",
                             }
                             jobs.append(job_data)
 
@@ -135,7 +160,7 @@ class SwissportScraper(BaseScraper):
 
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
-                    
+
                     # Check if next page exists (optional but good)
                     # For Swissport, if we found jobs on current page, we try next
                     if len(job_elements) == 0:
@@ -157,22 +182,24 @@ class SwissportScraper(BaseScraper):
             browser = await p.chromium.launch(headless=self.headless)
 
             for i in range(0, len(jobs), self.batch_size):
-                batch = jobs[i:i + self.batch_size]
+                batch = jobs[i : i + self.batch_size]
                 tasks = []
 
                 for job in batch:
-                    if job.get('url'):
+                    if job.get("url"):
                         tasks.append(self._extract_description(browser, job))
 
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
 
-                print(f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs")
+                print(
+                    f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs"
+                )
 
             await browser.close()
 
         # Count jobs with descriptions
-        with_desc = sum(1 for job in jobs if job.get('description'))
+        with_desc = sum(1 for job in jobs if job.get("description"))
         print(f"✓ Successfully extracted {with_desc}/{len(jobs)} descriptions")
 
         return jobs
@@ -183,20 +210,20 @@ class SwissportScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
 
             # Load job detail page
-            await page.goto(job['url'], wait_until='networkidle', timeout=45000)
+            await page.goto(job["url"], wait_until="networkidle", timeout=45000)
             await self.random_delay(2, 4)
 
             # Broad selector for description
             desc_selectors = [
-                '.job-description',
-                '.job-body',
-                '#job-details',
-                'mat-card-content',
-                '.content',
-                'main',
+                ".job-description",
+                ".job-body",
+                "#job-details",
+                "mat-card-content",
+                ".content",
+                "main",
             ]
 
-            description = ''
+            description = ""
             for selector in desc_selectors:
                 try:
                     elem = await page.query_selector(selector)
@@ -211,7 +238,7 @@ class SwissportScraper(BaseScraper):
             if not description:
                 description = await self.extract_description_from_page(page)
 
-            job['description'] = description
+            job["description"] = description
 
             await page.close()
             await context.close()

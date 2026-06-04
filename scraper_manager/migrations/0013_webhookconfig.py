@@ -4,25 +4,59 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('scraper_manager', '0012_scraperjob_progress'),
+        ("scraper_manager", "0012_scraperjob_progress"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='WebhookConfig',
+            name="WebhookConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
-                ('provider', models.CharField(choices=[('ntfy', 'Ntfy.sh'), ('slack', 'Slack Webhook'), ('custom', 'Custom HTTP POST')], default='ntfy', max_length=20)),
-                ('url', models.URLField(help_text='Webhook or ntfy topic URL', max_length=500)),
-                ('on_event', models.CharField(choices=[('completed', 'Scraper Completed'), ('failed', 'Scraper Failed'), ('all', 'All Events')], default='all', max_length=20)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, unique=True)),
+                (
+                    "provider",
+                    models.CharField(
+                        choices=[
+                            ("ntfy", "Ntfy.sh"),
+                            ("slack", "Slack Webhook"),
+                            ("custom", "Custom HTTP POST"),
+                        ],
+                        default="ntfy",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "url",
+                    models.URLField(
+                        help_text="Webhook or ntfy topic URL", max_length=500
+                    ),
+                ),
+                (
+                    "on_event",
+                    models.CharField(
+                        choices=[
+                            ("completed", "Scraper Completed"),
+                            ("failed", "Scraper Failed"),
+                            ("all", "All Events"),
+                        ],
+                        default="all",
+                        max_length=20,
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'ordering': ['name'],
+                "ordering": ["name"],
             },
         ),
     ]

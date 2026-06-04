@@ -33,7 +33,14 @@ def worker_ping(self):
 
 
 @shared_task(bind=True, name="scraper_manager.queue_scraper_sequence_task")
-def queue_scraper_sequence_task(self, scraper_names, triggered_by="", max_jobs=None, max_pages=None, job_categories=None):
+def queue_scraper_sequence_task(
+    self,
+    scraper_names,
+    triggered_by="",
+    max_jobs=None,
+    max_pages=None,
+    job_categories=None,
+):
     normalized_categories = normalize_job_categories(job_categories)
     config_map = {cfg.scraper_name: cfg for cfg in ScraperConfig.objects.all()}
     queued_jobs = []
@@ -50,7 +57,11 @@ def queue_scraper_sequence_task(self, scraper_names, triggered_by="", max_jobs=N
         finalize_stale_active_jobs(scraper_name=scraper_name, source="sequence_planner")
 
         scraper_config = config_map.get(scraper_name)
-        is_enabled = scraper_config.is_enabled if scraper_config else CONFIG["sites"].get(scraper_name, {}).get("enabled", False)
+        is_enabled = (
+            scraper_config.is_enabled
+            if scraper_config
+            else CONFIG["sites"].get(scraper_name, {}).get("enabled", False)
+        )
         if not is_enabled:
             skipped["disabled"].append(scraper_name)
             continue
@@ -60,10 +71,12 @@ def queue_scraper_sequence_task(self, scraper_names, triggered_by="", max_jobs=N
             status__in=ACTIVE_JOB_STATUSES,
         ).count()
         if active_count > 0:
-            skipped["already_running"].append({
-                "scraper_name": scraper_name,
-                "active_jobs": active_count,
-            })
+            skipped["already_running"].append(
+                {
+                    "scraper_name": scraper_name,
+                    "active_jobs": active_count,
+                }
+            )
             continue
 
         child_task_id = uuid.uuid4().hex
@@ -95,12 +108,14 @@ def queue_scraper_sequence_task(self, scraper_names, triggered_by="", max_jobs=N
             },
         )
         queued_job_ids.append(scraper_job.pk)
-        queued_jobs.append({
-            "job_id": str(scraper_job.pk),
-            "scraper_name": scraper_name,
-            "status": "queued",
-            "task_id": child_task_id,
-        })
+        queued_jobs.append(
+            {
+                "job_id": str(scraper_job.pk),
+                "scraper_name": scraper_name,
+                "status": "queued",
+                "task_id": child_task_id,
+            }
+        )
         signatures.append(
             run_scraper_task.si(
                 scraper_name=scraper_name,
@@ -133,15 +148,19 @@ def queue_scraper_sequence_task(self, scraper_names, triggered_by="", max_jobs=N
             }
             scraper_job.error_message = f"Sequence planning failed: {exc}"
             scraper_job.completed_at = timezone.now()
-            scraper_job.save(update_fields=[
-                "status",
-                "progress_message",
-                "failure_code",
-                "failure_context",
-                "error_message",
-                "completed_at",
-            ])
-            publish_job_event("job.failed", scraper_job, extra={"source": "sequence_planner"})
+            scraper_job.save(
+                update_fields=[
+                    "status",
+                    "progress_message",
+                    "failure_code",
+                    "failure_context",
+                    "error_message",
+                    "completed_at",
+                ]
+            )
+            publish_job_event(
+                "job.failed", scraper_job, extra={"source": "sequence_planner"}
+            )
         raise
 
     return {
@@ -153,7 +172,15 @@ def queue_scraper_sequence_task(self, scraper_names, triggered_by="", max_jobs=N
 
 
 @shared_task(bind=True, name="scraper_manager.bulk_check_job_url_status_task")
-def bulk_check_job_url_status_task(self, search="", status_filter="", source_filter="", max_checks=200, skip_verified=True, only_scraped=True):
+def bulk_check_job_url_status_task(
+    self,
+    search="",
+    status_filter="",
+    source_filter="",
+    max_checks=200,
+    skip_verified=True,
+    only_scraped=True,
+):
     queryset = Job.objects.all()
     if search:
         queryset = queryset.filter(
@@ -225,14 +252,24 @@ def reconcile_stale_jobs_task(self):
 
 
 @shared_task(bind=True, name="scraper_manager.run_scraper_task")
-def run_scraper_task(self, scraper_name, job_id, max_jobs=None, max_pages=None, job_categories=None):
+def run_scraper_task(
+    self, scraper_name, job_id, max_jobs=None, max_pages=None, job_categories=None
+):
     job = ScraperJob.objects.filter(pk=job_id).first()
     attempt_count = int(getattr(self.request, "retries", 0)) + 1
     worker_name = socket.gethostname()
 
     if job is not None:
         parameters = {**(job.parameters or {}), "celery_task_id": self.request.id}
-        update_fields = ["task_id", "worker_name", "heartbeat_at", "progress", "progress_message", "attempt_count", "parameters"]
+        update_fields = [
+            "task_id",
+            "worker_name",
+            "heartbeat_at",
+            "progress",
+            "progress_message",
+            "attempt_count",
+            "parameters",
+        ]
 
         job.task_id = self.request.id or ""
         job.worker_name = worker_name
@@ -250,7 +287,9 @@ def run_scraper_task(self, scraper_name, job_id, max_jobs=None, max_pages=None, 
             update_fields.append("started_at")
 
         job.save(update_fields=sorted(set(update_fields)))
-        publish_job_event("job.started", job, extra={"source": "celery", "worker": worker_name})
+        publish_job_event(
+            "job.started", job, extra={"source": "celery", "worker": worker_name}
+        )
 
     try:
         call_command(
@@ -262,12 +301,18 @@ def run_scraper_task(self, scraper_name, job_id, max_jobs=None, max_pages=None, 
             job_categories=job_categories or None,
         )
     except Exception as exc:
-        logger.exception("Celery wrapper failed for scraper %s job %s", scraper_name, job_id)
+        logger.exception(
+            "Celery wrapper failed for scraper %s job %s", scraper_name, job_id
+        )
         job = ScraperJob.objects.filter(pk=job_id).first()
         if job is not None:
             was_cancelled = bool(job.cancel_requested_at) or job.status == "cancelling"
             job.status = "cancelled" if was_cancelled else "failed"
-            job.error_message = "Cancelled by user" if was_cancelled else f"Celery task wrapper failed: {exc}"
+            job.error_message = (
+                "Cancelled by user"
+                if was_cancelled
+                else f"Celery task wrapper failed: {exc}"
+            )
             job.failure_code = "cancelled" if was_cancelled else exc.__class__.__name__
             job.failure_context = {
                 **(job.failure_context or {}),
@@ -276,19 +321,30 @@ def run_scraper_task(self, scraper_name, job_id, max_jobs=None, max_pages=None, 
             }
             job.completed_at = timezone.now()
             job.heartbeat_at = timezone.now()
-            job.progress_message = "Cancelled by user" if was_cancelled else "Worker task failed"
-            job.save(update_fields=[
-                "status",
-                "error_message",
-                "failure_code",
-                "failure_context",
-                "completed_at",
-                "heartbeat_at",
-                "progress_message",
-            ])
-            publish_job_event("job.cancelled" if was_cancelled else "job.failed", job, extra={"source": "celery_wrapper"})
+            job.progress_message = (
+                "Cancelled by user" if was_cancelled else "Worker task failed"
+            )
+            job.save(
+                update_fields=[
+                    "status",
+                    "error_message",
+                    "failure_code",
+                    "failure_context",
+                    "completed_at",
+                    "heartbeat_at",
+                    "progress_message",
+                ]
+            )
+            publish_job_event(
+                "job.cancelled" if was_cancelled else "job.failed",
+                job,
+                extra={"source": "celery_wrapper"},
+            )
 
-        self.update_state(state=states.FAILURE, meta={"job_id": str(job_id), "scraper_name": scraper_name})
+        self.update_state(
+            state=states.FAILURE,
+            meta={"job_id": str(job_id), "scraper_name": scraper_name},
+        )
         raise
 
     job = ScraperJob.objects.filter(pk=job_id).first()

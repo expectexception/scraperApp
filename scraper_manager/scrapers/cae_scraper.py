@@ -1,0 +1,138 @@
+import asyncio
+import logging
+import requests
+
+from .base_scraper import BaseScraper
+
+logger = logging.getLogger(__name__)
+
+
+class CAEScraper(BaseScraper):
+    """
+    Scraper for CAE (Workday)
+    URL: https://cae.wd3.myworkdayjobs.com/en-US/career/
+    """
+
+    def __init__(self, config, db_manager=None):
+        super().__init__(config, site_key="cae", db_manager=db_manager)
+        self.base_url = "https://cae.wd3.myworkdayjobs.com/en-US/career/"
+        self.company_name = "CAE"
+        self.api_url = "https://cae.wd3.myworkdayjobs.com/wday/cxs/cae/career/jobs"
+        self.detail_api_url = "https://cae.wd3.myworkdayjobs.com/wday/cxs/cae/career"
+
+    async def fetch_jobs(self) -> list:
+        jobs = []
+        logger.info(
+            f"[{self.site_key}] Querying Workday API endpoint directly for jobs..."
+        )
+
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        }
+
+        limit = 20
+        offset = 0
+
+        while True:
+            if self.max_jobs and len(jobs) >= self.max_jobs:
+                break
+
+            payload = {
+                "appliedFacets": {},
+                "limit": limit,
+                "offset": offset,
+                "searchText": "",
+            }
+
+            try:
+                resp = requests.post(
+                    self.api_url, json=payload, headers=headers, timeout=20
+                )
+                resp.raise_for_status()
+                data = resp.json()
+
+                postings = data.get("jobPostings", [])
+                if not postings:
+                    break
+
+                for j in postings:
+                    if self.max_jobs and len(jobs) >= self.max_jobs:
+                        break
+
+                    external_path = j.get("externalPath", "")
+                    url = f"{self.base_url.rstrip('/')}{external_path}"
+
+                    jobs.append(
+                        {
+                            "company": self.company_name,
+                            "title": j.get("title", "Unknown"),
+                            "location": j.get("locationsText", "Unknown"),
+                            "url": url,
+                            "source_url": url,
+                            "apply_url": url,
+                            "is_active": True,
+                            "job_seq_no": external_path,
+                        }
+                    )
+
+                offset += limit
+
+            except Exception as e:
+                logger.error(f"[{self.site_key}] API extraction failed: {e}")
+                break
+
+        return jobs
+
+    async def fetch_job_descriptions(self, jobs) -> list:
+        if not jobs:
+            return []
+
+        logger.info(
+            f"[{self.site_key}] Fetching descriptions for {len(jobs)} matched jobs via API..."
+        )
+
+        headers = {"Accept": "application/json", "User-Agent": "Mozilla/5.0"}
+
+        for job in jobs:
+            external_path = job.pop("job_seq_no", None)
+            if not external_path:
+                continue
+
+            try:
+                detail_url = f"{self.detail_api_url}{external_path}"
+                resp = requests.get(detail_url, headers=headers, timeout=20)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    desc = data.get("jobPostingInfo", {}).get("jobDescription", "")
+                    if desc:
+                        job["description"] = desc
+
+            except Exception as e:
+                logger.warning(
+                    f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}"
+                )
+
+            await asyncio.sleep(0.1)
+
+        return jobs
+
+    async def run(self):
+        self.print_header()
+        jobs = await self.fetch_jobs()
+        if not jobs:
+            return []
+
+        if self.use_filter and self.filter_manager:
+            jobs, _, _ = self.apply_title_filter(jobs)
+            if not jobs:
+                return []
+
+        jobs, _ = await self.filter_new_jobs(jobs)
+        if not jobs:
+            return []
+
+        jobs = await self.fetch_job_descriptions(jobs)
+        await self.save_results(jobs)
+        return jobs

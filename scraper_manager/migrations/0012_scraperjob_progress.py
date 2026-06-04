@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('scraper_manager', '0011_scraperjob_pid_alter_scraperjob_scraper_name'),
+        ("scraper_manager", "0011_scraperjob_pid_alter_scraperjob_scraper_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='scraperjob',
-            name='progress',
-            field=models.IntegerField(default=0, help_text='Progress percentage 0-100'),
+            model_name="scraperjob",
+            name="progress",
+            field=models.IntegerField(default=0, help_text="Progress percentage 0-100"),
         ),
     ]

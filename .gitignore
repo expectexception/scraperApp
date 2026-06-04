@@ -27,4 +27,5 @@ build/
 *.log
 *.coverage
 .coverage.* 
-pids/*.pid
+pids/*.pidups_*.html
+ups_*.html

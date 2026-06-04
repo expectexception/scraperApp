@@ -1,0 +1,790 @@
+<!DOCTYPE html><html lang="en-US"><head><!--material-ui-style-insertion-point--><style data-jss="" data-meta="MuiTouchRipple">
+.jssPortal102 {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  position: absolute;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.jssPortal103 {
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  opacity: 0;
+  position: absolute;
+}
+.jssPortal104 {
+  opacity: 0.3;
+  transform: scale(1);
+  animation: mui-ripple-enter 550ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation-name: $mui-ripple-enter;
+}
+.jssPortal105 {
+  animation-duration: 200ms;
+}
+.jssPortal106 {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  display: block;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+.jssPortal107 {
+  opacity: 0;
+  animation: mui-ripple-exit 550ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation-name: $mui-ripple-exit;
+}
+.jssPortal108 {
+  top: 0;
+  left: 0;
+  position: absolute;
+  animation: mui-ripple-pulsate 2500ms cubic-bezier(0.4, 0, 0.2, 1) 200ms infinite;
+  animation-name: $mui-ripple-pulsate;
+}
+@-webkit-keyframes mui-ripple-enter {
+  0% {
+    opacity: 0.1;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+}
+@-webkit-keyframes mui-ripple-exit {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes mui-ripple-pulsate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+</style><style data-jss="" data-meta="MuiButtonBase">
+.jssPortal29 {
+  color: inherit;
+  border: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  outline: none;
+  padding: 0;
+  position: relative;
+  align-items: center;
+  user-select: none;
+  border-radius: 0;
+  vertical-align: middle;
+  justify-content: center;
+  -moz-appearance: none;
+  text-decoration: none;
+  background-color: transparent;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.jssPortal29::-moz-focus-inner {
+  border-style: none;
+}
+.jssPortal29.jssPortal30 {
+  cursor: default;
+  pointer-events: none;
+}
+</style><style data-jss="" data-meta="MuiButton">
+.jssPortal3 {
+  color: rgba(0,0,0,0.94);
+  padding: 6px 16px;
+  font-size: 0.875rem;
+  min-width: 64px;
+  box-sizing: border-box;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  line-height: 1.75;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 500;
+  border-radius: 4px;
+  letter-spacing: 0.02857em;
+  text-transform: uppercase;
+}
+.jssPortal3:hover {
+  text-decoration: none;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.jssPortal3.jssPortal23 {
+  color: rgba(0, 0, 0, 0.26);
+}
+@media (hover: none) {
+  .jssPortal3:hover {
+    background-color: transparent;
+  }
+}
+.jssPortal3:hover.jssPortal23 {
+  background-color: transparent;
+}
+.jssPortal4 {
+  width: 100%;
+  display: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+}
+.jssPortal5 {
+  padding: 6px 8px;
+}
+.jssPortal6 {
+  color: #0f549e;
+}
+.jssPortal6:hover {
+  background-color: rgba(15, 84, 158, 0.08);
+}
+@media (hover: none) {
+  .jssPortal6:hover {
+    background-color: transparent;
+  }
+}
+.jssPortal7 {
+  color: #ffffff;
+}
+.jssPortal7:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+@media (hover: none) {
+  .jssPortal7:hover {
+    background-color: transparent;
+  }
+}
+.jssPortal11 {
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  padding: 5px 16px;
+}
+.jssPortal11.jssPortal23 {
+  border: 1px solid rgba(0, 0, 0, 0.26);
+}
+.jssPortal12 {
+  color: #0f549e;
+  border: 1px solid rgba(15, 84, 158, 0.5);
+}
+.jssPortal12:hover {
+  border: 1px solid #0f549e;
+  background-color: rgba(15, 84, 158, 0.08);
+}
+@media (hover: none) {
+  .jssPortal12:hover {
+    background-color: transparent;
+  }
+}
+.jssPortal13 {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.jssPortal13:hover {
+  border: 1px solid #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.jssPortal13.jssPortal23 {
+  border: 1px solid rgba(0, 0, 0, 0.26);
+}
+@media (hover: none) {
+  .jssPortal13:hover {
+    background-color: transparent;
+  }
+}
+.jssPortal14 {
+  color: rgba(0, 0, 0, 0.87);
+  box-shadow: 0px 1px 5px 0px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 3px 1px -2px rgba(0,0,0,0.12);
+  background-color: #e0e0e0;
+}
+.jssPortal14.jssPortal22 {
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);
+}
+.jssPortal14:active {
+  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2),0px 8px 10px 1px rgba(0,0,0,0.14),0px 3px 14px 2px rgba(0,0,0,0.12);
+}
+.jssPortal14.jssPortal23 {
+  color: rgba(0, 0, 0, 0.26);
+  box-shadow: none;
+  background-color: rgba(0, 0, 0, 0.12);
+}
+.jssPortal14:hover {
+  background-color: #d5d5d5;
+}
+@media (hover: none) {
+  .jssPortal14:hover {
+    background-color: #e0e0e0;
+  }
+}
+.jssPortal14:hover.jssPortal23 {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+.jssPortal15 {
+  color: rgb(255, 255, 255);
+  background-color: #0f549e;
+}
+.jssPortal15:hover {
+  background-color: rgb(10, 56, 106);
+}
+@media (hover: none) {
+  .jssPortal15:hover {
+    background-color: #0f549e;
+  }
+}
+.jssPortal16 {
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #ffffff;
+}
+.jssPortal16:hover {
+  background-color: rgb(172, 172, 172);
+}
+@media (hover: none) {
+  .jssPortal16:hover {
+    background-color: #ffffff;
+  }
+}
+.jssPortal20 {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  min-width: 0;
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);
+  border-radius: 50%;
+}
+.jssPortal20:active {
+  box-shadow: 0px 7px 8px -4px rgba(0,0,0,0.2),0px 12px 17px 2px rgba(0,0,0,0.14),0px 5px 22px 4px rgba(0,0,0,0.12);
+}
+.jssPortal21 {
+  width: auto;
+  height: 48px;
+  padding: 0 16px;
+  min-width: 48px;
+  border-radius: 24px;
+}
+.jssPortal24 {
+  color: inherit;
+  border-color: currentColor;
+}
+.jssPortal25 {
+  width: 40px;
+  height: 40px;
+}
+.jssPortal26 {
+  padding: 4px 8px;
+  min-width: 64px;
+  font-size: 0.8125rem;
+}
+.jssPortal27 {
+  padding: 8px 24px;
+  font-size: 0.9375rem;
+}
+.jssPortal28 {
+  width: 100%;
+}
+</style><style data-jss="" data-meta="MuiInputBase">
+.jssPortal73 {
+  color: rgba(0,0,0,0.94);
+  cursor: text;
+  display: inline-flex;
+  font-size: 1rem;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  line-height: 1.1875em;
+  align-items: center;
+}
+.jssPortal73.jssPortal76 {
+  color: rgba(0, 0, 0, 0.38);
+  cursor: default;
+}
+.jssPortal81 {
+  padding: 6px 0 7px;
+}
+.jssPortal82 {
+  width: 100%;
+}
+.jssPortal83 {
+  font: inherit;
+  color: currentColor;
+  width: 100%;
+  border: 0;
+  margin: 0;
+  padding: 6px 0 7px;
+  display: block;
+  min-width: 0;
+  box-sizing: content-box;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.jssPortal83::-webkit-input-placeholder {
+  color: currentColor;
+  opacity: 0.42;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+.jssPortal83::-moz-placeholder {
+  color: currentColor;
+  opacity: 0.42;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+.jssPortal83:-ms-input-placeholder {
+  color: currentColor;
+  opacity: 0.42;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+.jssPortal83::-ms-input-placeholder {
+  color: currentColor;
+  opacity: 0.42;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+.jssPortal83:focus {
+  outline: 0;
+}
+.jssPortal83:invalid {
+  box-shadow: none;
+}
+.jssPortal83::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+.jssPortal83.jssPortal76 {
+  opacity: 1;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83::-webkit-input-placeholder {
+  opacity: 0;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83::-moz-placeholder {
+  opacity: 0;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83:-ms-input-placeholder {
+  opacity: 0;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83::-ms-input-placeholder {
+  opacity: 0;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83:focus::-webkit-input-placeholder {
+  opacity: 0.42;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83:focus::-moz-placeholder {
+  opacity: 0.42;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83:focus:-ms-input-placeholder {
+  opacity: 0.42;
+}
+label[data-shrink=false] + .jssPortal74 .jssPortal83:focus::-ms-input-placeholder {
+  opacity: 0.42;
+}
+.jssPortal84 {
+  padding-top: 3px;
+}
+.jssPortal85 {
+  resize: none;
+  padding: 0;
+}
+.jssPortal86 {
+  height: 1.1875em;
+}
+.jssPortal87 {
+  -moz-appearance: textfield;
+  -webkit-appearance: textfield;
+}
+</style><style data-jss="" data-meta="MuiFormControl">
+.jssPortal38 {
+  margin: 0;
+  border: 0;
+  display: inline-flex;
+  padding: 0;
+  position: relative;
+  min-width: 0;
+  flex-direction: column;
+  vertical-align: top;
+}
+.jssPortal39 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.jssPortal40 {
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.jssPortal41 {
+  width: 100%;
+}
+</style><style data-jss="" data-meta="MuiFormLabel">
+.jssPortal53 {
+  color: rgba(0, 0, 0, 0.54);
+  padding: 0;
+  font-size: 1rem;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  line-height: 1;
+}
+.jssPortal53.jssPortal54 {
+  color: rgb(10, 56, 106);
+}
+.jssPortal53.jssPortal55 {
+  color: rgba(0, 0, 0, 0.38);
+}
+.jssPortal53.jssPortal56 {
+  color: #D32F2F;
+}
+.jssPortal59.jssPortal56 {
+  color: #D32F2F;
+}
+</style><style data-jss="" data-meta="MuiInputLabel">
+.jssPortal42 {
+  transform-origin: top left;
+}
+.jssPortal47 {
+  top: 0;
+  left: 0;
+  position: absolute;
+  transform: translate(0, 24px) scale(1);
+}
+.jssPortal48 {
+  transform: translate(0, 21px) scale(1);
+}
+.jssPortal49 {
+  transform: translate(0, 1.5px) scale(0.75);
+  transform-origin: top left;
+}
+.jssPortal50 {
+  transition: color 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms,transform 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms;
+}
+.jssPortal51 {
+  z-index: 1;
+  transform: translate(12px, 20px) scale(1);
+  pointer-events: none;
+}
+.jssPortal51.jssPortal48 {
+  transform: translate(12px, 17px) scale(1);
+}
+.jssPortal51.jssPortal49 {
+  transform: translate(12px, 10px) scale(0.75);
+}
+.jssPortal51.jssPortal49.jssPortal48 {
+  transform: translate(12px, 7px) scale(0.75);
+}
+.jssPortal52 {
+  z-index: 1;
+  transform: translate(14px, 20px) scale(1);
+  pointer-events: none;
+}
+.jssPortal52.jssPortal48 {
+  transform: translate(14px, 17px) scale(1);
+}
+.jssPortal52.jssPortal49 {
+  transform: translate(14px, -6px) scale(0.75);
+}
+</style><style data-jss="" data-meta="MuiPrivateNotchedOutline">
+.jssPortal90 {
+  top: -5px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  transition: padding-left 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms,border-color 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms,border-width 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.jssPortal91 {
+  padding: 0;
+  text-align: left;
+  transition: width 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms;
+  line-height: 11px;
+}
+</style><style data-jss="" data-meta="MuiOutlinedInput">
+.jssPortal60 {
+  position: relative;
+}
+.jssPortal60 .jssPortal67 {
+  border-color: rgba(0, 0, 0, 0.23);
+}
+.jssPortal60:hover:not(.jssPortal62):not(.jssPortal61):not(.jssPortal65) .jssPortal67 {
+  border-color: rgba(0,0,0,0.94);
+}
+.jssPortal60.jssPortal61 .jssPortal67 {
+  border-color: #0f549e;
+  border-width: 2px;
+}
+.jssPortal60.jssPortal65 .jssPortal67 {
+  border-color: #D32F2F;
+}
+.jssPortal60.jssPortal62 .jssPortal67 {
+  border-color: rgba(0, 0, 0, 0.26);
+}
+@media (hover: none) {
+  .jssPortal60:hover:not(.jssPortal62):not(.jssPortal61):not(.jssPortal65) .jssPortal67 {
+    border-color: rgba(0, 0, 0, 0.23);
+  }
+}
+.jssPortal63 {
+  padding-left: 14px;
+}
+.jssPortal64 {
+  padding-right: 14px;
+}
+.jssPortal66 {
+  padding: 18.5px 14px;
+  box-sizing: border-box;
+}
+.jssPortal68 {
+  padding: 18.5px 14px;
+}
+.jssPortal69 {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.jssPortal70 {
+  padding: 0;
+}
+.jssPortal71 {
+  padding-left: 0;
+}
+.jssPortal72 {
+  padding-right: 0;
+}
+</style><style data-jss="" data-meta="MuiSnackbar">
+.jssPortal109 {
+  left: 0;
+  right: 0;
+  z-index: 1400;
+  display: flex;
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+}
+.jssPortal110 {
+  top: 0;
+}
+@media (min-width:960px) {
+  .jssPortal110 {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+.jssPortal111 {
+  bottom: 0;
+}
+@media (min-width:960px) {
+  .jssPortal111 {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+.jssPortal112 {
+  top: 0;
+  justify-content: flex-end;
+}
+@media (min-width:960px) {
+  .jssPortal112 {
+    top: 24px;
+    left: auto;
+    right: 24px;
+  }
+}
+.jssPortal113 {
+  bottom: 0;
+  justify-content: flex-end;
+}
+@media (min-width:960px) {
+  .jssPortal113 {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+  }
+}
+.jssPortal114 {
+  top: 0;
+  justify-content: flex-start;
+}
+@media (min-width:960px) {
+  .jssPortal114 {
+    top: 24px;
+    left: 24px;
+    right: auto;
+  }
+}
+.jssPortal115 {
+  bottom: 0;
+  justify-content: flex-start;
+}
+@media (min-width:960px) {
+  .jssPortal115 {
+    left: 24px;
+    right: auto;
+    bottom: 24px;
+  }
+}
+</style><style data-jss="">
+.jssPortal1 {
+  display: flex;
+  text-transform: none;
+  justify-content: flex-start;
+}
+.jssPortal2:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style>
+    <!-- Preload the Logo -->
+    <style data-jss="">
+.jssPortal32 {
+  display: flex;
+  text-transform: none;
+  justify-content: center;
+}
+.jssPortal33:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal34 {
+  display: flex;
+  text-transform: none;
+  justify-content: center;
+}
+.jssPortal35:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal36 {
+  display: flex;
+  text-transform: none;
+  justify-content: center;
+}
+.jssPortal37:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal92 {
+  display: flex;
+  text-transform: none;
+  justify-content: center;
+}
+.jssPortal93:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal94 {
+  display: flex;
+  text-transform: none;
+  justify-content: flex-start;
+}
+.jssPortal95:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal96 {
+  display: flex;
+  text-transform: none;
+  justify-content: flex-start;
+}
+.jssPortal97:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal98 {
+  display: flex;
+  text-transform: none;
+  justify-content: flex-start;
+}
+.jssPortal99:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><style data-jss="">
+.jssPortal100 {
+  display: flex;
+  text-transform: none;
+  justify-content: flex-start;
+}
+.jssPortal101:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style><link rel="preload" fetchpriority="high" href="/v4/ats/web.php/portal-customization/logo?clientkey=91989CEA70627F35DBDEA57AC03E0A2B" as="image">
+    <!-- Preload the Hero Image -->
+    <link rel="preload" fetchpriority="high" href="/v4/ats/web.php/portal-customization/logo?type=2&amp;clientkey=91989CEA70627F35DBDEA57AC03E0A2B" as="image">
+    <title></title>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+                        <meta property="og:title" content="Job Opportunities">
+                <meta property="og:type" content="website">
+                    <meta property="og:url" content="https://www.paycomonline.net/v4/ats/web.php/portal/91989CEA70627F35DBDEA57AC03E0A2B/career-page">
+                            <meta property="og:image" content="https://www.paycomonline.net/v4/ats/web.php/application/style/logo/91989CEA70627F35DBDEA57AC03E0A2B?clientkey=91989CEA70627F35DBDEA57AC03E0A2B">
+            <meta property="og:image:type" content="image/png">
+            <meta property="og:image:width" content="1040">
+            <meta property="og:image:height" content="196">
+                    <link id="sprawl-css:ef519309e7a51e79e615cad6b2cc3daf0c55ce2a" rel="stylesheet" type="text/css" href="https://portal-applicant-tracking.us-cent.paycomonline.net/career-portal/main/index-sprawl-PTGBCNKL.css"><style data-emotion="css-global" data-s=""></style><style data-emotion="css" data-s=""></style><meta name="robots" content="noindex"></head>
+<body>
+<noscript>You need to enable JavaScript to run this app.</noscript>
+  <div data-attr="{&quot;ckeditor&quot;:{&quot;LTSKey&quot;:&quot;TlZscmEzb3pOMHBPWWpReE5UTlRlVGczZWpNemVUWjFjZz09LU56WTBORFU0T0RNek5EZzRPVFkw&quot;}}" id="Portal_configurations"></div>      <div id="fcd1fed485cc86ce"><div><div style="color: rgba(0, 0, 0, 0.94); font-family: Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color-scheme: normal;"><div style="display: none;"><span style="position: relative;"><span color="#0f549e" class="css-mttygb"><button class="jssPortal29 jssPortal3 jssPortal2 jssPortal14 jssPortal15 jssPortal17 jssPortal18 uiLibButton ui-btn-contained ui-btn-button" tabindex="-1" type="button" data-testid="CssOverridesButtonUiLibraryRequest" style="min-height: 36px; background-color: rgb(15, 84, 158); color: rgb(255, 255, 255); box-shadow: none; padding-right: 12px; padding-left: 12px;"><span class="jssPortal4 jssPortal1"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div><div style="position: fixed; width: 100vw; height: 100vh; background-color: rgb(255, 255, 255); z-index: -100000;"></div><div style="height: 80px;"><div><div style="height: 80px; position: fixed; top: 0px; z-index: 1000; width: 1280px;"><div><div style="background: rgb(255, 255, 255); padding-right: 32px; padding-left: 32px; height: 80px; display: flex; justify-content: space-between; align-items: center; z-index: 1100; box-shadow: rgba(0, 0, 0, 0.14) 2px 0px 2px 0px, rgba(0, 0, 0, 0.12) 3px 0px 1px -2px, rgba(0, 0, 0, 0.2) 1px 0px 5px 0px;"><div class="css-1y6zyau"><img role="presentation" src="/v4/ats/web.php/portal-customization/logo?clientkey=91989CEA70627F35DBDEA57AC03E0A2B" alt="" style="align-self: stretch; max-height: 100%; object-fit: contain; padding-right: 0px; display: unset; cursor: pointer;"></div><div class="css-1p7ggmc"><div class="css-1guovsc"><div style="color: rgba(0, 0, 0, 0.87); margin-left: 16px; padding-left: 0px; padding-top: 0px;"><span style="position: relative;"><span class="css-1esthja"><button class="jssPortal29 jssPortal3 jssPortal33 jssPortal5 jssPortal8 jssPortal24 uiLibButton ui-btn-text ui-btn-inherit" tabindex="0" type="button" data-testid="button" style="min-height: 36px; box-shadow: none; min-width: 36px; padding-left: 4px; padding-right: 4px;"><span class="jssPortal4 jssPortal32"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div><div style="color: rgba(0, 0, 0, 0.87); margin-left: 16px; padding-left: 0px; padding-top: 0px;"><span style="position: relative;"><span class="css-1esthja"><button class="jssPortal29 jssPortal3 jssPortal35 jssPortal5 jssPortal8 jssPortal24 uiLibButton ui-btn-text ui-btn-inherit" tabindex="0" type="button" data-testid="button" style="min-height: 36px; box-shadow: none; min-width: 36px; padding-left: 4px; padding-right: 4px;"><span class="jssPortal4 jssPortal34"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div><div style="color: rgba(0, 0, 0, 0.87); margin-left: 16px; padding-left: 8px; padding-top: 0px;"><span style="position: relative;"><span class="css-1esthja"><button class="jssPortal29 jssPortal3 jssPortal37 jssPortal11 jssPortal24 uiLibButton ui-btn-outlined ui-btn-inherit" tabindex="0" type="button" data-testid="button" style="min-height: 36px; box-shadow: none; padding-right: 12px; padding-left: 12px;"><span class="jssPortal4 jssPortal36"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div></div></div></div></div></div><div style="width: 1280px; height: 80px; position: relative; pointer-events: none;"></div></div></div><div class="css-17ir9fo"><div style="display: flex; width: 100%; justify-content: center; max-width: 1320px; background: unset; padding: unset; z-index: 0;"><div style="width: 100%; max-width: 1320px;"><div class="css-lp4ezc"><div style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; white-space: nowrap;"><h1 data-testid="typography" class="uiLibTypography ui-typography-body1 ui-typography-default css-f4px6s" style="word-break: break-word; display: block;"></h1></div><div class="css-1rllkal"><div class="css-kr8vd3"><div class="css-13edb3w"><div class="css-1czezeg"><div style="background-color: rgb(240, 240, 240); border-radius: 10px;"><div class="css-1hhhmix"><div class="css-g7x674"><div class="css-16e0mhm"><div class="css-osp9z"><div class="css-1c5pnnj"><div class="jssPortal38 jssPortal41 css-0"><label class="jssPortal53 css-1gzk8xk jssPortal42 jssPortal47 jssPortal50 jssPortal52" data-shrink="false" for="search-by-keyword-suggestion">Search by keyword</label><div class="jssPortal73 jssPortal60 css-z9xakh jssPortal82 jssPortal74"><fieldset aria-hidden="true" class="jssPortal90 jssPortal67 css-1pv0xvo" style="padding-left: 64.5px;"><legend class="jssPortal91" style="width: 0.01px;"><span>​</span></legend></fieldset><input aria-invalid="false" class="jssPortal83 jssPortal68 css-b66tyv" id="search-by-keyword-suggestion" type="text" value=""></div></div></div></div><div class="css-osp9z"><div class="css-1c5pnnj"><div class="loading css-jj84k1" aria-live="polite" role="status" aria-label="Loading" tabindex="0" style="height: 3vh; width: 100%; display: block;"></div></div></div><div class="css-1079ngn"><div class="css-1c5pnnj"><span style="position: relative;"><span color="#0f549e" class="css-mttygb"><button class="jssPortal29 jssPortal3 jssPortal93 jssPortal14 jssPortal15 jssPortal17 jssPortal18 uiLibButton ui-btn-contained ui-btn-button" tabindex="0" type="submit" data-testid="button" style="min-height: 36px; background-color: rgb(15, 84, 158); color: rgb(255, 255, 255); box-shadow: none; min-width: 100%; padding-right: 12px; padding-left: 12px;"><span class="jssPortal4 jssPortal92"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div></div></div></div></div></div></div></div><div class="css-13edb3w"><div class="css-128m09m"><div class="css-xg4qyu"><div class="css-1ahym48"><div class="css-fkwxed"><div class="css-1m6z5y2"><div class="css-1uu9x0g"><div class="css-kr8vd3"><div class="css-13edb3w"><div class="css-1czezeg"><div class="loading css-jj84k1" aria-live="polite" role="status" aria-label="Loading" tabindex="0" style="height: 35vh; width: 100%; display: block;"></div></div></div><div class="css-13edb3w"><div class="css-128m09m"><div class="loading css-jj84k1" aria-live="polite" role="status" aria-label="Loading" tabindex="0" style="height: 20vh; width: 100%; display: block;"></div></div></div></div></div></div></div><div class="css-osp9z"><div class="css-1m6z5y2"><div class="css-9qwwsc"><div class="css-kr8vd3"><div class="css-13edb3w"><div class="css-1czezeg"><div class="css-1q3zedi"><div class="loading css-jj84k1" aria-live="polite" role="status" aria-label="Loading" tabindex="0" style="height: 5vh; width: 100%; display: block;"></div></div></div></div><div class="css-13edb3w"><div class="css-eiqu1s"><div class="css-kr8vd3"><div class="css-13edb3w"><div class="css-1czezeg"><div class="css-1rllkal"><div class="css-kr8vd3"><div class="css-1br01np"><div class="css-v84tee"><div class="css-1rllkal"><div style="display: flex; justify-content: flex-start;"><span style="position: relative;"><span color="#0f549e" class="css-mttygb"><button class="jssPortal29 jssPortal3 jssPortal95 jssPortal5 jssPortal6 jssPortal8 jssPortal9 uiLibButton ui-btn-text ui-btn-button" tabindex="0" type="button" data-testid="button" style="min-height: 36px; color: rgb(15, 84, 158); box-shadow: none; min-width: 36px; padding-left: 4px; padding-right: 4px;"><span class="jssPortal4 jssPortal94"><svg data-testid="share-icon" aria-label="share" role="img" focusable="false" color="inherit" viewBox="0 0 24 24" class="css-vk6w45"><path d="M0 0h24v24H0z" fill="none"></path><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"></path></svg><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"><div class="css-13edb3w"><div class="css-x8pidd"></div></div></span></span><span class="jssPortal102"></span></button></span></span></div></div></div><div class="css-v84tee"><div class="css-1rllkal"><div style="display: flex; justify-content: flex-end;"><span style="position: relative;"><span color="#0f549e" class="css-mttygb"><button class="jssPortal29 jssPortal3 jssPortal97 jssPortal5 jssPortal6 jssPortal8 jssPortal9 uiLibButton ui-btn-text ui-btn-button" tabindex="0" type="button" data-testid="button" style="min-height: 36px; color: rgb(15, 84, 158); box-shadow: none; min-width: 36px; padding-left: 4px; padding-right: 4px;"><span class="jssPortal4 jssPortal96"><svg data-testid="bell dark-icon" aria-label="bell dark" role="img" focusable="false" color="inherit" viewBox="0 0 24 24" class="css-vk6w45"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"></path></svg><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div></div></div></div></div></div></div></div><div class="css-13edb3w"><div class="css-128m09m"><div class="loading css-jj84k1" aria-live="polite" role="status" aria-label="Loading" tabindex="0" style="height: 80vh; width: 100%; display: block;"></div></div></div><div class="css-13edb3w"><div class="css-128m09m"><div class="css-9rkosv"></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div><div class="css-td0mdg"><span id="portalLegalFooter"><div class="css-8atqhb"><div class="css-bea15c"><svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 2" width="150" height="32.8" viewBox="0 0 286.2 62.62" style="display: block;"><path fill="#008542" d="M54.75 3.09H7.29a4 4 0 0 0-4 4V61.7a4 4 0 0 0 4 4h8.43a4 4 0 0 0 4-4V23.52a4 4 0 0 1 4-4h21.75a4 4 0 0 1 4 4v21.7a4 4 0 0 1-4 4H33a4 4 0 0 0-4 4v8.43a4 4 0 0 0 4 4h29a4 4 0 0 0 4-4V7.09a4 4 0 0 0-4-4z" transform="translate(-3.29 -3.08)"></path><path d="M79.85 29.69h5.43v3.47h.12c1.5-1.83 5-4 10.42-4 8.92 0 13.26 5.83 13.26 12.44s-3.92 13.3-13.2 13.3c-5.42 0-8.49-1.69-10.24-4h-.12v13.49h-5.67zm14.77 3.08c-6.15 0-9.1 4.68-9.1 9.26 0 4.09 2.65 9.15 9 9.15 6.08 0 8.61-5.44 8.49-9.29.16-4.44-2.25-9.12-8.39-9.12zM116.13 31.42a23.3 23.3 0 0 1 10.12-2.31c8.8 0 12.36 3.47 12.36 10.17v10.17a31.22 31.22 0 0 0 .24 4.82h-5.31v-3.18h-.12c-1.32 1.49-4.33 3.76-9.52 3.76-6.62 0-11.27-2.31-11.27-7.66 0-6.17 8.44-8.1 14.29-8.1 2.23 0 3.79 0 6 .09 0-4.24-1.93-6.41-7.59-6.41a16.88 16.88 0 0 0-8.92 2.51zm16.81 11.14c-1.2 0-2.41-.1-3.61-.1-3.08 0-10.67.39-10.67 4.73 0 2.6 3.13 4 5.73 4 5.6 0 8.55-2.79 8.55-6.45zM143.91 60.92a10.21 10.21 0 0 0 2.65.39c5.06 0 6.75-5.59 6.75-6.07a12.41 12.41 0 0 0-1.08-2.61L141.8 29.69h6.2L156.26 50h.12l8.44-20.34h5.72L159.21 54.8C157.1 59.53 154.87 65 147.4 65a23.55 23.55 0 0 1-3.85-.33zM193.86 33.83a20.08 20.08 0 0 0-6.15-1.06c-6.32 0-9.87 4.53-9.87 9.21 0 4.39 2.94 9.2 10.24 9.2a14.19 14.19 0 0 0 6.08-1.39l.42 4.05a21 21 0 0 1-7.1 1c-9.29 0-15.67-5.83-15.67-12.87 0-7.47 6.27-12.87 15.67-12.87a26 26 0 0 1 6.86 1zM212.72 29.11c9.34 0 15.61 5.4 15.61 12.87 0 7-6.39 12.87-15.61 12.87S197.06 49 197.06 42c0-7.49 6.26-12.89 15.66-12.89zm0 22.07c6.63 0 9.59-4.81 9.59-9.2a9.62 9.62 0 0 0-19.23 0c0 4.39 2.92 9.2 9.64 9.2zM233.87 29.69h5.31v3.56h.12c2.17-2.84 5.24-4.14 9.76-4.14 3.56 0 7.11 1.45 8.73 4.77 2.11-3.52 6.75-4.77 9.52-4.77 7.84 0 10.67 4 10.67 9.4v15.76h-5.67V39.62c0-3-.89-6.85-5.48-6.85-5.78 0-8.07 4.53-8.07 9.12v12.38h-5.66V39.62c0-3-.91-6.85-5.49-6.85-5.78 0-8.08 4.53-8.08 9.12v12.38h-5.66zM281.14 34a4.17 4.17 0 1 1 4.17 4.17 4.17 4.17 0 0 1-4.17-4.17zm7.33 0a3.16 3.16 0 1 0-3.16 3.36 3.2 3.2 0 0 0 3.16-3.36zm-4.76-2.38h1.75c1.14 0 1.75.39 1.75 1.38a1.19 1.19 0 0 1-1.21 1.24l1.27 2.06h-.9l-1.23-2h-.52v2h-.88zm.88 2h.77c.52 0 1-.07 1-.7s-.51-.65-1-.65h-.78z" transform="translate(-3.29 -3.08)"></path></svg></div><div class="css-xd9hbc"><a href="http://paycom.com/terms-of-use.php" target="_blank" class="css-128vswk">Terms of Use | </a><a href="http://paycom.com/privacy.php" target="_blank" class="css-128vswk">Privacy Policy |</a> © 2026 Paycom | All Rights Reserved.</div></div></span></div><style>
+        #portalLegalFooter > div > div:first-child {
+          display: none;
+        }
+        #portalLegalFooter > div > div:last-child {
+          margin: 0;
+        }
+      </style></div></div></div><div style="min-height: 84px; height: 84px;"></div><div style="position: relative; z-index: 900;"><div class="css-ur9w16"><div style="background: white;"><div style="background: white; box-shadow: rgba(0, 0, 0, 0.14) 2px 0px 2px 0px, rgba(0, 0, 0, 0.12) 3px 0px 1px -2px, rgba(0, 0, 0, 0.2) 1px 0px 5px 0px; clip-path: inset(-5px 0px 0px);"><div style="float: right;"><span style="position: relative;"><span color="rgb(109, 109, 109)" class="css-1i73fta"><button class="jssPortal29 jssPortal3 jssPortal99 jssPortal5 jssPortal8 uiLibButton ui-btn-text ui-btn-default" tabindex="0" type="button" data-testid="button" style="min-height: 36px; box-shadow: none; min-width: 36px; padding-left: 4px; padding-right: 4px;"><span class="jssPortal4 jssPortal98"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;">X</span></span><span class="jssPortal102"></span></button></span></span></div><div class="css-61ki09"><div class="css-c6i9mn"><div class="css-1fk1ucb"><div class="css-osp9z"><div class="css-g3kaq0"><p data-testid="typography" class="uiLibTypography ui-typography-body2 ui-typography-default css-10e79bf" style="word-break: normal; display: block;"></p></div></div><div class="css-1079ngn"><div class="css-g3kaq0"><div style="margin-left: auto;"><span style="position: relative;"><span color="#0f549e" class="css-mttygb"><button class="jssPortal29 jssPortal3 jssPortal101 jssPortal14 jssPortal15 jssPortal17 jssPortal18 uiLibButton ui-btn-contained ui-btn-button" tabindex="0" type="button" data-testid="button" style="min-height: 36px; background-color: rgb(15, 84, 158); color: rgb(255, 255, 255); box-shadow: none; padding-right: 12px; padding-left: 12px;"><span class="jssPortal4 jssPortal100"><span style="display: flex; align-items: center; padding-left: 4px; padding-right: 4px;"></span></span><span class="jssPortal102"></span></button></span></span></div></div></div></div></div></div></div></div></div></div></div></div></div>  <script src="/v4/ats/../assets/generated/sprawl/sprawl.min.js?_=lookup_miss_prefix_16568624"></script>
+<script>    var configsFromHost = {"sessionJWT":"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwWUE0OSIsImp0aSI6IjAwMDowWUE0OTowIiwic3ViIjoiMCIsInN5c3RlbSI6ImF0cyIsInByb2NfY2VudGVyIjoiMDAwIiwiY2xpZW50Y29kZSI6IjBZQTQ5IiwicGF5cm9sbFByb2ZpbGVDb2RlIjoiMFlBNDkiLCJlZUNvZGUiOiIiLCJpc0ludGVybmFsSm9iQm9hcmQiOiIiLCJmZWF0dXJlcyI6W3siQ2FuZGlkYXRlQXBwbGljYXRpb25SZWRlc2lnbiI6MX0seyJDYXJlZXJQb3J0YWxSZWRlc2lnbiI6MX0seyJDZW50cmFsSW5wdXRWYWxpZGF0b3JzIjoxfSx7IkFkZFByb25vdW5GaWVsZFRvQVRTIjoxfSx7IkVtcGxveWVlUGhvbmV0aWNzIjowfSx7IklUSU5OdW1iZXIiOjF9LHsiUHJldmVudEFwcGxpY2F0aW9uc1RvQ2xvc2VkT3JFeHBpcmVkSm9icyI6MX0seyJQcmV2ZW50U3BhbUFwcGxpY2F0aW9ucyI6MX0seyJBVFNDYW5kaWRhdGVQb3J0YWxUcmFuc2xhdGlvbnMiOjB9LHsiUHJldmlvdXNMZWdhbExhc3ROYW1lIjoxfSx7InByZWZlcnJlZE5hbWUiOjF9LHsiQ2FuZGlkYXRlUHJvZmlsZVBob3RvVXBsb2FkIjoxfSx7IkluZm9ybUNhbmRpZGF0ZUFwcGxpY2F0aW9uTm90Q29tcGxldGUiOjF9LHsiQXRzVXRvcGlhQ2FyZWVyUG9ydGFsRW5oYW5jZW1lbnRzIjoxfSx7IkF0c0luc3RpdHV0aW9uVHlwZXNVcGRhdGUiOjB9LHsiQXBwbGljYW50VHJhY2tpbmdTdGFuZGFyZHMiOjF9LHsiSGlkZVByaW9yUGF5UmF0ZSI6MH0seyJBZGRyZXNzVmFsaWRhdGlvbkF1dG9Db21wbGV0ZSI6MX0seyJTaXhEZWNpbWFsUmF0ZVJvdW5kaW5nQW5kRGlzcGxheSI6MH0seyJEZWxheWVkQXBwbGljYXRpb25TdGF0dXNVcGRhdGVzIjoxfSx7IkFUU1ByZWZlcnJlZE5hbWUiOjF9LHsiRGlzYWJsZVByb25vdW5zQ2xpZW50U2V0dGluZyI6MX0seyJBcHBsaWNhdGlvblByZXZpZXciOjF9LHsiQ2FuZGlkYXRlUHJpdmFjeVBvbGljeUFja25vd2xlZGdlbWVudCI6MX0seyJBVFNGbGFnRGVmYXVsdCI6MX0seyJFeHBhbmRlZEFUU0FwcGxpY2F0aW9uQVBJIjoxfSx7IlBhdXNlUmVxdWlzaXRpb25zIjoxfSx7IkludGVybmF0aW9uYWxDdXJyZW5jaWVzT25SZXFzQW5kT2ZmZXJzIjoxfSx7IkFUU0N1cnJlbnRseUVucm9sbGVkIjoxfSx7IkFUU0NvbmZpZ3VyZUNhbmRpZGF0ZVByb2ZpbGVTZXR0aW5ncyI6MH0seyJBVFNUb1dPVENXb3JrZmxvdyI6MH0seyJXb3RjUXVlc3Rpb25uYWlyZUNvbXBsaWFuY2VVcGRhdGVzIjoxfSx7IlNlYXRzVGllZFRvUmVxdWlzaXRpb25zIjowfSx7IkZURUZpZWxkT25SZXF1aXNpdGlvbnNBbmRPZmZlcnMiOjF9LHsiQ2FyZWVyUG9ydGFsSG90Sm9iSW5kaWNhdG9yIjoxfSx7IkNhbGVuZGFyU3luY0FuZFNlbGZTY2hlZHVsaW5nIjowfSx7IlNraWxsc0Vzc2VudGlhbHMiOjB9XSwiY2xpZW50U2V0dGluZ3MiOnsiZGlzYWJsZWRQcm9ub3VucyI6ZmFsc2V9LCJpYXQiOjE3ODA0Njk5NTQuNzU3MDYwMDUwOTY0MzU1NDY4NzUsIm5iZiI6MTc4MDQ2OTk1NC43NTcwNjAwNTA5NjQzNTU0Njg3NSwiZXhwIjoxNzgwNDc3MTU0fQ.DGFP2DTPXrrWV_SAeATPtetP_F6NYTEXQIOFbSAq04HsTBkBCgBvCySJF1r0JfyFm4AHYIZcgrnSdXnVwIyeVG3-F-qOvIDF9ed4dH34xiiomh-LOQaoA4zuofqLRI4IMjLNmZu7H3lGZPahC83_w-pLGRtaLQlTzUjnn9mTLwFH4D2YM-HCcHgmZiBYQpC7njCOthIExZFuziUvhvTwRHP_bVAUvi3Uj1KkKr8h7o4yiR953KnZWBDeh5l5wTznT2VBPox8j0nJUEMuQCr5wGGZXgkUuiNbc4s_XeErMZZhvJeMtIB3eGv-wxWsRbrl7OK6VCsKqsN2QQK4q-nq4A","libConfig":"{\"isDevEnvironment\":false,\"isQaEnvironment\":false,\"locale\":\"en-US\",\"translationHighlights\":false,\"atsClMantlePreambleUrl\":\"\",\"portalCustomizationPreviewPreambleUrl\":\"\",\"atsClMantleServiceUrl\":\"\",\"atsPortalMantlePreambleUrl\":\"https:\\\/\\\/portal-applicant-tracking.us-cent.paycomonline.net\\\/career-portal\\\/sprawl.json\",\"atsPortalMantleServiceUrl\":\"https:\\\/\\\/portal-applicant-tracking.us-cent.paycomonline.net\\\/\",\"textMessagingPreviewPreambleUrl\":\"\",\"candidateApplicationPreambleUrl\":\"https:\\\/\\\/portal-applicant-tracking.us-cent.paycomonline.net\\\/candidate-application\\\/sprawl.json\",\"googleMapsApiKey\":\"AIzaSyDdeAAD5ob5w3WTmTMiekIVnr_mcCVfc2w\",\"isGlobalHCMEnabled\":false,\"isPhotoUploadAllowed\":true,\"isJobPayRateAllowed\":true}","primaryColor":"#ffffff","secondaryColor":"#0f549e","loadingElement":"<div class=\"portal-sprawl-loader-container\"><div class=\"portal-sprawl-loader\"><\/div><\/div>","i18n":"en-US-translation-set.json"};
+    var Mountable = Sprawl('@paycom/sprawl')('Mountable');
+    configsFromHost['loading'] = new Mountable(element => {
+        element.innerHTML = configsFromHost.loadingElement;
+        return element;
+    });
+    Sprawl.mount(
+        document.getElementById('fcd1fed485cc86ce'),
+        new URL('https://portal-applicant-tracking.us-cent.paycomonline.net/career-portal/sprawl.json', String(window.location)),
+        configsFromHost
+    );</script>
+
+
+<style>
+    .portal-sprawl-loader-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .portal-sprawl-loader {
+        border-width: 4px;
+        border-style: solid;
+        border-color: #ffffff lightgray lightgray;
+        border-image: initial;
+        border-radius: 50%;
+        width: min(50vh, 50vw);
+        height: min(50vh, 50vw);
+        animation: 2s linear 0s infinite normal none running animation-portal-loader;
+    }
+
+    @keyframes animation-portal-loader {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+<div></div></body></html>

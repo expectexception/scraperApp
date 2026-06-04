@@ -1,21 +1,25 @@
 import asyncio
-import logging
 import re
 from datetime import datetime
 from playwright.async_api import async_playwright
 from .base_scraper import BaseScraper
 from .job_schema import get_job_dict
 
+
 class AirFranceScraper(BaseScraper):
     """Scraper for Air France Recruitment"""
 
     def __init__(self, config, db_manager=None):
-        super().__init__(config, 'airfrance', db_manager=db_manager)
-        self.site_config = config.get('sites', {}).get('airfrance', {})
-        self.base_url = self.site_config.get('base_url', 'https://recrutement.airfrance.com')
-        # We start by hitting the main job search page or the "All Jobs" endpoint if possible. 
+        super().__init__(config, "airfrance", db_manager=db_manager)
+        self.site_config = config.get("sites", {}).get("airfrance", {})
+        self.base_url = self.site_config.get(
+            "base_url", "https://recrutement.airfrance.com"
+        )
+        # We start by hitting the main job search page or the "All Jobs" endpoint if possible.
         # For simplicity, we can hit a general search URL that returns all results
-        self.jobs_url = self.site_config.get('jobs_url', 'https://recrutement.airfrance.com/accueil.aspx?LCID=2057')
+        self.jobs_url = self.site_config.get(
+            "jobs_url", "https://recrutement.airfrance.com/accueil.aspx?LCID=2057"
+        )
         self.company_name = "Air France"
 
     async def fetch_jobs(self) -> list:
@@ -32,7 +36,7 @@ class AirFranceScraper(BaseScraper):
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
-        
+
         if self.use_filter and self.filter_manager:
             matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
             self.filter_manager.print_filter_stats(filter_stats)
@@ -51,14 +55,18 @@ class AirFranceScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
 
             try:
-                self.logger.info(f"[{self.site_key}] Loading {self.company_name} careers page...")
+                self.logger.info(
+                    f"[{self.site_key}] Loading {self.company_name} careers page..."
+                )
                 await self.random_delay(1, 2)
-                await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=45000)
+                await page.goto(
+                    self.jobs_url, wait_until="domcontentloaded", timeout=45000
+                )
 
                 await self.random_delay(4, 6)
                 await self.simulate_human_behavior(page)
 
-                job_links = await page.evaluate('''() => {
+                job_links = await page.evaluate("""() => {
                     let items = Array.from(document.querySelectorAll('li.ts-offer-list-item'));
                     return items.map(li => {
                         let a = li.querySelector('a.ts-offer-list-item__title-link');
@@ -70,60 +78,71 @@ class AirFranceScraper(BaseScraper):
                             location: loc ? loc.innerText.trim() : 'Unknown'
                         };
                     }).filter(item => item !== null);
-                }''')
-                
+                }""")
+
                 # Check for "Search Offers" page if the main url didn't yield many
                 if len(job_links) < 5:
-                    await page.goto("https://recrutement.airfrance.com/offre-de-emploi/liste-offres.aspx?LCID=2057", wait_until='domcontentloaded')
+                    await page.goto(
+                        "https://recrutement.airfrance.com/offre-de-emploi/liste-offres.aspx?LCID=2057",
+                        wait_until="domcontentloaded",
+                    )
                     await self.random_delay(2, 4)
-                    more_links = await page.evaluate('''() => {
+                    more_links = await page.evaluate("""() => {
                         let links = Array.from(document.querySelectorAll('a.ts-offer-list-item__title-link'));
                         return links.map(a => ({
                             href: a.href,
                             title: a.innerText.trim()
                         }));
-                    }''')
+                    }""")
                     job_links.extend(more_links)
 
                 unique_links = {}
                 for l in job_links:
-                    if l['href'] not in unique_links and l.get('title'):
-                        unique_links[l['href']] = l
+                    if l["href"] not in unique_links and l.get("title"):
+                        unique_links[l["href"]] = l
 
                 self.logger.info(f"[{self.site_key}] ✓ Found {len(unique_links)} jobs")
 
                 if not unique_links:
                     return jobs
 
-                for href, l in list(unique_links.items())[:self.max_jobs] if self.max_jobs else unique_links.items():
+                for href, l in (
+                    list(unique_links.items())[: self.max_jobs]
+                    if self.max_jobs
+                    else unique_links.items()
+                ):
                     try:
-                        job_url = href if href.startswith('http') else f"{self.base_url}{href}"
-                        title = l.get('title', '')
-                        location = l.get('location', 'Unknown')
-                        
+                        job_url = (
+                            href
+                            if href.startswith("http")
+                            else f"{self.base_url}{href}"
+                        )
+                        title = l.get("title", "")
+                        location = l.get("location", "Unknown")
+
                         # Pre-scrape title filtering
                         if not self.should_process_job(title):
                             continue
-                            
+
                         job_id = None
-                        match = re.search(r'_(\d+)\.aspx', job_url)
+                        match = re.search(r"_(\d+)\.aspx", job_url)
                         if match:
                             job_id = match.group(1)
                         if not job_id:
                             job_id = f"airfrance_{len(jobs) + 1}"
 
                         job_data = {
-                            'job_id': f"airfrance_{job_id}",
-                            'title': title,
-                            'company': self.company_name,
-                            'source': self.site_key,
-                            'url': job_url,
-                            'apply_url': job_url,
-                            'location': location,
-                            'timestamp': datetime.now().isoformat(),
+                            "job_id": f"airfrance_{job_id}",
+                            "title": title,
+                            "company": self.company_name,
+                            "source": self.site_key,
+                            "url": job_url,
+                            "apply_url": job_url,
+                            "location": location,
+                            "timestamp": datetime.now().isoformat(),
                         }
                         jobs.append(job_data)
-                    except Exception as e:
+                    except Exception:
                         continue
 
             except Exception as e:
@@ -140,22 +159,26 @@ class AirFranceScraper(BaseScraper):
             browser = await p.chromium.launch(headless=self.headless)
 
             for i in range(0, len(jobs), self.batch_size):
-                batch = jobs[i:i + self.batch_size]
+                batch = jobs[i : i + self.batch_size]
                 tasks = []
 
                 for job in batch:
-                    if job.get('url'):
+                    if job.get("url"):
                         tasks.append(self._extract_description(browser, job))
 
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
 
-                print(f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs")
+                print(
+                    f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs"
+                )
 
             await browser.close()
 
-        with_desc = sum(1 for job in jobs if job.get('description'))
-        self.logger.info(f"[{self.site_key}] ✓ Successfully extracted {with_desc}/{len(jobs)} descriptions")
+        with_desc = sum(1 for job in jobs if job.get("description"))
+        self.logger.info(
+            f"[{self.site_key}] ✓ Successfully extracted {with_desc}/{len(jobs)} descriptions"
+        )
 
         return jobs
 
@@ -163,25 +186,38 @@ class AirFranceScraper(BaseScraper):
         try:
             page, context = await self.setup_stealth_page(browser)
             await self.random_delay(1, 2)
-            await page.goto(job['url'], wait_until='domcontentloaded', timeout=45000)
+            await page.goto(job["url"], wait_until="domcontentloaded", timeout=45000)
             await self.random_delay(2, 4)
             await self.simulate_human_behavior(page)
 
             # Air France specific structure
-            location_selectors = ['.ts-offer-page__block.ts-block-4', '.offer-location', '.job-location', '.location', '.localite']
+            location_selectors = [
+                ".ts-offer-page__block.ts-block-4",
+                ".offer-location",
+                ".job-location",
+                ".location",
+                ".localite",
+            ]
             for selector in location_selectors:
                 try:
                     loc_elem = await page.query_selector(selector)
                     if loc_elem:
                         loc_text = await loc_elem.inner_text()
                         if loc_text and len(loc_text) > 2:
-                            job['location'] = loc_text.strip()
+                            job["location"] = loc_text.strip()
                             break
                 except Exception:
                     continue
 
-            desc_selectors = ['.ts-offer-page__content', '.offer-description', '.job-description', '.content-text', 'main', '.blocText']
-            description = ''
+            desc_selectors = [
+                ".ts-offer-page__content",
+                ".offer-description",
+                ".job-description",
+                ".content-text",
+                "main",
+                ".blocText",
+            ]
+            description = ""
             for selector in desc_selectors:
                 try:
                     elem = await page.query_selector(selector)
@@ -193,23 +229,25 @@ class AirFranceScraper(BaseScraper):
                 except Exception:
                     continue
 
-            title_elem = await page.query_selector('.ts-offer-page__title')
+            title_elem = await page.query_selector(".ts-offer-page__title")
             if title_elem:
                 title_text = await title_elem.inner_text()
                 if title_text and len(title_text) > 2:
-                    job['title'] = title_text.strip()
-            
+                    job["title"] = title_text.strip()
+
             if not description:
                 description = await self.extract_description_from_page(page)
 
             posted_date = await self.extract_posted_date_from_page(page)
             if posted_date:
-                job['posted_date'] = posted_date
+                job["posted_date"] = posted_date
 
-            job['description'] = description
+            job["description"] = description
 
             await page.close()
             await context.close()
 
         except Exception as e:
-            self.logger.warning(f"[{self.site_key}]  Error fetching description for {job['job_id']}: {e}")
+            self.logger.warning(
+                f"[{self.site_key}]  Error fetching description for {job['job_id']}: {e}"
+            )

@@ -117,145 +117,227 @@ from .emploitic_scraper import EmploiticScraper
 from .swissport_scraper import SwissportScraper
 from .menzies_scraper import MenziesScraper
 from .united_scraper import UnitedScraper
-
-
+from .ups_scraper import UPSScraper
+from .alaska_scraper import AlaskaScraper
+from .skywest_scraper import SkyWestScraper
+from .republic_scraper import RepublicScraper
+from .endeavor_scraper import EndeavorScraper
+from .frontier_scraper import FrontierScraper
+from .dhl_scraper import DHLScraper
+from .cae_scraper import CAEScraper
+from .globeair_scraper import GlobeAirScraper
+from .fai_scraper import FAIScraper
+from .aireuropa_scraper import AirEuropaScraper
+from .skyexpress_scraper import SkyExpressScraper
+from .glock_scraper import GlockScraper
+from .maltairport_scraper import MaltairportScraper
+from .marabu_scraper import MarabuScraper
+from .jost_scraper import JostScraper
+from .faktor_scraper import FaktorScraper
+from .challenge_scraper import ChallengeGroupScraper
+from .flix_scraper import FlixScraper
+from .tradewind_scraper import TradewindScraper
+from .psa_scraper import PsaScraper
+from .gridiron_scraper import GridironScraper
+from .usajobs_scraper import UsajobsScraper
+from .usajobs_api_scraper import UsajobsApiScraper
+from .canada_gc_scraper import CanadaGcScraper
+from .findajob_uk_scraper import FindajobUkScraper
+from .apsjobs_au_scraper import ApsjobsAuScraper
+from .ncs_india_scraper import NcsIndiaScraper
+from .governmentjobs_scraper import GovernmentjobsScraper
+from .naspe_scraper import NaspeScraper
+from .faa_scraper import FaaScraper
+from .eurocontrol_scraper import EurocontrolScraper
+from .caa_uk_scraper import CaaUkScraper
+from .dgca_india_scraper import DgcaIndiaScraper
+from .iag_scraper import IagScraper
+from .lufthansa_group_scraper import LufthansaGroupScraper
+from .american_airlines_scraper import (
+    AmericanAirlinesScraper as AmericanAirlinesCareersScraper,
+)
+from .wmd_scraper import WmdScraper
+from .havenasg_scraper import HavenAsgScraper
+from .contour_scraper import ContourScraper
+from .breeze_airways_scraper import BreezeAirwaysScraper
 
 # Available scrapers
 SCRAPERS = {
-    'absjets': AbsjetsScraper,
-    'aegean': AegeanScraper,
-    'airfrance': AirFranceScraper,
-    'airfrancehop': AirFranceHopScraper,
-    'aena': AenaScraper,
-    'airmalta': AirMaltaScraper,
-    'airserbia': AirSerbiaScraper,
-    'alsieexpress': AlsieExpressScraper,
-    'amapolaflyg': AmapolaFlygScraper,
-    'aslairlinesbelgium': ASLAirlinesBelgiumScraper,
-    'austrianairlines': AustrianAirlinesScraper,
-    'blueislands': BlueIslandsScraper,
-    'braathens': BraathensScraper,
-    'bristow': BristowScraper,
-    'brusselsairlines': BrusselsAirlinesScraper,
-    'buraqair': BuraqAirScraper,
-    'buzz': BuzzScraper,
-    'cabotaviation': CabotAviationScraper,
-    'signature': SignatureAviationScraper,
-    'aap': AAPAviationScraper,
-    'indigo': IndiGoScraper,
-    'cargolux': CargoluxPeopleClickScraper,
-    'airindia': AirIndiaScraper,
-    'emirates': EmiratesScraper,
-    'boeing': BoeingScraper,
-    'airbus': AirbusScraper,
-    'aisats': AISATSScraper,
-    'jmc': JMCScraper,
-    'iata': IataScraper,
-    'avianation': AvianationScraper,
-    'wizzair': WizzAirScraper,
-    'cpr': CPRScraper,
-    'nbaa': NBAAScraper,
-    'starair': StarAirScraper,
-    'lufthansa': LufthansaScraper,
-    'southwest': SouthwestScraper,
-    'ba': BritishAirwaysScraper,
-    'capitalairlines': CapitalAirlinesScraper,
-    'carpatair': CarpatairScraper,
-    'dat': DATScraper,
-    'edelweiss': EdelweissScraper,
-    'egyptair': EgyptairScraper,
-    'elal': ElAlScraper,
-    'ethiopian': EthiopianScraper,
-    'eurowings': EurowingsScraper,
-    'finnair': FinnairScraper,
-    'flybe': FlybeScraper,
-    'hahnair': HahnAirScraper,
-    'iberia': IberiaScraper,
-    'iberiaexpress': IberiaExpressScraper,
-    'icelandair': IcelandairScraper,
-    'itaairways': ITAScraper,
-    'klm': KLMScraper,
-    'lufthansacityline': LufthansaCityLineScraper,
-    'norwegian': NorwegianScraper,
-    'olympicair': OlympicAirScraper,
-    'ryanair': RyanairScraper,
-    'sas': SASScraper,
-    'smartwings': SmartWingsScraper,
-    'swiss': SwissScraper,
-    'tap': TAPScraper,
-    'transavia': TransaviaScraper,
-    'tuiairways': TuiAirwaysScraper,
-    'vueling': VuelingScraper,
-    'aerlingus': AerLingusScraper,
-    'airbaltic': AirBalticScraper,
-    'airdolomiti': AirDolomitiScraper,
-    'airnostrum': AirNostrumScraper,
-    'easternairways': EasternAirwaysScraper,
-    'easyjet': EasyJetScraper,
-    'cathay': CathayPacificScraper,
-    'germanairways': GermanAirwaysScraper,
-    'aa': AmericanAirlinesScraper,
-    'etihad': EtihadScraper,
-    'flydubai': FlydubaiScraper,
-    'airarabia': AirArabiaScraper,
-    'airarabia_auh': AirArabiaAuhScraper,
-    'royaljet': RoyalJetScraper,
-    'dubairaw': DubaiRawScraper,
-    'abudhabiaviation': AbuDhabiAviationScraper,
-    'falconaviation': FalconAviationScraper,
-    'jetfly': JetflyScraper,
-    'spirit': SpiritScraper,
-    'mesa': MesaAirlinesScraper,
-    'delta': DeltaScraper,
-    'sun_country': SunCountryScraper,
-    'mountain_air_cargo': MountainAirCargoScraper,
-    'air_wisconsin': AirWisconsinScraper,
-    'atsg': ATSGScraper,
-    'nac': NACScraper,
-    'omni_air': OmniAirScraper,
-    'kalitta_holdings': KalittaHoldingsScraper,
-    'jet_aviation': JetAviationScraper,
-    'riyadh_air': RiyadhAirScraper,
-    'global_jet': GlobalJetScraper,
-    'aar_corp': AARCorpScraper,
-    'fedex': FedexScraper,
-    'kalitta_air': KalittaAirScraper,
-    'envoy_air': EnvoyAirScraper,
-    'atlas_air': AtlasAirScraper,
-    'atlantic_aviation': AtlanticAviationScraper,
-    'cargolux': CargoluxScraper,
-    'netjets': NetJetsScraper,
-    'wheels_up': WheelsUpScraper,
-    'flexjet': FlexjetScraper,
-    'amerijet': AmerijetScraper,
-    'cargojet': CargojetScraper,
-    'jetblue': JetBlueScraper,
-    'qatar': QatarAirwaysScraper,
-    'dnatabrasil': DnataBrasilScraper,
-    'emploitic': EmploiticScraper,
-    'swissport': SwissportScraper,
-    'menzies': MenziesScraper,
-    'united': UnitedScraper,
-
+    "absjets": AbsjetsScraper,
+    "aegean": AegeanScraper,
+    "airfrance": AirFranceScraper,
+    "airfrancehop": AirFranceHopScraper,
+    "aena": AenaScraper,
+    "airmalta": AirMaltaScraper,
+    "airserbia": AirSerbiaScraper,
+    "alsieexpress": AlsieExpressScraper,
+    "amapolaflyg": AmapolaFlygScraper,
+    "aslairlinesbelgium": ASLAirlinesBelgiumScraper,
+    "austrianairlines": AustrianAirlinesScraper,
+    "blueislands": BlueIslandsScraper,
+    "braathens": BraathensScraper,
+    "bristow": BristowScraper,
+    "brusselsairlines": BrusselsAirlinesScraper,
+    "buraqair": BuraqAirScraper,
+    "buzz": BuzzScraper,
+    "cabotaviation": CabotAviationScraper,
+    "signature": SignatureAviationScraper,
+    "aap": AAPAviationScraper,
+    "indigo": IndiGoScraper,
+    "cargolux": CargoluxPeopleClickScraper,
+    "airindia": AirIndiaScraper,
+    "emirates": EmiratesScraper,
+    "boeing": BoeingScraper,
+    "airbus": AirbusScraper,
+    "aisats": AISATSScraper,
+    "jmc": JMCScraper,
+    "iata": IataScraper,
+    "avianation": AvianationScraper,
+    "wizzair": WizzAirScraper,
+    "cpr": CPRScraper,
+    "nbaa": NBAAScraper,
+    "starair": StarAirScraper,
+    "lufthansa": LufthansaScraper,
+    "southwest": SouthwestScraper,
+    "ba": BritishAirwaysScraper,
+    "capitalairlines": CapitalAirlinesScraper,
+    "carpatair": CarpatairScraper,
+    "dat": DATScraper,
+    "edelweiss": EdelweissScraper,
+    "egyptair": EgyptairScraper,
+    "elal": ElAlScraper,
+    "ethiopian": EthiopianScraper,
+    "eurowings": EurowingsScraper,
+    "finnair": FinnairScraper,
+    "flybe": FlybeScraper,
+    "hahnair": HahnAirScraper,
+    "iberia": IberiaScraper,
+    "iberiaexpress": IberiaExpressScraper,
+    "icelandair": IcelandairScraper,
+    "itaairways": ITAScraper,
+    "klm": KLMScraper,
+    "lufthansacityline": LufthansaCityLineScraper,
+    "norwegian": NorwegianScraper,
+    "olympicair": OlympicAirScraper,
+    "ryanair": RyanairScraper,
+    "sas": SASScraper,
+    "smartwings": SmartWingsScraper,
+    "swiss": SwissScraper,
+    "tap": TAPScraper,
+    "transavia": TransaviaScraper,
+    "tuiairways": TuiAirwaysScraper,
+    "vueling": VuelingScraper,
+    "aerlingus": AerLingusScraper,
+    "airbaltic": AirBalticScraper,
+    "airdolomiti": AirDolomitiScraper,
+    "airnostrum": AirNostrumScraper,
+    "easternairways": EasternAirwaysScraper,
+    "easyjet": EasyJetScraper,
+    "cathay": CathayPacificScraper,
+    "germanairways": GermanAirwaysScraper,
+    "aa": AmericanAirlinesScraper,
+    "etihad": EtihadScraper,
+    "flydubai": FlydubaiScraper,
+    "airarabia": AirArabiaScraper,
+    "airarabia_auh": AirArabiaAuhScraper,
+    "royaljet": RoyalJetScraper,
+    "dubairaw": DubaiRawScraper,
+    "abudhabiaviation": AbuDhabiAviationScraper,
+    "falconaviation": FalconAviationScraper,
+    "jetfly": JetflyScraper,
+    "spirit": SpiritScraper,
+    "mesa": MesaAirlinesScraper,
+    "delta": DeltaScraper,
+    "sun_country": SunCountryScraper,
+    "mountain_air_cargo": MountainAirCargoScraper,
+    "air_wisconsin": AirWisconsinScraper,
+    "atsg": ATSGScraper,
+    "nac": NACScraper,
+    "omni_air": OmniAirScraper,
+    "kalitta_holdings": KalittaHoldingsScraper,
+    "jet_aviation": JetAviationScraper,
+    "riyadh_air": RiyadhAirScraper,
+    "global_jet": GlobalJetScraper,
+    "aar_corp": AARCorpScraper,
+    "fedex": FedexScraper,
+    "kalitta_air": KalittaAirScraper,
+    "envoy_air": EnvoyAirScraper,
+    "atlas_air": AtlasAirScraper,
+    "atlantic_aviation": AtlanticAviationScraper,
+    "netjets": NetJetsScraper,
+    "wheels_up": WheelsUpScraper,
+    "flexjet": FlexjetScraper,
+    "amerijet": AmerijetScraper,
+    "cargojet": CargojetScraper,
+    "jetblue": JetBlueScraper,
+    "qatar": QatarAirwaysScraper,
+    "dnatabrasil": DnataBrasilScraper,
+    "emploitic": EmploiticScraper,
+    "swissport": SwissportScraper,
+    "menzies": MenziesScraper,
+    "united": UnitedScraper,
+    "ups": UPSScraper,
+    "alaska": AlaskaScraper,
+    "skywest": SkyWestScraper,
+    "republic": RepublicScraper,
+    "endeavor": EndeavorScraper,
+    "frontier": FrontierScraper,
+    "dhl": DHLScraper,
+    "cae": CAEScraper,
+    "globeair": GlobeAirScraper,
+    "fai": FAIScraper,
+    "aireuropa": AirEuropaScraper,
+    "skyexpress": SkyExpressScraper,
+    "glock": GlockScraper,
+    "maltairport": MaltairportScraper,
+    "marabu": MarabuScraper,
+    "jost": JostScraper,
+    "faktor": FaktorScraper,
+    "challenge": ChallengeGroupScraper,
+    "flix": FlixScraper,
+    "tradewind": TradewindScraper,
+    "psa": PsaScraper,
+    "gridiron": GridironScraper,
+    "usajobs": UsajobsScraper,
+    "usajobs_api": UsajobsApiScraper,
+    "canada_gc": CanadaGcScraper,
+    "findajob_uk": FindajobUkScraper,
+    "apsjobs_au": ApsjobsAuScraper,
+    "ncs_india": NcsIndiaScraper,
+    "governmentjobs": GovernmentjobsScraper,
+    "naspe": NaspeScraper,
+    "faa": FaaScraper,
+    "eurocontrol": EurocontrolScraper,
+    "caa_uk": CaaUkScraper,
+    "dgca_india": DgcaIndiaScraper,
+    "iag": IagScraper,
+    "lufthansa_group": LufthansaGroupScraper,
+    "american_airlines": AmericanAirlinesCareersScraper,
+    "wmd": WmdScraper,
+    "havenasg": HavenAsgScraper,
+    "contour": ContourScraper,
+    "breeze_airways": BreezeAirwaysScraper,
 }
 
 
 def get_scraper(scraper_name: str, config: dict, db_manager=None):
     """
     Factory function to get scraper instance
-    
+
     Args:
         site_name: Name of the site ('signature', 'flygosh', etc.)
         scraper_name: Name of the scraper ('signature', 'flygosh', etc.)
         config: Configuration dictionary for the scraper
         db_manager: Optional database manager for URL tracking
-    
+
     Returns:
         Scraper instance
     """
     if scraper_name not in SCRAPERS:
-        raise ValueError(f"Unknown scraper: {scraper_name}. Available: {list(SCRAPERS.keys())}")
-    
+        raise ValueError(
+            f"Unknown scraper: {scraper_name}. Available: {list(SCRAPERS.keys())}"
+        )
+
     scraper_class = SCRAPERS[scraper_name]
     return scraper_class(config, db_manager=db_manager)
 

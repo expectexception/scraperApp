@@ -5,7 +5,6 @@ Extracts aviation job listings from goindigo.in careers page
 
 import asyncio
 import re
-import json
 import os
 import tempfile
 import random
@@ -19,53 +18,55 @@ logger = logging.getLogger(__name__)
 
 class IndiGoScraper(BaseScraper):
     """Scraper for IndiGo Airlines career page"""
-    
+
     def __init__(self, config, db_manager=None):
-        super().__init__(config, 'indigo', db_manager=db_manager)
-        self.site_config = config['sites']['indigo']
-        self.base_url = self.site_config['base_url']
-        self.jobs_url = self.site_config['jobs_url']
-        
+        super().__init__(config, "indigo", db_manager=db_manager)
+        self.site_config = config["sites"]["indigo"]
+        self.base_url = self.site_config["base_url"]
+        self.jobs_url = self.site_config["jobs_url"]
+
     async def run(self):
         """Main execution method"""
         self.print_header()
-        
+
         logger.info(f"Fetching jobs from {self.site_config['name']}...")
         logger.info(f"URL: {self.jobs_url}")
-        
+
         jobs = await self.fetch_jobs_from_listing()
-        
+
         if not jobs:
             logger.warning("No jobs found")
             return []
-        
+
         logger.info(f"Extracted {len(jobs)} jobs from listing")
-        
+
         # Disable deep description fetching to avoid Akamai WAF blocks on job-details pages
         # The listing page already provides Title, URL, Location, and Date.
         # jobs_with_descriptions = await self.fetch_job_descriptions(jobs)
         jobs_with_descriptions = jobs
-        
+
         if self.use_filter and self.filter_manager and jobs_with_descriptions:
             logger.info(f"[{self.site_key}] Applying final filter check...")
-            jobs_with_descriptions, _, filter_stats = self.apply_title_filter(jobs_with_descriptions)
+            jobs_with_descriptions, _, filter_stats = self.apply_title_filter(
+                jobs_with_descriptions
+            )
             self.filter_manager.print_filter_stats(filter_stats)
-        
+
         # Save results
-        await self.save_results(jobs_with_descriptions, self.site_config['name'])
+        await self.save_results(jobs_with_descriptions, self.site_config["name"])
         self.print_sample(jobs_with_descriptions)
-        
+
         return jobs_with_descriptions
-    
+
     async def setup_stealth_page(self, browser):
         """Create a stealthy page context"""
         # Context with Mac UA (matches successful inspection script)
         context = await browser.new_context(
-            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            viewport={'width': 1920, 'height': 1080},
-            ignore_https_errors=True
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            viewport={"width": 1920, "height": 1080},
+            ignore_https_errors=True,
         )
-        
+
         # Advanced Stealth Init Script
         await context.add_init_script("""
             // 1. Pass WebDriver Test
@@ -119,11 +120,14 @@ class IndiGoScraper(BaseScraper):
         # CDP Session for lower-level override (Windows UA to match inspection script quirks)
         try:
             cdp = await context.new_cdp_session(page)
-            await cdp.send("Network.setUserAgentOverride", {
-                "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                "platform": "Win32",
-                "acceptLanguage": "en-US,en;q=0.9",
-            })
+            await cdp.send(
+                "Network.setUserAgentOverride",
+                {
+                    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                    "platform": "Win32",
+                    "acceptLanguage": "en-US,en;q=0.9",
+                },
+            )
         except Exception as e:
             logger.warning(f"CDP Stealth Error: {e}")
 
@@ -134,12 +138,12 @@ class IndiGoScraper(BaseScraper):
         try:
             # Common cookie button selectors for IndiGo/general
             selectors = [
-                "button:has-text('Agree')", 
-                "button:has-text('Accept')", 
-                "button:has-text('Allow')", 
+                "button:has-text('Agree')",
+                "button:has-text('Accept')",
+                "button:has-text('Allow')",
                 "button:has-text('Dismiss')",
                 "button.cookie-close",
-                "#onetrust-accept-btn-handler"
+                "#onetrust-accept-btn-handler",
             ]
             for sel in selectors:
                 if await page.locator(sel).first.is_visible():
@@ -155,33 +159,31 @@ class IndiGoScraper(BaseScraper):
         try:
             box = await element.bounding_box()
             if box:
-                x = box['x'] + box['width'] / 2 + random.uniform(-10, 10)
-                y = box['y'] + box['height'] / 2 + random.uniform(-10, 10)
+                x = box["x"] + box["width"] / 2 + random.uniform(-10, 10)
+                y = box["y"] + box["height"] / 2 + random.uniform(-10, 10)
                 await page.mouse.move(x, y, steps=random.randint(5, 15))
         except Exception:
             pass
-            
+
     async def fetch_jobs_from_listing(self):
         """Fetch jobs from listing page"""
         jobs = []
 
         # Try proxy if available (set PROXY_URL environment variable)
-        proxy_url = os.getenv('PROXY_URL')
+        proxy_url = os.getenv("PROXY_URL")
         proxy_config = None
         if proxy_url:
-            proxy_config = {
-                'server': proxy_url
-            }
+            proxy_config = {"server": proxy_url}
             logger.info(f"Using proxy: {proxy_url}")
 
         async with async_playwright() as p:
             # Launch with proxy if configured
             launch_args = {
-                'headless': True,
-                'args': ['--disable-blink-features=AutomationControlled']
+                "headless": True,
+                "args": ["--disable-blink-features=AutomationControlled"],
             }
             if proxy_config:
-                launch_args['proxy'] = proxy_config
+                launch_args["proxy"] = proxy_config
 
             browser = await p.chromium.launch(**launch_args)
             page, context = await self.setup_stealth_page(browser)
@@ -189,7 +191,11 @@ class IndiGoScraper(BaseScraper):
             try:
                 logger.info("Loading Indigo home page first (anti-blocking)...")
                 try:
-                    await page.goto("https://www.goindigo.in", wait_until='domcontentloaded', timeout=30000)
+                    await page.goto(
+                        "https://www.goindigo.in",
+                        wait_until="domcontentloaded",
+                        timeout=30000,
+                    )
                     await self.random_delay(5, 8)
                     await self.dismiss_cookie_banner(page)
                     await self.simulate_human_behavior(page)
@@ -200,11 +206,13 @@ class IndiGoScraper(BaseScraper):
                 # Try with different wait strategies
                 try:
                     await self.random_delay(2, 4)
-                    await page.goto(self.jobs_url, wait_until='load', timeout=40000)
+                    await page.goto(self.jobs_url, wait_until="load", timeout=40000)
                 except Exception:
                     logger.info("  Timeout on 'load', trying 'domcontentloaded'...")
                     await self.random_delay(3, 5)
-                    await page.goto(self.jobs_url, wait_until='domcontentloaded', timeout=30000)
+                    await page.goto(
+                        self.jobs_url, wait_until="domcontentloaded", timeout=30000
+                    )
 
                 # Simulate human behavior on careers page before interaction
                 await self.dismiss_cookie_banner(page)
@@ -214,29 +222,41 @@ class IndiGoScraper(BaseScraper):
                 # Try to click the search button to trigger job loading (Critical for Indigo's SPA)
                 logger.info("Clicking Search Button (required for job loading)...")
                 try:
-                     # button.btn is common in the new interface
-                     search_btn = await page.query_selector('button.btn, button.skyplus-button, button:has-text("Search"), .search-btn')
-                     if search_btn:
-                         await self.random_mouse_move_to_element(page, search_btn) # Simulate moving to button
-                         await search_btn.click()
-                         logger.info("  Clicked Search Button")
-                         # Wait for jobs to appear
-                         await page.wait_for_selector('.search-result__job-cards--card', timeout=20000)
-                         await self.random_delay(2, 4)
-                     else:
-                         logger.warning("  Search button not found")
+                    # button.btn is common in the new interface
+                    search_btn = await page.query_selector(
+                        'button.btn, button.skyplus-button, button:has-text("Search"), .search-btn'
+                    )
+                    if search_btn:
+                        await self.random_mouse_move_to_element(
+                            page, search_btn
+                        )  # Simulate moving to button
+                        await search_btn.click()
+                        logger.info("  Clicked Search Button")
+                        # Wait for jobs to appear
+                        await page.wait_for_selector(
+                            ".search-result__job-cards--card", timeout=20000
+                        )
+                        await self.random_delay(2, 4)
+                    else:
+                        logger.warning("  Search button not found")
                 except Exception as e:
-                     logger.warning(f"  Search click / wait error: {e}")
+                    logger.warning(f"  Search click / wait error: {e}")
 
                 # Wait for dynamic content to load
                 await self.simulate_human_behavior(page)
                 await self.random_delay(2, 4)
+                html_content = await page.content()
+                blocked_page = (
+                    "Access Denied" in html_content
+                    or "captcha" in html_content.lower()
+                    or "cloudflare" in html_content.lower()
+                )
 
                 # Try multiple selectors in order of specificity
                 selectors_to_try = [
-                    ('div.search-result__job-cards--card', 'Exact div with class'),
-                    ('.search-result__job-cards--card', 'Class selector'),
-                    ('.jobitem', 'Alternative job item class'),
+                    ("div.search-result__job-cards--card", "Exact div with class"),
+                    (".search-result__job-cards--card", "Class selector"),
+                    (".jobitem", "Alternative job item class"),
                 ]
 
                 job_elements = []
@@ -255,11 +275,11 @@ class IndiGoScraper(BaseScraper):
                         try:
                             job_data = await self._extract_job_from_card(element, idx)
                             if job_data:
-                                if self.should_process_job(job_data['title']):
+                                if self.should_process_job(job_data["title"]):
                                     jobs.append(job_data)
                         except Exception as e:
                             logger.error(f"Error extracting job {idx + 1}: {e}")
-                    
+
                     if jobs:
                         logger.info(f"Extracted {len(jobs)} jobs from selectors")
                         await context.close()
@@ -278,24 +298,33 @@ class IndiGoScraper(BaseScraper):
                     logger.warning(f"  careers-API attempt failed: {e}")
 
                 # Try JSON-LD structured data
-                jsonld_scripts = await page.query_selector_all('script[type="application/ld+json"]')
+                jsonld_scripts = await page.query_selector_all(
+                    'script[type="application/ld+json"]'
+                )
                 found_json_jobs = 0
                 for s in jsonld_scripts:
                     try:
                         txt = (await s.inner_text()).strip()
                         import json as _json
+
                         data = _json.loads(txt)
                         items = data if isinstance(data, list) else [data]
                         for item in items:
-                            if isinstance(item, dict) and (item.get('@type') and 'JobPosting' in item.get('@type')):
-                                title = item.get('title') or item.get('name') or 'No Title'
-                                job_url = item.get('url') or self.jobs_url
-                                jd = item.get('description') or ''
-                                job_data = self._create_basic_job(job_url, title, len(jobs))
-                                job_data['description'] = jd
-                                if item.get('datePosted'):
-                                    job_data['posted_date'] = item.get('datePosted')
-                                if self.should_process_job(job_data['title']):
+                            if isinstance(item, dict) and (
+                                item.get("@type") and "JobPosting" in item.get("@type")
+                            ):
+                                title = (
+                                    item.get("title") or item.get("name") or "No Title"
+                                )
+                                job_url = item.get("url") or self.jobs_url
+                                jd = item.get("description") or ""
+                                job_data = self._create_basic_job(
+                                    job_url, title, len(jobs)
+                                )
+                                job_data["description"] = jd
+                                if item.get("datePosted"):
+                                    job_data["posted_date"] = item.get("datePosted")
+                                if self.should_process_job(job_data["title"]):
                                     jobs.append(job_data)
                                     found_json_jobs += 1
                     except Exception:
@@ -316,20 +345,28 @@ class IndiGoScraper(BaseScraper):
                     return jobs
 
                 # If page appeared blocked, try persistent render retry
-                if 'blocked_page' in locals() and blocked_page:
-                    logger.warning("Page looks blocked (failover). Will attempt a persistent browser retry before giving up.")
+                if "blocked_page" in locals() and blocked_page:
+                    logger.warning(
+                        "Page looks blocked (failover). Will attempt a persistent browser retry before giving up."
+                    )
                     # Try persistent context retry
                     try:
-                        persistent = await self._fetch_with_persistent_context(browser, self.jobs_url, max_wait=20)
+                        persistent = await self._fetch_with_persistent_context(
+                            browser, self.jobs_url, max_wait=20
+                        )
                         if persistent:
-                            logger.info(f"Persistent render extracted {len(persistent)} jobs")
+                            logger.info(
+                                f"Persistent render extracted {len(persistent)} jobs"
+                            )
                             await context.close()
                             await browser.close()
                             return persistent
                     except Exception as e:
                         logger.warning(f"  Persistent render failed: {e}")
 
-                    logger.error("Page looks blocked (failover). No jobs extracted from fallbacks.")
+                    logger.error(
+                        "Page looks blocked (failover). No jobs extracted from fallbacks."
+                    )
                     await context.close()
                     await browser.close()
                     return []
@@ -357,41 +394,62 @@ class IndiGoScraper(BaseScraper):
 
         # If live API/rendering failed (e.g., blocked), try using a saved local HTML snapshot as a fallback for testing
         try:
-            local_path = os.path.join(os.path.dirname(__file__), '..', 'tmp_indigo_page.html')
+            local_path = os.path.join(
+                os.path.dirname(__file__), "..", "tmp_indigo_page.html"
+            )
             # also check project root fallback
-            project_root_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tmp_indigo_page.html')
-            candidate_paths = [local_path, project_root_path, '/home/rajat/Desktop/AeroOps Intel/aeroScrap_backend/backendMain/tmp_indigo_page.html']
+            project_root_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "tmp_indigo_page.html",
+            )
+            candidate_paths = [
+                local_path,
+                project_root_path,
+                "/home/rajat/Desktop/AeroOps Intel/aeroScrap_backend/backendMain/tmp_indigo_page.html",
+            ]
             for p in candidate_paths:
                 if p and os.path.exists(p):
-                    html = open(p, 'r', encoding='utf-8').read()
+                    html = open(p, "r", encoding="utf-8").read()
                     jobs_local = []
                     # find title links
-                    for m in re.finditer(r'<a[^>]*class=["\']card-head--title["\'][^>]*href=["\']([^"\']+)["\'][^>]*>([^<]+)</a>', html, re.IGNORECASE):
+                    for m in re.finditer(
+                        r'<a[^>]*class=["\']card-head--title["\'][^>]*href=["\']([^"\']+)["\'][^>]*>([^<]+)</a>',
+                        html,
+                        re.IGNORECASE,
+                    ):
                         href = m.group(1)
                         title = m.group(2).strip()
                         # look ahead for date-text within next 500 chars
-                        snippet = html[m.end():m.end()+800]
-                        date_m = re.search(r'<span[^>]*class=["\']date-text["\'][^>]*>(.*?)</span>', snippet, re.IGNORECASE|re.DOTALL)
-                        location_m = re.search(r'<span[^>]*class=["\']location-text["\'][^>]*>\s*<span[^>]*>([^<]+)</span>', snippet, re.IGNORECASE|re.DOTALL)
+                        snippet = html[m.end() : m.end() + 800]
+                        date_m = re.search(
+                            r'<span[^>]*class=["\']date-text["\'][^>]*>(.*?)</span>',
+                            snippet,
+                            re.IGNORECASE | re.DOTALL,
+                        )
+                        location_m = re.search(
+                            r'<span[^>]*class=["\']location-text["\'][^>]*>\s*<span[^>]*>([^<]+)</span>',
+                            snippet,
+                            re.IGNORECASE | re.DOTALL,
+                        )
                         date_text = None
                         if date_m:
                             dt_raw = date_m.group(1)
                             # strip tags like <sup>
-                            dt_clean = re.sub(r'<[^>]+>', '', dt_raw).strip()
+                            dt_clean = re.sub(r"<[^>]+>", "", dt_raw).strip()
                             date_text = dt_clean
-                        location = location_m.group(1).strip() if location_m else ''
+                        location = location_m.group(1).strip() if location_m else ""
                         # normalize href
-                        if href.startswith('/'):
+                        if href.startswith("/"):
                             url = f"https://www.goindigo.in/{href.lstrip('/')}"
-                        elif href.startswith('http'):
+                        elif href.startswith("http"):
                             url = href
                         else:
                             url = f"https://www.goindigo.in/{href}"
                         job = self._create_basic_job(url, title, len(jobs_local))
                         if date_text:
                             parsed = self.parse_posted_date(date_text)
-                            job['posted_date'] = parsed if parsed else date_text
-                        job['location'] = location
+                            job["posted_date"] = parsed if parsed else date_text
+                        job["location"] = location
                         jobs_local.append(job)
                         if self.max_jobs and len(jobs_local) >= self.max_jobs:
                             break
@@ -399,25 +457,25 @@ class IndiGoScraper(BaseScraper):
                         return jobs_local
         except Exception:
             pass
-    
+
     async def _extract_job_from_card(self, element, idx):
         """Extract job data from a job card element"""
         try:
             # Get all text content
             text = await element.inner_text()
-            lines = [line.strip() for line in text.split('\n') if line.strip()]
-            
+            lines = [line.strip() for line in text.split("\n") if line.strip()]
+
             # Extract title using specific selector
-            title = 'Unknown Position'
-            title_elem = await element.query_selector('a.card-head--title')
+            title = "Unknown Position"
+            title_elem = await element.query_selector("a.card-head--title")
             if title_elem:
                 title = (await title_elem.inner_text()).strip()
                 # Get job URL from title link
-                href = await title_elem.get_attribute('href')
+                href = await title_elem.get_attribute("href")
                 if href:
-                    if href.startswith('/'):
+                    if href.startswith("/"):
                         job_url = f"{self.base_url}/{href}"
-                    elif href.startswith('http'):
+                    elif href.startswith("http"):
                         job_url = href
                     else:
                         job_url = f"{self.base_url}/{href}"
@@ -425,102 +483,147 @@ class IndiGoScraper(BaseScraper):
                     job_url = None
             else:
                 # Fallback to any link
-                links = await element.query_selector_all('a')
+                links = await element.query_selector_all("a")
                 job_url = None
                 if links:
                     for link in links:
-                        href = await link.get_attribute('href')
-                        if href and 'job-details' in href:
-                            if href.startswith('/'):
+                        href = await link.get_attribute("href")
+                        if href and "job-details" in href:
+                            if href.startswith("/"):
                                 job_url = f"{self.base_url}/{href}"
-                            elif href.startswith('http'):
+                            elif href.startswith("http"):
                                 job_url = href
                             else:
                                 job_url = f"{self.base_url}/{href}"
                             break
-            
+
             # Extract location - it's in the text with date
-            location = ''
-            location_elem = await element.query_selector('p.card-body--location')
+            location = ""
+            location_elem = await element.query_selector("p.card-body--location")
             if location_elem:
                 location = (await location_elem.inner_text()).strip()
             else:
                 # Parse from text - format is "DateLocation" like "25th Nov 25Gurgaon"
                 for line in lines:
-                    if any(keyword in line for keyword in ['Mumbai', 'Delhi', 'Gurgaon', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'India', 'Pan-India']):
+                    if any(
+                        keyword in line
+                        for keyword in [
+                            "Mumbai",
+                            "Delhi",
+                            "Gurgaon",
+                            "Bangalore",
+                            "Hyderabad",
+                            "Chennai",
+                            "Kolkata",
+                            "India",
+                            "Pan-India",
+                        ]
+                    ):
                         # Extract just the location part
-                        for loc in ['Mumbai', 'Delhi', 'Gurgaon', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pan-India']:
+                        for loc in [
+                            "Mumbai",
+                            "Delhi",
+                            "Gurgaon",
+                            "Bangalore",
+                            "Hyderabad",
+                            "Chennai",
+                            "Kolkata",
+                            "Pan-India",
+                        ]:
                             if loc in line:
                                 location = loc
                                 break
                         break
-            
+
             # Extract job type
-            job_type = ''
-            type_elem = await element.query_selector('.job-type, [class*="type"], [class*="Type"]')
+            job_type = ""
+            type_elem = await element.query_selector(
+                '.job-type, [class*="type"], [class*="Type"]'
+            )
             if type_elem:
                 job_type = (await type_elem.inner_text()).strip()
             else:
                 for line in lines:
-                    if any(keyword in line for keyword in ['Full-time', 'Part-time', 'Contract', 'Permanent', 'Temporary']):
+                    if any(
+                        keyword in line
+                        for keyword in [
+                            "Full-time",
+                            "Part-time",
+                            "Contract",
+                            "Permanent",
+                            "Temporary",
+                        ]
+                    ):
                         job_type = line
                         break
-            
+
             # Extract department
-            department = ''
-            dept_elem = await element.query_selector('.department, [class*="department"], [class*="Department"]')
+            department = ""
+            dept_elem = await element.query_selector(
+                '.department, [class*="department"], [class*="Department"]'
+            )
             if dept_elem:
                 department = (await dept_elem.inner_text()).strip()
-            
+
             # Extract posted date (prefer explicit span.date-text if present)
-            posted_date = ''
-            date_elem = await element.query_selector('span.date-text')
+            posted_date = ""
+            date_elem = await element.query_selector("span.date-text")
             if not date_elem:
-                date_elem = await element.query_selector('[class*="date"], [class*="Date"], [class*="posted"], time')
+                date_elem = await element.query_selector(
+                    '[class*="date"], [class*="Date"], [class*="posted"], time'
+                )
             if date_elem:
                 date_text = (await date_elem.inner_text()).strip()
                 # Normalize ordinals like '2nd' -> '2' (base parser also handles but keep local safety)
-                date_text = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_text, flags=re.IGNORECASE)
+                date_text = re.sub(
+                    r"(\d+)(st|nd|rd|th)", r"\1", date_text, flags=re.IGNORECASE
+                )
                 parsed_date = self.parse_posted_date(date_text)
                 posted_date = parsed_date if parsed_date else date_text
             else:
                 # Try to extract from lines (format: "25th Nov 25" or similar)
                 for line in lines:
-                    if re.search(r'\d+(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)', line, re.IGNORECASE):
+                    if re.search(
+                        r"\d+(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
+                        line,
+                        re.IGNORECASE,
+                    ):
                         parsed_date = self.parse_posted_date(line)
                         posted_date = parsed_date if parsed_date else line
                         break
-            
+
             # Generate job ID
             job_id = f"indigo_{idx + 1}_{datetime.now().strftime('%Y%m%d')}"
             if job_url:
                 # Try to extract ID from URL
-                parts = job_url.split('/')
+                parts = job_url.split("/")
                 for part in parts:
-                    if part.isdigit() or (len(part) > 5 and any(c.isdigit() for c in part)):
+                    if part.isdigit() or (
+                        len(part) > 5 and any(c.isdigit() for c in part)
+                    ):
                         job_id = f"indigo_{part}"
                         break
-            
+
             job_data = {
-                'job_id': job_id,
-                'title': title,
-                'company': 'IndiGo Airlines',
-                'source': 'indigo',
-                'url': job_url or self.jobs_url,
-                'apply_url': job_url or self.jobs_url,
-                'location': location,
-                'job_type': job_type,
-                'department': department,
-                'posted_date': posted_date,
-                'closing_date': '',
-                'timestamp': datetime.now().isoformat(),
-                'description': f"Join IndiGo Airlines as a {title}. IndiGo is India's largest passenger airline and is the fastest growing low-cost carrier in the world. Please visit the official career portal for more details and to apply.",
-                'requirements': '',
-                'qualifications': '',
+                "job_id": job_id,
+                "title": title,
+                "company": "IndiGo Airlines",
+                "source": "indigo",
+                "url": job_url or self.jobs_url,
+                "apply_url": job_url or self.jobs_url,
+                "location": location,
+                "job_type": job_type,
+                "department": department,
+                "posted_date": posted_date,
+                "closing_date": "",
+                "timestamp": datetime.now().isoformat(),
+                "description": f"Join IndiGo Airlines as a {title}. IndiGo is India's largest passenger airline and is the fastest growing low-cost carrier in the world. Please visit the official career portal for more details and to apply.",
+                "requirements": "",
+                "qualifications": "",
             }
-            
+
             return job_data
-            
+
         except Exception as e:
             logger.error(f"Error parsing job card: {e}")
             return None
@@ -534,17 +637,21 @@ class IndiGoScraper(BaseScraper):
             candidates.append(m.group(1))
 
         # Look for direct JSON endpoints
-        for m in re.finditer(r"/content/[\w\-/]+careers-job-search[\w\-\.]*\.json", html_content):
+        for m in re.finditer(
+            r"/content/[\w\-/]+careers-job-search[\w\-\.]*\.json", html_content
+        ):
             candidates.append(m.group(0))
 
         # Look for mf-careers-prod domain endpoints (avoid quoting issues)
-        for m in re.finditer(r'mf-careers-prod\.goindigo\.in[^\s\'" ]+\.json', html_content):
+        for m in re.finditer(
+            r'mf-careers-prod\.goindigo\.in[^\s\'" ]+\.json', html_content
+        ):
             # prepend scheme if missing
             part = m.group(0)
-            if part.startswith('http'):
+            if part.startswith("http"):
                 candidates.append(part)
             else:
-                candidates.append('https://' + part)
+                candidates.append("https://" + part)
 
         # Normalize and dedupe
         candidates = [c for c in dict.fromkeys(candidates)]
@@ -560,43 +667,55 @@ class IndiGoScraper(BaseScraper):
             candidates = []
 
         # ALWAYS add the known fallback endpoints, as dynamic ones might be 403d
-        candidates.extend([
-            '/content/careers-api/skypluscareers/in/en/v1/careers-job-search.json',
-            'https://ms-careers-prod.goindigo.in/career-job-list',
-        ])
+        candidates.extend(
+            [
+                "/content/careers-api/skypluscareers/in/en/v1/careers-job-search.json",
+                "https://ms-careers-prod.goindigo.in/career-job-list",
+            ]
+        )
 
         jobs = []
         for path in candidates:
-            if path.startswith('/'):
+            if path.startswith("/"):
                 url = f"https://www.goindigo.in{path}"
-            elif path.startswith('http'):
+            elif path.startswith("http"):
                 url = path
             else:
                 url = f"https://www.goindigo.in{path}"
 
             try:
                 # Use the new async make_request from BaseScraper
-                resp = await self.make_request(url, timeout=15, headers={
-                    'Accept': 'application/json, text/javascript, */*; q=0.01',
-                    'Referer': self.jobs_url,
-                    'Origin': self.base_url,
-                })
+                resp = await self.make_request(
+                    url,
+                    timeout=15,
+                    headers={
+                        "Accept": "application/json, text/javascript, */*; q=0.01",
+                        "Referer": self.jobs_url,
+                        "Origin": self.base_url,
+                    },
+                )
 
                 if resp.status_code != 200:
                     # If this looks like the ms-careers-prod job-list endpoint, try POST with a typical payload
-                    if 'career-job-list' in url or 'ms-careers-prod' in url:
+                    if "career-job-list" in url or "ms-careers-prod" in url:
                         try:
                             payload = {
-                                'start': 0,
-                                'limit': self.max_jobs or 50,
-                                'filters': {},
+                                "start": 0,
+                                "limit": self.max_jobs or 50,
+                                "filters": {},
                             }
-                            resp2 = await self.make_request(url, method='POST', json=payload, timeout=20, headers={
-                                'Accept': 'application/json, text/javascript, */*; q=0.01',
-                                'Referer': self.jobs_url,
-                                'Origin': self.base_url,
-                                'Content-Type': 'application/json'
-                            })
+                            resp2 = await self.make_request(
+                                url,
+                                method="POST",
+                                json=payload,
+                                timeout=20,
+                                headers={
+                                    "Accept": "application/json, text/javascript, */*; q=0.01",
+                                    "Referer": self.jobs_url,
+                                    "Origin": self.base_url,
+                                    "Content-Type": "application/json",
+                                },
+                            )
                             if resp2.status_code == 200:
                                 data = resp2.json()
                             else:
@@ -610,8 +729,12 @@ class IndiGoScraper(BaseScraper):
 
                 # Try to find job entries in common keys
                 items = None
-                for key in ['jobs', 'results', 'items', 'data']:
-                    if isinstance(data, dict) and key in data and isinstance(data[key], list):
+                for key in ["jobs", "results", "items", "data"]:
+                    if (
+                        isinstance(data, dict)
+                        and key in data
+                        and isinstance(data[key], list)
+                    ):
                         items = data[key]
                         break
                 if items is None and isinstance(data, list):
@@ -619,29 +742,47 @@ class IndiGoScraper(BaseScraper):
 
                 if not items:
                     continue
-                
+
                 logger.info(f"    Found {len(items)} items in API response")
                 if len(items) > 0:
-                     logger.debug(f"DEBUG: First API Item: {items[0]}")
+                    logger.debug(f"DEBUG: First API Item: {items[0]}")
 
                 for it in items:
-                    title = it.get('title') or it.get('name') or it.get('jobTitle') or it.get('position')
-                    url = it.get('url') or it.get('detailUrl') or it.get('applyUrl')
-                    if url and url.startswith('/'):
+                    title = (
+                        it.get("title")
+                        or it.get("name")
+                        or it.get("jobTitle")
+                        or it.get("position")
+                    )
+                    url = it.get("url") or it.get("detailUrl") or it.get("applyUrl")
+                    if url and url.startswith("/"):
                         url = f"https://www.goindigo.in{url}"
-                    posted = it.get('datePosted') or it.get('postedDate') or it.get('publishDate') or it.get('created')
-                    job = self._create_basic_job(url or self.jobs_url, title or 'No Title', len(jobs))
-                    
+                    posted = (
+                        it.get("datePosted")
+                        or it.get("postedDate")
+                        or it.get("publishDate")
+                        or it.get("created")
+                    )
+                    job = self._create_basic_job(
+                        url or self.jobs_url, title or "No Title", len(jobs)
+                    )
+
                     # Extract description if available in API
-                    desc = it.get('description') or it.get('jobDescription') or it.get('richText') or it.get('details') or it.get('intro')
+                    desc = (
+                        it.get("description")
+                        or it.get("jobDescription")
+                        or it.get("richText")
+                        or it.get("details")
+                        or it.get("intro")
+                    )
                     if desc:
-                        job['description'] = desc
+                        job["description"] = desc
 
                     if isinstance(posted, str):
                         parsed = self.parse_posted_date(posted)
-                        job['posted_date'] = parsed if parsed else posted
-                    
-                    if self.should_process_job(job['title']):
+                        job["posted_date"] = parsed if parsed else posted
+
+                    if self.should_process_job(job["title"]):
                         jobs.append(job)
 
                 if jobs:
@@ -652,37 +793,52 @@ class IndiGoScraper(BaseScraper):
         # If live API attempts failed (network / blocking), try parsing a local snapshot for testing
         try:
             snapshot_paths = [
-                os.path.join(os.path.dirname(__file__), '..', 'tmp_indigo_page.html'),
-                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tmp_indigo_page.html'),
-                '/home/rajat/Desktop/AeroOps Intel/aeroScrap_backend/backendMain/tmp_indigo_page.html'
+                os.path.join(os.path.dirname(__file__), "..", "tmp_indigo_page.html"),
+                os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                    "tmp_indigo_page.html",
+                ),
+                "/home/rajat/Desktop/AeroOps Intel/aeroScrap_backend/backendMain/tmp_indigo_page.html",
             ]
             for p in snapshot_paths:
                 if p and os.path.exists(p):
-                    html = open(p, 'r', encoding='utf-8').read()
+                    html = open(p, "r", encoding="utf-8").read()
                     jobs_local = []
-                    for m in re.finditer(r'<a[^>]*class=["\']card-head--title["\'][^>]*href=["\']([^"\']+)["\'][^>]*>([^<]+)</a>', html, re.IGNORECASE):
+                    for m in re.finditer(
+                        r'<a[^>]*class=["\']card-head--title["\'][^>]*href=["\']([^"\']+)["\'][^>]*>([^<]+)</a>',
+                        html,
+                        re.IGNORECASE,
+                    ):
                         href = m.group(1)
                         title = m.group(2).strip()
-                        snippet = html[m.end():m.end()+800]
-                        date_m = re.search(r'<span[^>]*class=["\']date-text["\'][^>]*>(.*?)</span>', snippet, re.IGNORECASE|re.DOTALL)
-                        location_m = re.search(r'<span[^>]*class=["\']location-text["\'][^>]*>\s*<span[^>]*>([^<]+)</span>', snippet, re.IGNORECASE|re.DOTALL)
+                        snippet = html[m.end() : m.end() + 800]
+                        date_m = re.search(
+                            r'<span[^>]*class=["\']date-text["\'][^>]*>(.*?)</span>',
+                            snippet,
+                            re.IGNORECASE | re.DOTALL,
+                        )
+                        location_m = re.search(
+                            r'<span[^>]*class=["\']location-text["\'][^>]*>\s*<span[^>]*>([^<]+)</span>',
+                            snippet,
+                            re.IGNORECASE | re.DOTALL,
+                        )
                         date_text = None
                         if date_m:
                             dt_raw = date_m.group(1)
-                            dt_clean = re.sub(r'<[^>]+>', '', dt_raw).strip()
+                            dt_clean = re.sub(r"<[^>]+>", "", dt_raw).strip()
                             date_text = dt_clean
-                        location = location_m.group(1).strip() if location_m else ''
-                        if href.startswith('/'):
+                        location = location_m.group(1).strip() if location_m else ""
+                        if href.startswith("/"):
                             url = f"https://www.goindigo.in/{href.lstrip('/')}"
-                        elif href.startswith('http'):
+                        elif href.startswith("http"):
                             url = href
                         else:
                             url = f"https://www.goindigo.in/{href}"
                         job = self._create_basic_job(url, title, len(jobs_local))
                         if date_text:
                             parsed = self.parse_posted_date(date_text)
-                            job['posted_date'] = parsed if parsed else date_text
-                        job['location'] = location
+                            job["posted_date"] = parsed if parsed else date_text
+                        job["location"] = location
                         jobs_local.append(job)
                         if self.max_jobs and len(jobs_local) >= self.max_jobs:
                             break
@@ -696,17 +852,17 @@ class IndiGoScraper(BaseScraper):
     async def _fetch_with_persistent_context(self, browser, url, max_wait=20):
         """Retry rendering using a persistent context to reduce transient blocking. Returns job list or []"""
         # Use a temporary user-data-dir so Playwright creates a persistent profile
-        temp_dir = tempfile.mkdtemp(prefix='indigo_profile_')
+        temp_dir = tempfile.mkdtemp(prefix="indigo_profile_")
         try:
             # Use proxy if available
-            proxy_url = os.getenv('PROXY_URL')
+            proxy_url = os.getenv("PROXY_URL")
             launch_args = {
-                'user_data_dir': temp_dir,
-                'headless': True,
-                'args': ['--disable-blink-features=AutomationControlled']
+                "user_data_dir": temp_dir,
+                "headless": True,
+                "args": ["--disable-blink-features=AutomationControlled"],
             }
             if proxy_url:
-                launch_args['proxy'] = {'server': proxy_url}
+                launch_args["proxy"] = {"server": proxy_url}
 
             async with async_playwright() as p:
                 ctx = await p.chromium.launch_persistent_context(**launch_args)
@@ -718,11 +874,11 @@ class IndiGoScraper(BaseScraper):
                     Object.defineProperty(navigator, 'languages', {get: () => ['en-US','en']});
                     window.chrome = { runtime: {} };
                 """)
-                await page.goto(url, wait_until='load', timeout=40000)
+                await page.goto(url, wait_until="load", timeout=40000)
                 await asyncio.sleep(max_wait)
                 await self.simulate_human_behavior(page)
                 # Try selector extraction as before
-                elems = await page.query_selector_all('.search-result__job-cards--card')
+                elems = await page.query_selector_all(".search-result__job-cards--card")
                 jobs = []
                 for idx, el in enumerate(elems):
                     job = await self._extract_job_from_card(el, idx)
@@ -738,109 +894,127 @@ class IndiGoScraper(BaseScraper):
                 pass
             except Exception:
                 pass
-    
+
     def _create_basic_job(self, url, title, idx):
         """Create basic job data from URL and title"""
-        if url.startswith('/'):
+        if url.startswith("/"):
             url = f"{self.base_url}{url}"
-        elif not url.startswith('http'):
+        elif not url.startswith("http"):
             url = f"{self.base_url}/{url}"
-        
+
         job_id = f"indigo_{idx + 1}_{datetime.now().strftime('%Y%m%d')}"
-        
+
         return {
-            'job_id': job_id,
-            'title': title,
-            'company': 'IndiGo Airlines',
-            'source': 'indigo',
-            'url': url,
-            'apply_url': url,
-            'location': '',
-            'job_type': '',
-            'department': '',
-            'posted_date': '',
-            'closing_date': '',
-            'timestamp': datetime.now().isoformat(),
-            'description': '',
-            'requirements': '',
-            'qualifications': '',
+            "job_id": job_id,
+            "title": title,
+            "company": "IndiGo Airlines",
+            "source": "indigo",
+            "url": url,
+            "apply_url": url,
+            "location": "",
+            "job_type": "",
+            "department": "",
+            "posted_date": "",
+            "closing_date": "",
+            "timestamp": datetime.now().isoformat(),
+            "description": "",
+            "requirements": "",
+            "qualifications": "",
         }
-    
+
     async def fetch_job_descriptions(self, jobs):
         """Fetch detailed descriptions for each job"""
         print(f"\nFetching detailed descriptions for {len(jobs)} jobs...")
-        
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=self.headless,
-                args=['--disable-blink-features=AutomationControlled']
+                args=["--disable-blink-features=AutomationControlled"],
             )
-            
+
             for i in range(0, len(jobs), self.batch_size):
-                batch = jobs[i:i + self.batch_size]
+                batch = jobs[i : i + self.batch_size]
                 tasks = []
-                
+
                 for job in batch:
-                    if job.get('url') and job['url'] != self.jobs_url:
+                    if job.get("url") and job["url"] != self.jobs_url:
                         tasks.append(self._extract_description(browser, job))
-                
+
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
-                
-                print(f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs")
-            
+
+                print(
+                    f"  Processed {min(i + self.batch_size, len(jobs))}/{len(jobs)} jobs"
+                )
+
             await browser.close()
-        
+
         # Count jobs with descriptions
-        with_desc = sum(1 for job in jobs if job.get('description'))
+        with_desc = sum(1 for job in jobs if job.get("description"))
         print(f"✓ Successfully extracted {with_desc}/{len(jobs)} descriptions")
-        
+
         return jobs
-    
+
     async def _extract_description(self, browser, job):
         """Extract detailed description from job page with retry logic"""
         # If we already have a good description (e.g. from API), don't waste time/risk overwriting
-        if job.get('description') and len(job['description']) > 100:
+        if job.get("description") and len(job["description"]) > 100:
             return
 
         max_retries = 3
         retry_count = 0
-        
+
         while retry_count < max_retries:
             page = None
             context = None
             try:
                 page, context = await self.setup_stealth_page(browser)
-                
+
                 # Increase delay on retries
                 delay_min = 2 + (retry_count * 2)
                 delay_max = 4 + (retry_count * 2)
                 await self.random_delay(delay_min, delay_max)
-                
+
                 try:
-                    await page.goto(job['url'], wait_until='load', timeout=35000)
+                    await page.goto(job["url"], wait_until="load", timeout=35000)
                 except Exception as timeout_err:
                     await self.random_delay(1, 2)
                     try:
-                        await page.goto(job['url'], wait_until='domcontentloaded', timeout=30000)
+                        await page.goto(
+                            job["url"], wait_until="domcontentloaded", timeout=30000
+                        )
                     except:
                         raise timeout_err
-                
+
                 # Wait longer for dynamic content
                 await self.random_delay(4, 6)
                 await self.simulate_human_behavior(page)
-                
+
                 # Get page title
                 page_title = await page.title()
                 if page_title and len(page_title) > 10:
-                    job['title'] = page_title.replace(' - IndiGo', '').replace(' | IndiGo', '').strip()
-                
+                    job["title"] = (
+                        page_title.replace(" - IndiGo", "")
+                        .replace(" | IndiGo", "")
+                        .strip()
+                    )
+
                 # PRIORITY 1: Try common container selectors (Targeted first to avoid noise)
-                if not job.get('description') or len(job.get('description') or '') < 100:
+                if (
+                    not job.get("description")
+                    or len(job.get("description") or "") < 100
+                ):
                     main_selectors = [
-                        '.description-content', '.job-description', '.jd-content',
-                        '.job-details', '.description', 'article', 'main [role="main"]',
-                        '.job-detail-content', '.jd-section', '.job-overview'
+                        ".description-content",
+                        ".job-description",
+                        ".jd-content",
+                        ".job-details",
+                        ".description",
+                        "article",
+                        'main [role="main"]',
+                        ".job-detail-content",
+                        ".jd-section",
+                        ".job-overview",
                     ]
                     for selector in main_selectors:
                         try:
@@ -848,29 +1022,43 @@ class IndiGoScraper(BaseScraper):
                             if element:
                                 text = await element.inner_text()
                                 if len(text) > 200:
-                                    job['description'] = text.strip()
-                                    logger.info(f"  Extracted description using selector: {selector}")
+                                    job["description"] = text.strip()
+                                    logger.info(
+                                        f"  Extracted description using selector: {selector}"
+                                    )
                                     break
                         except Exception:
                             continue
 
                 # PRIORITY 2: Try structured data extraction (JSON-LD)
-                if not job.get('description') or len(job.get('description') or '') < 100:
+                if (
+                    not job.get("description")
+                    or len(job.get("description") or "") < 100
+                ):
                     try:
-                        jsonld_scripts = await page.query_selector_all('script[type="application/ld+json"]')
+                        jsonld_scripts = await page.query_selector_all(
+                            'script[type="application/ld+json"]'
+                        )
                         for script in jsonld_scripts:
                             try:
                                 txt = (await script.inner_text()).strip()
                                 import json as _json
+
                                 data = _json.loads(txt)
                                 items = data if isinstance(data, list) else [data]
                                 for item in items:
-                                    if isinstance(item, dict) and item.get('@type') and 'JobPosting' in item.get('@type'):
-                                         if item.get('description'):
-                                            job['description'] = item['description']
-                                            logger.info("  Extracted description from JSON-LD")
+                                    if (
+                                        isinstance(item, dict)
+                                        and item.get("@type")
+                                        and "JobPosting" in item.get("@type")
+                                    ):
+                                        if item.get("description"):
+                                            job["description"] = item["description"]
+                                            logger.info(
+                                                "  Extracted description from JSON-LD"
+                                            )
                                             break
-                                if job['description']:
+                                if job["description"]:
                                     break
                             except:
                                 continue
@@ -878,8 +1066,11 @@ class IndiGoScraper(BaseScraper):
                         pass
 
                 # PRIORITY 3: Extract specific content blocks (heuristics)
-                if not job.get('description') or len(job.get('description') or '') < 100:
-                    description_parts = []
+                if (
+                    not job.get("description")
+                    or len(job.get("description") or "") < 100
+                ):
+                    pass
                     # ... [existing logic for headings, paragraphs, lists] ...
                     # (I will keep it but it's already there in the file, I'll just make sure it's after the targeted ones)
 
@@ -888,31 +1079,38 @@ class IndiGoScraper(BaseScraper):
                 # when the page was blocked or the description container wasn't found.
 
                 # Detect common error/failover text and clear if present
-                if job.get('description'):
-                    d_lower = job['description'].lower()
-                    d_len = len(job['description'])
-                    
+                if job.get("description"):
+                    d_lower = job["description"].lower()
+                    d_len = len(job["description"])
+
                     is_error_page = False
-                    
+
                     if d_len < 150:
-                        error_keywords = ['something went wrong', 'please try again', 'akamai', 'error 5']
+                        error_keywords = [
+                            "something went wrong",
+                            "please try again",
+                            "akamai",
+                            "error 5",
+                        ]
                         # Check against keywords - simpler threshold
                         error_count = sum(1 for err in error_keywords if err in d_lower)
                         if error_count >= 1:
                             is_error_page = True
-                    
-                    if 'akamfailoverpage' in d_lower or (d_len < 200 and '404' in d_lower and 'not found' in d_lower):
+
+                    if "akamfailoverpage" in d_lower or (
+                        d_len < 200 and "404" in d_lower and "not found" in d_lower
+                    ):
                         is_error_page = True
-                    
+
                     if is_error_page:
-                        job['description'] = ''
+                        job["description"] = ""
                         retry_count += 1
                         continue
-                
+
                 # Extract location from page if not already set
-                if not job['location']:
+                if not job["location"]:
                     location_selectors = [
-                        '[class*="location"]', 
+                        '[class*="location"]',
                         '[class*="Location"]',
                         'span:has-text("Mumbai")',
                         'span:has-text("Delhi")',
@@ -924,67 +1122,98 @@ class IndiGoScraper(BaseScraper):
                             if elem:
                                 text = await elem.inner_text()
                                 if text.strip():
-                                    job['location'] = text.strip()
+                                    job["location"] = text.strip()
                                     break
                         except:
                             continue
-                
+
                 # Extract job type
-                if not job['job_type']:
+                if not job["job_type"]:
                     try:
-                        body_text = await page.inner_text('body')
-                        type_keywords = ['Permanent', 'Contract', 'Temporary', 'Full-time', 'Full time', 'Part-time']
+                        body_text = await page.inner_text("body")
+                        type_keywords = [
+                            "Permanent",
+                            "Contract",
+                            "Temporary",
+                            "Full-time",
+                            "Full time",
+                            "Part-time",
+                        ]
                         for keyword in type_keywords:
                             if keyword in body_text:
-                                job['job_type'] = keyword
+                                job["job_type"] = keyword
                                 break
                     except Exception:
                         pass
-                
+
                 # Extract department
-                if not job['department']:
+                if not job["department"]:
                     try:
-                        body_text = await page.inner_text('body')
-                        dept_keywords = ['Cabin Crew', 'Pilot', 'Engineering', 'Ground Staff', 'Operations', 'Finance', 'IT', 'Customer Service']
+                        body_text = await page.inner_text("body")
+                        dept_keywords = [
+                            "Cabin Crew",
+                            "Pilot",
+                            "Engineering",
+                            "Ground Staff",
+                            "Operations",
+                            "Finance",
+                            "IT",
+                            "Customer Service",
+                        ]
                         for keyword in dept_keywords:
                             if keyword in body_text:
-                                job['department'] = keyword
+                                job["department"] = keyword
                                 break
                     except Exception:
                         pass
-                
+
                 # Extract posted date if not already set
-                if not job['posted_date']:
-                    date_selectors = ['[class*="date"]', '[class*="Date"]', '[class*="posted"]', 'time']
+                if not job["posted_date"]:
+                    date_selectors = [
+                        '[class*="date"]',
+                        '[class*="Date"]',
+                        '[class*="posted"]',
+                        "time",
+                    ]
                     for selector in date_selectors:
                         try:
                             elem = await page.query_selector(selector)
                             if elem:
                                 date_text = await elem.inner_text()
                                 if date_text.strip():
-                                    parsed_date = self.parse_posted_date(date_text.strip())
-                                    job['posted_date'] = parsed_date if parsed_date else date_text.strip()
+                                    parsed_date = self.parse_posted_date(
+                                        date_text.strip()
+                                    )
+                                    job["posted_date"] = (
+                                        parsed_date
+                                        if parsed_date
+                                        else date_text.strip()
+                                    )
                                     break
                         except:
                             continue
 
                 # Additional fallback: detect posted_date via page heuristics (meta tags or JSON-LD)
-                if not job.get('posted_date'):
+                if not job.get("posted_date"):
                     try:
                         fallback_pd = await self.extract_posted_date_from_page(page)
                         if fallback_pd:
-                            job['posted_date'] = fallback_pd
+                            job["posted_date"] = fallback_pd
                     except Exception:
                         pass
-                
+
                 # Success - exit retry loop
                 break
-                
+
             except asyncio.TimeoutError:
-                print(f"  Timeout for {job['job_id']} (attempt {retry_count + 1}/{max_retries})")
+                print(
+                    f"  Timeout for {job['job_id']} (attempt {retry_count + 1}/{max_retries})"
+                )
                 retry_count += 1
             except Exception as e:
-                print(f"  Error fetching description for {job['job_id']} (attempt {retry_count + 1}/{max_retries}): {e}")
+                print(
+                    f"  Error fetching description for {job['job_id']} (attempt {retry_count + 1}/{max_retries}): {e}"
+                )
                 retry_count += 1
             finally:
                 if page and not page.is_closed():
@@ -996,40 +1225,56 @@ class IndiGoScraper(BaseScraper):
         """Clean navigation noise from IndiGo job descriptions"""
         if not text:
             return ""
-        
+
         # Site navigation text to remove (IndiGo specific)
         noise_keywords = [
-            'Login/Sign Up', 'Web Check-in', 'Flight Status', 'View/Edit Booking', 
-            'Update Contact Details', 'View GST Invoice', 'Check Refund Status', 
-            'Partner Login', 'Interest on Credit Shell', 'Plan B', 'Book a flight',
-            'Flights', 'Offers', 'Manage', '6E Rewards', 'Indigo', 'Help', 'Login', 'Sign up',
-            'Application form', 'Job information is missing'
+            "Login/Sign Up",
+            "Web Check-in",
+            "Flight Status",
+            "View/Edit Booking",
+            "Update Contact Details",
+            "View GST Invoice",
+            "Check Refund Status",
+            "Partner Login",
+            "Interest on Credit Shell",
+            "Plan B",
+            "Book a flight",
+            "Flights",
+            "Offers",
+            "Manage",
+            "6E Rewards",
+            "Indigo",
+            "Help",
+            "Login",
+            "Sign up",
+            "Application form",
+            "Job information is missing",
         ]
-        
-        lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+        lines = [l.strip() for l in text.split("\n") if l.strip()]
         cleaned_lines = []
-        
+
         # Skip header noise (lines before the actual content)
         # We assume the content starts after some common header words or after many noise lines
         content_started = False
-        
+
         for line in lines:
             # Check if this line is purely noise
             is_noise = any(noise.lower() in line.lower() for noise in noise_keywords)
-            
+
             # If line is longer and doesn't match noise exactly, it might be content
             # A typical job title or intro sentence is > 30 chars
             if len(line) > 40 and not is_noise:
                 content_started = True
-                
+
             if content_started:
                 # Even if content started, some lines might be footer noise
                 if is_noise and len(line) < 50:
                     continue
                 cleaned_lines.append(line)
-        
+
         if not cleaned_lines:
             # If everything was filtered out, maybe it wasn't noise
             return "\n".join(lines[:100])
-            
+
         return "\n".join(cleaned_lines)
