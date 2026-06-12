@@ -1,3 +1,9 @@
+from .two_excel_scraper import TwoExcelScraper
+from .ascent_scraper import AscentScraper
+from .aviasg_scraper import AviasgScraper
+from .dlr_scraper import DlrScraper
+from .lar_scraper import LarScraper
+from .virgin_australia_scraper import VirginAustraliaScraper
 """
 Scraper Factory
 Import and instantiate scrapers for different aviation job sites
@@ -99,7 +105,7 @@ from .jet_aviation_scraper import JetAviationScraper
 from .riyadh_air_scraper import RiyadhAirScraper
 from .global_jet_scraper import GlobalJetScraper
 from .aar_corp_scraper import AARCorpScraper
-from .fedex_scraper import FedexScraper
+from .fedex_scraper import FedexScraper, FedexEuroDispatchScraper
 from .kalitta_air_scraper import KalittaAirScraper
 from .envoy_air_scraper import EnvoyAirScraper
 from .atlas_air_scraper import AtlasAirScraper
@@ -110,6 +116,8 @@ from .wheels_up_scraper import WheelsUpScraper
 from .flexjet_scraper import FlexjetScraper
 from .amerijet_scraper import AmerijetScraper
 from .cargojet_scraper import CargojetScraper
+from .canadian_north_scraper import CanadianNorthScraper
+from .rtx_scraper import RtxScraper
 from .jetblue_scraper import JetBlueScraper
 from .qatar_scraper import QatarAirwaysScraper
 from .dnatabrasil_scraper import DnataBrasilScraper
@@ -125,7 +133,8 @@ from .endeavor_scraper import EndeavorScraper
 from .frontier_scraper import FrontierScraper
 from .dhl_scraper import DHLScraper
 from .cae_scraper import CAEScraper
-from .globeair_scraper import GlobeAirScraper
+from .globeair_scraper import GlobeairScraper
+from .norse_scraper import NorseScraper
 from .fai_scraper import FAIScraper
 from .aireuropa_scraper import AirEuropaScraper
 from .skyexpress_scraper import SkyExpressScraper
@@ -160,9 +169,38 @@ from .wmd_scraper import WmdScraper
 from .havenasg_scraper import HavenAsgScraper
 from .contour_scraper import ContourScraper
 from .breeze_airways_scraper import BreezeAirwaysScraper
+from .perimeter_scraper import PerimeterScraper
+from .cevalogistics_scraper import CevaLogisticsScraper
+from .jpmc_scraper import JpmcScraper
+from .westjet_scraper import WestJetScraper
+from .cmacgm_scraper import CmacgmScraper
+from .neosair_scraper import NeosAirScraper
+from .hifly_scraper import HiFlyScraper
+from .airarabia_scraper import AirArabiaScraper
+from .cargolux_scraper import CargoluxScraper
+from .platoon_scraper import PlatoonScraper
+from .flexjet_scraper import FlexjetScraper
+from .skyexpress_scraper import SkyExpressScraper
+from .vistajetcn_scraper import VistajetcnScraper
+from .flylevel_scraper import FlylevelScraper
+from .aeroitalia_scraper import AeroitaliaScraper
+from .menzies_ultipro_scraper import MenziesUltiproScraper
+from .gojet_scraper import GoJetScraper
+from .aeroguard_scraper import AeroGuardScraper
+from .flyexclusive_scraper import FlyexclusiveScraper
+from .glock_scraper import GlockScraper
+from .aircanada_scraper import AirCanadaScraper
+from .cevalogistics_scraper import ChallengeGroupScraper
+from .amazonair_scraper import AmazonAirScraper
 
 # Available scrapers
 SCRAPERS = {
+    "virgin_australia": VirginAustraliaScraper,
+    "lar": LarScraper,
+    "dlr": DlrScraper,
+    "aviasg": AviasgScraper,
+    "ascent": AscentScraper,
+    "two_excel": TwoExcelScraper,
     "absjets": AbsjetsScraper,
     "aegean": AegeanScraper,
     "airfrance": AirFranceScraper,
@@ -260,6 +298,7 @@ SCRAPERS = {
     "global_jet": GlobalJetScraper,
     "aar_corp": AARCorpScraper,
     "fedex": FedexScraper,
+    "fedex_euro_dispatch": FedexEuroDispatchScraper,
     "kalitta_air": KalittaAirScraper,
     "envoy_air": EnvoyAirScraper,
     "atlas_air": AtlasAirScraper,
@@ -269,6 +308,8 @@ SCRAPERS = {
     "flexjet": FlexjetScraper,
     "amerijet": AmerijetScraper,
     "cargojet": CargojetScraper,
+    "canadian_north": CanadianNorthScraper,
+    "rtx": RtxScraper,
     "jetblue": JetBlueScraper,
     "qatar": QatarAirwaysScraper,
     "dnatabrasil": DnataBrasilScraper,
@@ -284,7 +325,8 @@ SCRAPERS = {
     "frontier": FrontierScraper,
     "dhl": DHLScraper,
     "cae": CAEScraper,
-    "globeair": GlobeAirScraper,
+    "globeair": GlobeairScraper,
+    "norse": NorseScraper,
     "fai": FAIScraper,
     "aireuropa": AirEuropaScraper,
     "skyexpress": SkyExpressScraper,
@@ -317,6 +359,29 @@ SCRAPERS = {
     "havenasg": HavenAsgScraper,
     "contour": ContourScraper,
     "breeze_airways": BreezeAirwaysScraper,
+    "perimeter": PerimeterScraper,
+    "cevalogistics": CevaLogisticsScraper,
+    "jpmc": JpmcScraper,
+    "westjet": WestJetScraper,
+    "cmacgm": CmacgmScraper,
+    "neosair": NeosAirScraper,
+    "hifly": HiFlyScraper,
+    "airarabia": AirArabiaScraper,
+    "cargolux": CargoluxScraper,
+    "platoon": PlatoonScraper,
+    "flexjet": FlexjetScraper,
+    "skyexpress": SkyExpressScraper,
+    "vistajetcn": VistajetcnScraper,
+    "flylevel": FlylevelScraper,
+    "aeroitalia": AeroitaliaScraper,
+    "menzies_ultipro": MenziesUltiproScraper,
+    "gojet": GoJetScraper,
+    "aeroguard": AeroGuardScraper,
+    "flyexclusive": FlyexclusiveScraper,
+    "air_canada": AirCanadaScraper,
+    "challenge_group": ChallengeGroupScraper,
+    "glock": GlockScraper,
+    "amazon_air": AmazonAirScraper,
 }
 
 

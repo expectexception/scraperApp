@@ -35,11 +35,11 @@ class DjangoDBManager:
         re.IGNORECASE,
     )
 
-    def _clean_location(self, location: str) -> str:
+    def _clean_location(self, location: str, company: str = "") -> str:
         """Strip label prefixes and resolve postal-prefix codes."""
         if not location:
             return location
-        return LocationManager.normalize_location(location)
+        return LocationManager.normalize_location(location, company=company)
 
     def _country_name_from_code(self, code: str) -> Optional[str]:
         """Return full country name for a 2-letter ISO code, e.g. 'AT' → 'Austria'"""
@@ -54,7 +54,7 @@ class DjangoDBManager:
 
         # Normalize first if it's not already
         if "," not in location and len(location) > 2:
-            location = LocationManager.normalize_location(location)
+            location = LocationManager.normalize_location(location, company=company)
 
         return LocationManager.extract_country_code(location)
 
@@ -444,9 +444,9 @@ class DjangoDBManager:
         try:
             # Extract and normalize fields
             title = job_data.get("title", "No Title").strip()
-            company = job_data.get("company", "Unknown").strip()
+            company = (job_data.get("company") or job_data.get("recruiter") or "Unknown").strip()
             url = job_data.get("url", "").strip()
-            location = self._clean_location(job_data.get("location", "").strip())
+            location = self._clean_location(job_data.get("location", "").strip(), company=company)
             description = job_data.get("description", "").strip()
 
             if not url:

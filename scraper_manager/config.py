@@ -17,14 +17,12 @@ AUTO_SCHEDULE = {
         "schedule": "0 */6 * * *",  # Every 6 hours
         "description": "Run high-priority scrapers (Signature, LinkedIn, AviationJobSearch)",
         "scrapers": ["signature"],
-        "max_jobs": 100,
     },
     "run_specialty_scrapers": {
         "enabled": True,
         "schedule": "0 1 * * *",  # Daily at 01:00
         "description": "Run specialty airline scrapers (IndiGo, Air India, Cargolux)",
         "scrapers": ["indigo", "airindia", "cargolux"],
-        "max_jobs": 50,
     },
     "cleanup_old_jobs": {
         "enabled": True,
@@ -179,8 +177,9 @@ SCRAPER_SETTINGS = {
         "jet_aviation": "medium",
         "riyadh_air": "medium",
         "global_jet": "medium",
-        "aar_corp": "medium",
+        "global_jet": "medium",
         "fedex": "medium",
+        "fedex_euro_dispatch": "medium",
         "kalitta_air": "medium",
         "envoy_air": "medium",
         "atlas_air": "medium",
@@ -190,6 +189,8 @@ SCRAPER_SETTINGS = {
         "flexjet": "medium",
         "amerijet": "medium",
         "cargojet": "medium",
+        "canadian_north": "medium",
+        "rtx": "medium",
         "jetblue": "medium",
         "qatar": "medium",
         "dnatabrasil": "medium",
@@ -201,192 +202,219 @@ SCRAPER_SETTINGS = {
         "havenasg": "medium",
         "contour": "medium",
         "breeze_airways": "medium",
+        "westjet": "medium",
+        "cmacgm": "medium",
+        "neosair": "medium",
+        "hifly": "medium",
+        "airarabia": "medium",
+        "cargolux": "medium",
+        "platoon": "medium",
+        "flexjet": "medium",
+        "skyexpress": "medium",
     },
 }
 
 # Per-Site Scraper Limits
 SCRAPERS = {
-    "absjets": {
+    "two_excel": {
+        "enabled": True,
+        "headless": True,
+    },
+    "ascent": {
+        "enabled": True,
+        "headless": True,
+    },
+    "aviasg": {
+        "enabled": True,
+        "headless": True,
+    },
+    "fedex": {
+        "enabled": True,
+        "headless": True,
+    },
+    "fedex_euro_dispatch": {
+        "enabled": True,
+        "headless": True,
+    },
+    "dlr": {
+        "enabled": True,
+        "headless": True,
+    },
+    "lar": {
+        "enabled": True,
+        "headless": True,
+    },
+    "virgin_australia": {
+        "enabled": True,
+        "headless": True,
+    },
+    "menzies": {
+        "enabled": True,
+        "headless": True,
+        "max_pages": 3,
         "max_jobs": 50,
+    },
+    "menzies_ultipro": {
+        "enabled": True,
+        "headless": True,
+        "max_pages": 3,
+        "max_jobs": 50,
+    },
+    "gojet": {
+        "enabled": True,
+        "headless": True,
+    },
+    "aeroguard": {
+        "enabled": True,
+        "headless": True,
+    },
+    "flyexclusive": {
+        "enabled": True,
+        "headless": True,
+        "max_pages": 3,
+        "max_jobs": 50,
+    },
+    "air_canada": {
+        "enabled": True,
+        "headless": True,
+    },
+    "challenge_group": {
+        "enabled": True,
+        "headless": True,
+    },
+    "glock": {
+        "enabled": True,
+        "headless": True,
+    },
+    "amazon_air": {
+        "enabled": True,
+        "headless": True,
+        "max_pages": 3,
+    },
+    "absjets": {
     },
     "aegean": {
-        "max_jobs": 50,
     },
     "aena": {
-        "max_jobs": 50,
     },
     "airfrance": {
-        "max_jobs": 50,
     },
     "airfrancehop": {
-        "max_jobs": 50,
     },
     "airmalta": {
-        "max_jobs": 50,
     },
     "airserbia": {
-        "max_jobs": 50,
     },
     "alsieexpress": {
-        "max_jobs": 50,
     },
     "amapolaflyg": {
-        "max_jobs": 50,
     },
     "aslairlinesbelgium": {
-        "max_jobs": 50,
     },
     "austrianairlines": {
-        "max_jobs": 50,
     },
     "blueislands": {
-        "max_jobs": 50,
     },
     "braathens": {
-        "max_jobs": 50,
     },
     "bristow": {
-        "max_jobs": 50,
     },
     "brusselsairlines": {
-        "max_jobs": 50,
     },
     "buraqair": {
-        "max_jobs": 50,
     },
     "buzz": {
-        "max_jobs": 50,
     },
     "cabotaviation": {
-        "max_jobs": 50,
     },
     "capitalairlines": {
-        "max_jobs": 50,
     },
     "carpatair": {
-        "max_jobs": 50,
     },
     "dat": {
-        "max_jobs": 50,
     },
     "easternairways": {
-        "max_jobs": 50,
     },
     "easyjet": {
-        "max_jobs": 100,
     },
     "edelweiss": {
-        "max_jobs": 50,
     },
     "egyptair": {
-        "max_jobs": 50,
         "headless": False,
     },
     "elal": {
-        "max_jobs": 50,
         "headless": False,
     },
     "ethiopian": {
-        "max_jobs": 50,
     },
     "eurowings": {
-        "max_jobs": 50,
     },
     "finnair": {
-        "max_jobs": 50,
     },
     "flybe": {
-        "max_jobs": 50,
     },
     "hahnair": {
-        "max_jobs": 50,
     },
     "iberia": {
-        "max_jobs": 50,
         "headless": False,
     },
     "iberiaexpress": {
-        "max_jobs": 50,
         "headless": False,
     },
     "icelandair": {
-        "max_jobs": 50,
         "headless": False,
     },
     "itaairways": {
-        "max_jobs": 50,
         "headless": False,
     },
     "klm": {
-        "max_jobs": 50,
         "headless": False,
     },
     "lufthansacityline": {
-        "max_jobs": 50,
     },
     "norwegian": {
-        "max_jobs": 50,
     },
     "olympicair": {
-        "max_jobs": 50,
     },
     "ryanair": {
-        "max_jobs": 50,
     },
     "sas": {
-        "max_jobs": 50,
     },
     "smartwings": {
-        "max_jobs": 50,
         "headless": False,
     },
     "swiss": {
-        "max_jobs": 50,
     },
     "tap": {
-        "max_jobs": 50,
     },
     "transavia": {
-        "max_jobs": 50,
         "headless": False,
     },
     "tuiairways": {
-        "max_jobs": 50,
     },
     "vueling": {
-        "max_jobs": 50,
     },
     "aerlingus": {
-        "max_jobs": 50,
     },
     "airbaltic": {
-        "max_jobs": 50,
     },
     "airdolomiti": {
-        "max_jobs": 50,
     },
     "airnostrum": {
-        "max_jobs": 50,
     },
-    "signature": {
-        "max_jobs": 50,  # None = extract all jobs
+    "signature": {  # None = extract all jobs
         # None = no page limit
     },
-    "aap": {
-        "max_jobs": 50,  # Limit for testing
+    "aap": {  # Limit for testing
     },
     "cargolux": {
-        "max_jobs": 50,
     },
     "airindia": {
-        "max_jobs": 50,
     },
     "emirates": {
-        "max_jobs": 50,
         "search_queries": ["Operations", "Dispatcher", "Manager"],
     },
     "boeing": {
-        "max_jobs": 50,
         "search_queries": ["Operations", "Dispatcher", "Manager"],
         "search_locations": [
             "Singapore",
@@ -399,24 +427,19 @@ SCRAPERS = {
             "Washington",
         ],
     },
-    "airbus": {"max_jobs": 50, "search_queries": ["Dispatch", "Operations", "Manager"]},
+    "airbus": { "search_queries": ["Dispatch", "Operations", "Manager"]},
     "aisats": {
-        "max_jobs": 5,
     },
     "jmc": {
-        "max_jobs": 50,
         "timeout": 60,
     },
     "iata": {
-        "max_jobs": 50,
         "timeout": 60,
     },
     "avianation": {
-        "max_jobs": 50,
         "timeout": 60,
     },
     "wizzair": {
-        "max_jobs": 50,
         "timeout": 60,
         "search_queries": [
             "Operations",
@@ -425,197 +448,189 @@ SCRAPERS = {
         ],  # Default to all, or user specific like "Pilot"
     },
     "cpr": {
-        "max_jobs": 50,
         "timeout": 60,
     },
     "nbaa": {
-        "max_jobs": 50,
         "timeout": 60,
     },
     "starair": {
-        "max_jobs": 50,
     },
     "lufthansa": {
-        "max_jobs": 50,
     },
     "southwest": {
-        "max_jobs": 50,
     },
     "ba": {
-        "max_jobs": 50,
     },
     "cathay": {
-        "max_jobs": 50,
     },
     "germanairways": {
-        "max_jobs": 50,
     },
     "aa": {
-        "max_jobs": 50,
     },
     "etihad": {
-        "max_jobs": 50,
     },
     "flydubai": {
-        "max_jobs": 50,
     },
     "airarabia": {
-        "max_jobs": 50,
     },
     "airarabia_auh": {
-        "max_jobs": 50,
     },
     "royaljet": {
-        "max_jobs": 50,
-    },
-    "dubairaw": {
-        "max_jobs": 50,
     },
     "abudhabiaviation": {
-        "max_jobs": 50,
     },
     "falconaviation": {
-        "max_jobs": 50,
     },
     "wmd": {
-        "max_jobs": 50,
     },
     "jetfly": {
-        "max_jobs": 50,
     },
     "kuwaitairways": {
-        "max_jobs": 50,
     },
     "flyadeal": {
-        "max_jobs": 50,
     },
     "flynas": {
-        "max_jobs": 50,
     },
     "saudia": {
-        "max_jobs": 50,
     },
     "nesma": {
-        "max_jobs": 50,
     },
     "gulfair": {
-        "max_jobs": 50,
     },
     "omanair": {
-        "max_jobs": 50,
     },
     "salamair": {
-        "max_jobs": 50,
     },
     "spirit": {
-        "max_jobs": 50,
     },
     "mesa": {
-        "max_jobs": 50,
     },
     "delta": {
-        "max_jobs": 50,
     },
     "sun_country": {
-        "max_jobs": 50,
     },
     "mountain_air_cargo": {
-        "max_jobs": 50,
     },
     "air_wisconsin": {
-        "max_jobs": 50,
     },
     "atsg": {
-        "max_jobs": 50,
     },
     "nac": {
-        "max_jobs": 50,
     },
     "omni_air": {
-        "max_jobs": 50,
     },
     "kalitta_holdings": {
-        "max_jobs": 50,
     },
     "jet_aviation": {
-        "max_jobs": 50,
     },
     "riyadh_air": {
-        "max_jobs": 50,
     },
     "global_jet": {
-        "max_jobs": 50,
     },
     "aar_corp": {
-        "max_jobs": 50,
-    },
-    "fedex": {
-        "max_jobs": 50,
     },
     "kalitta_air": {
-        "max_jobs": 50,
     },
     "envoy_air": {
-        "max_jobs": 50,
     },
     "atlas_air": {
-        "max_jobs": 50,
     },
     "atlantic_aviation": {
-        "max_jobs": 50,
     },
     "netjets": {
-        "max_jobs": 50,
     },
     "wheels_up": {
-        "max_jobs": 50,
     },
     "flexjet": {
-        "max_jobs": 50,
     },
     "amerijet": {
-        "max_jobs": 50,
     },
     "cargojet": {
-        "max_jobs": 50,
+    },
+    "canadian_north": {
+    },
+    "rtx": {
     },
     "jetblue": {
-        "max_jobs": 50,
     },
     "qatar": {
-        "max_jobs": 50,
     },
     "dnatabrasil": {
-        "max_jobs": 50,
     },
     "emploitic": {
-        "max_jobs": 50,
     },
     "swissport": {
-        "max_jobs": 50,
     },
     "menzies": {
-        "max_jobs": 50,
     },
     "united": {
-        "max_jobs": 50,
     },
     "ups": {
-        "max_jobs": 50,
     },
     "havenasg": {
-        "max_jobs": 50,
     },
     "contour": {
-        "max_jobs": 150,
     },
     "breeze_airways": {
-        "max_jobs": 50,
+    },
+    "westjet": {
+    },
+    "cmacgm": {
+    },
+    "neosair": {
+    },
+    "hifly": {
+    },
+    "airarabia": {
+    },
+    "cargolux": {
+    },
+    "platoon": {
+    },
+    "flexjet": {
+    },
+    "skyexpress": {
     },
 }
 
 # Site Configurations
 SITES = {
+    "two_excel": {
+        "name": "2Excel",
+        "base_url": "https://2excel.talosats-careers.com",
+        "jobs_url": "https://2excel.talosats-careers.com/view-all-vacancies?what=&where=&iso=gb&radius=30&custom=-1-_-1-#vacancies-section-filters",
+        "description": "2Excel Careers",
+    },
+    "ascent": {
+        "name": "Ascent Flight Training",
+        "base_url": "https://ascentflighttraining.com",
+        "jobs_url": "https://ascentflighttraining.com/careers/",
+        "description": "Ascent Flight Training Careers",
+    },
+    "aviasg": {
+        "name": "Avia Solutions Group",
+        "base_url": "https://careers.aviasg.com",
+        "jobs_url": "https://careers.aviasg.com/en/search?keyword=&country=&businessSegment=&company=&category=",
+        "description": "Avia Solutions Group Careers",
+    },
+    "dlr": {
+        "name": "DLR",
+        "base_url": "https://jobs.dlr.de",
+        "jobs_url": "https://jobs.dlr.de/go/All-Jobs/9291501/",
+        "description": "DLR Careers",
+    },
+    "lar": {
+        "name": "LAR Careers",
+        "base_url": "https://lar.careers",
+        "jobs_url": "https://lar.careers/board/62729feb4cdf6e3a3a8dc30d",
+        "description": "LAR Careers Careers",
+    },
+    "virgin_australia": {
+        "name": "Virgin Australia",
+        "base_url": "https://careers.virginaustralia.com",
+        "jobs_url": "https://careers.virginaustralia.com/jobs/search",
+        "description": "Virgin Australia Careers",
+    },
     "usajobs": {
         "name": "USAJOBS",
         "enabled": True,
@@ -751,12 +766,68 @@ SITES = {
     },
     "menzies": {
         "name": "Menzies Aviation",
-        "enabled": True,
+        "category": "service_provider",
         "base_url": "https://careers.jmenzies.com",
         "jobs_url": "https://careers.jmenzies.com/aviation/vacancy/find/results/",
         "description": "Menzies Aviation careers (Oleeo)",
         "class": "MenziesScraper",
         "module": "scraper_manager.scrapers.menzies_scraper",
+    },
+    "menzies_ultipro": {
+        "name": "Menzies Aviation (UltiPro)",
+        "category": "service_provider",
+        "base_url": "https://recruiting2.ultipro.com",
+        "jobs_url": "https://recruiting2.ultipro.com/MEN1002MENZI/JobBoard/c62dfe4d-64ad-4642-8cd0-17a30715a697/?q=&o=postedDateDesc",
+        "description": "Menzies Aviation UltiPro Job Board",
+    },
+    "gojet": {
+        "name": "GoJet Airlines",
+        "category": "airline",
+        "base_url": "https://workforcenow.adp.com",
+        "jobs_url": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=a7828c0b-d30d-40a2-a3ee-61c80628985c&ccId=19000101_000001&lang=en_US",
+        "description": "GoJet Airlines ADP Job Board",
+    },
+    "aeroguard": {
+        "name": "AeroGuard Flight Training Center",
+        "category": "service_provider",
+        "base_url": "https://recruitingbypaycor.com",
+        "jobs_url": "https://recruitingbypaycor.com/career/CareerHome.action?clientId=8a7883d088e0b78e0189415b377122db",
+        "description": "AeroGuard Flight Training Center Paycor Job Board",
+    },
+    "flyexclusive": {
+        "name": "FlyExclusive",
+        "category": "operator",
+        "base_url": "https://www.paycomonline.net",
+        "jobs_url": "https://www.paycomonline.net/v4/ats/web.php/jobs?clientkey=91989CEA70627F35DBDEA57AC03E0A2B",
+        "description": "FlyExclusive Paycom Careers",
+    },
+    "air_canada": {
+        "name": "Air Canada",
+        "category": "airline",
+        "base_url": "https://careers.aircanada.com",
+        "jobs_url": "https://careers.aircanada.com/ca/en/search-results",
+        "description": "Air Canada Phenom People Job Board",
+    },
+    "challenge_group": {
+        "name": "Challenge Group",
+        "category": "airline",
+        "base_url": "https://career.challenge-group.com",
+        "jobs_url": "https://career.challenge-group.com/search/?q=&locationsearch=&searchResultView=LIST&pageNumber=0&facetFilters=%7B%7D&sortBy=&markerViewed=&carouselIndex=",
+        "description": "Challenge Group SuccessFactors Job Board",
+    },
+    "glock": {
+        "name": "Glock",
+        "category": "operator",
+        "base_url": "https://jobs.glock.at",
+        "jobs_url": "https://jobs.glock.at/programme/onlinebewerbung_uebersicht.php",
+        "description": "Glock Aviation & Corporate Jobs",
+    },
+    "amazon_air": {
+        "name": "Amazon Air",
+        "category": "airline",
+        "base_url": "https://amazon.jobs",
+        "jobs_url": "https://amazon.jobs/content/en/teams/transportation-shipping-logistics/air#jobs-search",
+        "description": "Amazon Air Global Careers",
     },
     "united": {
         "name": "United Airlines",
@@ -1051,10 +1122,19 @@ SITES = {
     },
     "fedex": {
         "name": "FedEx",
-        "enabled": True,
+        "category": "service_provider",
         "base_url": "https://careers.fedex.com",
         "jobs_url": "https://careers.fedex.com/jobs",
         "description": "FedEx careers (Phenom People)",
+        "class": "FedexScraper",
+        "module": "scraper_manager.scrapers.fedex_scraper",
+    },
+    "fedex_euro_dispatch": {
+        "name": "FedEx European Operations",
+        "category": "service_provider",
+        "base_url": "https://careers.fedex.com",
+        "jobs_url": "https://careers.fedex.com/international/european-operations/jobs?keyword=dispatch",
+        "description": "FedEx European Operations Dispatch",
     },
     "kalitta_air": {
         "name": "Kalitta Air",
@@ -1118,6 +1198,24 @@ SITES = {
         "base_url": "https://recruiting.ultipro.ca",
         "jobs_url": "https://recruiting.ultipro.ca/CAR5000CJT/JobBoard/3bdb0a52-04dc-4fa4-91cd-d80afd88843d/",
         "description": "Cargojet careers (UltiPro)",
+    },
+    "canadian_north": {
+        "name": "Canadian North",
+        "enabled": True,
+        "base_url": "https://recruiting.ultipro.ca",
+        "jobs_url": "https://recruiting.ultipro.ca/BRA50007F/JobBoard/2ea5e84a-bfc4-4167-88ba-20d03547d410/",
+        "description": "Canadian North careers (UltiPro)",
+        "class": "CanadianNorthScraper",
+        "module": "scraper_manager.scrapers.canadian_north_scraper",
+    },
+    "rtx": {
+        "name": "RTX",
+        "enabled": True,
+        "base_url": "https://careers.rtx.com",
+        "jobs_url": "https://careers.rtx.com/global/en/search-results",
+        "description": "RTX / Collins / Pratt & Whitney careers (Phenom People)",
+        "class": "RtxScraper",
+        "module": "scraper_manager.scrapers.rtx_scraper",
     },
     "mesa": {
         "name": "Mesa Airlines",
@@ -1630,6 +1728,13 @@ SITES = {
         "jobs_url": "https://www.globeair.com/career",
         "description": "GlobeAir Careers",
     },
+    "norse": {
+        "name": "Norse Atlantic Airways",
+        "enabled": True,
+        "base_url": "https://careers.flynorse.com",
+        "jobs_url": "https://careers.flynorse.com/jobs",
+        "description": "Norse Atlantic Airways Careers",
+    },
     "perimeter": {
         "name": "Perimeter Aviation",
         "enabled": True,
@@ -1638,6 +1743,35 @@ SITES = {
         "description": "Perimeter Aviation careers (Dayforce)",
         "class": "DayforceScraper",
         "module": "scraper_manager.scrapers.dayforce_scraper",
+    },
+    "westjet": {
+        "name": "WestJet",
+        "enabled": True,
+        "base_url": "https://jobs.dayforcehcm.com",
+        "jobs_url": "https://jobs.dayforcehcm.com/en-CA/WestJet/OPSCONTROLCENTRE",
+        "description": "WestJet careers (Dayforce)",
+        "class": "DayforceScraper",
+        "module": "scraper_manager.scrapers.dayforce_scraper",
+    },
+    "cevalogistics": {
+        "name": "CEVA Logistics",
+        "enabled": True,
+        "base_url": "https://jobs.cmacgm-group.com",
+        "jobs_url": "https://jobs.cmacgm-group.com/CEVALogistics/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_shifttype=",
+        "description": "CEVA Logistics careers portal (SuccessFactors)",
+        "class": "CevaLogisticsScraper",
+        "module": "scraper_manager.scrapers.cevalogistics_scraper",
+    },
+    "jpmc": {
+        "name": "JPMorgan Chase",
+        "enabled": True,
+        "base_url": "https://jpmc.fa.oraclecloud.com",
+        "jobs_url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?mode=location",
+        "api_url": "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions",
+        "site_number": "CX_1001",
+        "description": "JPMorgan Chase careers portal (Oracle Cloud HCM)",
+        "class": "JpmcScraper",
+        "module": "scraper_manager.scrapers.jpmc_scraper",
     },
     "fai": {
         "name": "FAI Aviation Group",
@@ -1762,6 +1896,78 @@ SITES = {
         "jobs_url": "https://www.paycomonline.net/v4/ats/web.php/portal/4E8FCB0F31AC88147F0DB7B85238B354/career-page",
         "description": "Contour Aviation Careers",
     },
+    "cmacgm": {
+        "name": "CMA CGM",
+        "enabled": True,
+        "base_url": "https://jobs.cmacgm-group.com",
+        "jobs_url": "https://jobs.cmacgm-group.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_shifttype=",
+        "description": "CMA CGM careers (SuccessFactors)",
+        "class": "CmacgmScraper",
+        "module": "scraper_manager.scrapers.cmacgm_scraper",
+    },
+    "neosair": {
+        "name": "Neos Air",
+        "enabled": True,
+        "base_url": "https://www.neosair.com",
+        "jobs_url": "https://www.neosair.com/en/work-with-us/open-positions",
+        "description": "Neos Air careers",
+        "class": "NeosAirScraper",
+        "module": "scraper_manager.scrapers.neosair_scraper",
+    },
+    "hifly": {
+        "name": "Hi Fly",
+        "enabled": True,
+        "base_url": "https://hifly.aero",
+        "jobs_url": "https://hifly.aero/careers/",
+        "description": "Hi Fly careers",
+        "class": "HiFlyScraper",
+        "module": "scraper_manager.scrapers.hifly_scraper",
+    },
+    "airarabia": {
+        "name": "Air Arabia",
+        "enabled": True,
+        "base_url": "https://www.airarabiagroupcareers.com",
+        "jobs_url": "https://www.airarabiagroupcareers.com/gb/en/search-results",
+        "description": "Air Arabia Careers",
+        "class": "AirArabiaScraper",
+        "module": "scraper_manager.scrapers.airarabia_scraper",
+    },
+    "cargolux": {
+        "name": "Cargolux",
+        "enabled": True,
+        "base_url": "https://cargolux-iajigs.fa.ocs.oraclecloud.com",
+        "jobs_url": "https://cargolux-iajigs.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CargoluxGroundStaff/jobs",
+        "description": "Cargolux Ground Staff Careers",
+        "class": "CargoluxScraper",
+        "module": "scraper_manager.scrapers.cargolux_scraper",
+    },
+    "platoon": {
+        "name": "Platoon Aviation",
+        "enabled": True,
+        "base_url": "https://platoon-aviation.jobs.personio.de/",
+        "jobs_url": "https://platoon-aviation.jobs.personio.de/",
+        "description": "Platoon Aviation Personio",
+        "class": "PlatoonScraper",
+        "module": "scraper_manager.scrapers.platoon_scraper",
+    },
+    "flexjet": {
+        "name": "Flexjet",
+        "enabled": True,
+        "base_url": "https://careers.flexjet.com",
+        "jobs_url": "https://careers.flexjet.com/us/en/search-results",
+        "description": "Flexjet Careers",
+        "class": "FlexjetScraper",
+        "module": "scraper_manager.scrapers.flexjet_scraper",
+    },
+    "skyexpress": {
+        "name": "Sky Express",
+        "enabled": True,
+        "base_url": "https://www.skyexpress.gr/en/company/careers",
+        "jobs_url": "https://www.skyexpress.gr/en/company/careers",
+        "description": "Sky Express Careers",
+        "class": "SkyExpressScraper",
+        "module": "scraper_manager.scrapers.skyexpress_scraper",
+    },
     "breeze_airways": {
         "name": "Breeze Airways",
         "enabled": True,
@@ -1771,7 +1977,35 @@ SITES = {
         "module": "scraper_manager.scrapers.breeze_airways_scraper",
         "description": "Breeze Airways Careers",
     },
+    "vistajetcn": {
+        "name": "VistaJet CN",
+        "enabled": True,
+        "base_url": "https://www.vistajet.cn/en/careers/",
+        "jobs_url": "https://careers-vistajet.icims.com/jobs/search?ss=1&in_iframe=1",
+        "description": "VistaJet CN Careers",
+        "class": "VistajetcnScraper",
+        "module": "scraper_manager.scrapers.vistajetcn_scraper",
+    },
+    "flylevel": {
+        "name": "Fly LEVEL",
+        "enabled": True,
+        "base_url": "https://careers.flylevel.com",
+        "jobs_url": "https://careers.flylevel.com/jobs",
+        "description": "Fly LEVEL Careers",
+        "class": "FlylevelScraper",
+        "module": "scraper_manager.scrapers.flylevel_scraper",
+    },
+    "aeroitalia": {
+        "name": "Aeroitalia",
+        "enabled": True,
+        "base_url": "https://www.aeroitalia.com/en",
+        "jobs_url": "https://www.aeroitalia.com/en/company/work-with-us",
+        "description": "Aeroitalia Careers",
+        "class": "AeroitaliaScraper",
+        "module": "scraper_manager.scrapers.aeroitalia_scraper",
+    },
 }
+
 
 # Build complete config (used by scrapers)
 CONFIG = {

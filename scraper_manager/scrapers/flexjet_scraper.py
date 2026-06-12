@@ -1,32 +1,34 @@
 import asyncio
 import logging
 import requests
-
+from typing import List, Dict
 from .base_scraper import BaseScraper
+from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
 
 class FlexjetScraper(BaseScraper):
     """
-    Scraper for Flexjet (Phenom People)
-    URL: https://careers.flexjet.com/us/en/search-results
+    Scraper for Flexjet (Phenom People API)
+    URL: https://careers.flexjet.com/us/en/search-results?m=3
     """
 
-    def __init__(self, config, db_manager=None):
+    def __init__(self, config: Dict, db_manager=None):
         super().__init__(config, site_key="flexjet", db_manager=db_manager)
         self.base_url = "https://careers.flexjet.com/us/en/search-results"
         self.company_name = "Flexjet"
 
-    async def fetch_jobs(self) -> list:
+    async def fetch_jobs(self) -> List[Dict]:
         jobs = []
 
         headers = {
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
+        # Size 1000 to get a large block of jobs at once
         payload = {
             "sortBy": "",
             "subsearch": "",
@@ -34,7 +36,6 @@ class FlexjetScraper(BaseScraper):
             "jobs": True,
             "counts": True,
             "all_fields": [
-                "phLocSlider",
                 "category",
                 "country",
                 "state",
@@ -51,7 +52,7 @@ class FlexjetScraper(BaseScraper):
             "pageId": "page3",
             "siteType": "external",
             "ddoKey": "refineSearch",
-            "refNum": "FLEXJETGLOBAL",
+            "refNum": "FLEXJET",
         }
 
         try:
@@ -64,6 +65,7 @@ class FlexjetScraper(BaseScraper):
                 json=payload,
                 timeout=30,
             )
+            resp.raise_for_status()
             data = resp.json()
             raw_jobs = data.get("refineSearch", {}).get("data", {}).get("jobs", [])
 
@@ -74,11 +76,14 @@ class FlexjetScraper(BaseScraper):
                     j.get("applyUrl")
                     or f"https://careers.flexjet.com/us/en/job/{j.get('jobId')}"
                 )
+                
+                location = j.get("cityStateCountry") or j.get("location") or "Unknown"
+
                 jobs.append(
                     {
-                        "company": self.company_name,
+                        "company": j.get("companyName", self.company_name),
                         "title": j.get("title", "Unknown"),
-                        "location": j.get("location", "United States"),
+                        "location": location,
                         "url": link,
                         "source_url": link,
                         "apply_url": link,
@@ -92,7 +97,7 @@ class FlexjetScraper(BaseScraper):
 
         return jobs
 
-    async def fetch_job_descriptions(self, jobs) -> list:
+    async def fetch_job_descriptions(self, jobs: List[Dict]) -> List[Dict]:
         if not jobs:
             return []
 
@@ -101,11 +106,12 @@ class FlexjetScraper(BaseScraper):
         )
 
         headers = {
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
+        enriched_jobs = []
         for job in jobs:
             job_seq_no = job.pop("job_seq_no", None)
             if not job_seq_no:
@@ -114,7 +120,7 @@ class FlexjetScraper(BaseScraper):
             payload = {
                 "jobSeqNo": job_seq_no,
                 "ddoKey": "jobDetail",
-                "refNum": "FLEXJETGLOBAL",
+                "refNum": "FLEXJET",
             }
 
             try:
@@ -124,12 +130,26 @@ class FlexjetScraper(BaseScraper):
                     json=payload,
                     timeout=20,
                 )
+                resp.raise_for_status()
                 data = resp.json()
                 jdata = data.get("jobDetail", {}).get("data", {}).get("job", {})
 
                 full_desc = jdata.get("description") or jdata.get("jobDescription")
                 if full_desc:
                     job["description"] = full_desc
+
+                job_dict = get_job_dict(
+                    job_id=f"{self.site_key}_{hash(job['url'])}",
+                    title=job["title"],
+                    company=job["company"],
+                    location=job["location"],
+                    url=job["url"],
+                    source_url=self.base_url,
+                    description=job["description"],
+                    apply_url=job["url"],
+                    source=self.site_key
+                )
+                enriched_jobs.append(job_dict)
 
             except Exception as e:
                 logger.warning(
@@ -138,7 +158,7 @@ class FlexjetScraper(BaseScraper):
 
             await asyncio.sleep(0.1)
 
-        return jobs
+        return enriched_jobs
 
     async def run(self):
         self.print_header()
@@ -147,18 +167,17 @@ class FlexjetScraper(BaseScraper):
         if not jobs:
             return []
 
-        if self.use_filter and self.filter_manager:
-            logger.info(f"[{self.site_key}] Applying pre-filter...")
-            matched_jobs, rejected_jobs, filter_stats = self.apply_title_filter(jobs)
-            self.filter_manager.print_filter_stats(filter_stats)
-            if not matched_jobs:
-                return []
-            jobs = matched_jobs
-
-        jobs, _ = await self.filter_new_jobs(jobs)
-        if not jobs:
+        # Filter by title
+        matched_jobs, rejected_jobs, stats = self.apply_title_filter(jobs)
+        if not matched_jobs:
             return []
 
-        jobs = await self.fetch_job_descriptions(jobs)
-        await self.save_results(jobs)
-        return jobs
+        # Filter out already scraped
+        new_jobs, _ = await self.filter_new_jobs(matched_jobs)
+        if not new_jobs:
+            return []
+
+        # Fetch details
+        final_jobs = await self.fetch_job_descriptions(new_jobs)
+        await self.save_results(final_jobs)
+        return final_jobs

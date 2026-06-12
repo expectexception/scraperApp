@@ -48,15 +48,23 @@ class DayforceScraper(BaseScraper):
                         break
 
                 links = await page.evaluate("""() => {
-                    return Array.from(document.querySelectorAll('a[href*="/jobs/"]')).map(a => {
-                        let titleEl = a.querySelector('.job-title') || a;
-                        let locEl = a.querySelector('.job-location, .location') || a.parentElement.querySelector('.location');
+                    let cards = document.querySelectorAll('[test-id="job-posting-card"]');
+                    if (cards.length === 0) {
+                        cards = document.querySelectorAll('.ant-list-item, .job-tile, .job-row');
+                    }
+                    return Array.from(cards).map(card => {
+                        let titleEl = card.querySelector('[test-id="job-title"]') || card.querySelector('.job-title') || card.querySelector('h2, h3, a');
+                        let aEl = card.querySelector('a[href*="/jobs/"]') || card.querySelector('a');
+                        let locEl = card.querySelector('[test-id="job-location"]') || card.querySelector('.job-location, .location');
+                        let dateEl = card.querySelector('[test-id="job-posted-date-expiry"]') || card.querySelector('.posted-date');
+                        
                         return {
-                            t: titleEl.innerText.trim(),
-                            h: a.href,
-                            l: locEl ? locEl.innerText.trim() : "Unknown"
+                            t: titleEl ? titleEl.innerText.trim() : "",
+                            h: aEl ? aEl.href : "",
+                            l: locEl ? locEl.innerText.trim() : "Unknown",
+                            d: dateEl ? dateEl.innerText.trim() : ""
                         };
-                    });
+                    }).filter(item => item.h && item.t);
                 }""")
 
                 logger.info(f"[{self.site_key}] Found {len(links)} jobs in DOM")
@@ -67,6 +75,7 @@ class DayforceScraper(BaseScraper):
                     title = link["t"]
                     job_url = link["h"]
                     location = link["l"]
+                    date_raw = link["d"]
                     
                     if not title or not job_url or job_url in seen_urls:
                         continue
@@ -79,10 +88,19 @@ class DayforceScraper(BaseScraper):
                     if await self.is_url_already_scraped(job_url):
                         continue
                         
+                    clean_date = date_raw
+                    if clean_date.lower().startswith("posted"):
+                        clean_date = clean_date[6:].strip()
+                        if clean_date.startswith(","):
+                            clean_date = clean_date[1:].strip()
+                    
+                    parsed_date = self.parse_posted_date(clean_date)
+                        
                     job_data_list.append({
                         "title": title,
                         "url": job_url,
                         "location": location,
+                        "posted_date": parsed_date,
                     })
                     
                     if self.max_jobs and len(job_data_list) >= self.max_jobs:
@@ -105,10 +123,11 @@ class DayforceScraper(BaseScraper):
                         logger.error(f"[{self.site_key}] Failed to load details for {item['url']}: {e}")
 
                     job = get_job_dict(
-                        job_id=f"{self.site_key}_{hash(item["url"])}",
+                        job_id=f"{self.site_key}_{hash(item['url'])}",
                         title=item["title"],
                         company=self.company_name,
                         location=item["location"],
+                        posted_date=item.get("posted_date"),
                         url=item["url"],
                         source_url=self.base_url if hasattr(self, 'base_url') else item["url"],
                         description=desc_text,

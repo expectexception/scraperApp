@@ -69,8 +69,8 @@ class BaseScraper:
 
         # Limits
         scraper_config = config.get("scrapers", {}).get(site_key, {})
-        self.max_jobs = scraper_config.get("max_jobs") or config.get("max_jobs", 100)
-        self.max_pages = scraper_config.get("max_pages") or config.get("max_pages", 5)
+        self.max_jobs = scraper_config.get("max_jobs") or config.get("max_jobs")
+        self.max_pages = scraper_config.get("max_pages") or config.get("max_pages")
 
         self.batch_size = config.get("scraper_settings", {}).get("batch_size", 5)
 
@@ -174,7 +174,7 @@ class BaseScraper:
             hint_country = "United States"
 
         return LocationManager.normalize_location(
-            location_text, hint_country=hint_country
+            location_text, hint_country=hint_country, company=self.company_name
         )
 
     async def update_progress(self, current: int, total: int):
@@ -769,9 +769,19 @@ class BaseScraper:
             except (AttributeError, IndexError):
                 continue
 
+        # Fallback using dateutil.parser.parse (fuzzy matching)
+        try:
+            from dateutil import parser
+            parsed_date_dt = parser.parse(text_raw, fuzzy=True).date()
+            if parsed_date_dt >= (now.date() - timedelta(days=3650)) and parsed_date_dt <= (now.date() + timedelta(days=30)):
+                return parsed_date_dt.isoformat()
+        except Exception:
+            pass
+
         # If nothing matched, return None (don't return original text)
         logger.debug(f"[{self.site_key}] Could not parse date: {date_text}")
         return None
+
 
     async def scroll_to_bottom(self, page):
         """Scroll to the bottom of the page to trigger lazy loading"""
@@ -834,9 +844,10 @@ class BaseScraper:
             for m in metas:
                 name = await m.get_attribute("name") or ""
                 prop = await m.get_attribute("property") or ""
+                itemprop = await m.get_attribute("itemprop") or ""
                 content = await m.get_attribute("content") or ""
                 if any(
-                    k in (name + prop).lower()
+                    k in (name + prop + itemprop).lower()
                     for k in (
                         "date",
                         "publish",
@@ -849,6 +860,7 @@ class BaseScraper:
                     parsed = self.parse_posted_date(content)
                     if parsed:
                         return parsed
+
 
             # JSON-LD
             scripts = await page.query_selector_all(

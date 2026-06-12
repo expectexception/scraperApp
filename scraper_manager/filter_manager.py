@@ -65,6 +65,8 @@ class JobFilterManager:
             r"\b(cashier|retail associate|store clerk|shop assistant|sales associate)\b",
             r"\b(bartender|chef|waiter|waitress|catering)\b",
             r"\b(delivery driver|truck driver|courier|warehouse associate)\b",
+            # Non-Aviation Dispatch & Transport
+            r"\b(truck dispatcher|trucking dispatcher|freight dispatcher|logistics dispatcher|bus dispatcher|taxi dispatcher|rail dispatcher|train dispatcher|train driver|bus driver|taxi driver|courier dispatcher|emergency dispatcher|911 dispatcher|police dispatcher|tow dispatcher|fleet dispatcher)\b",
         ]
 
         # Category weights for scoring (higher = more important)

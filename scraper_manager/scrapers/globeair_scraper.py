@@ -1,124 +1,102 @@
-import asyncio
 import logging
-import requests
-from bs4 import BeautifulSoup
+import asyncio
+from typing import List, Dict
+from urllib.parse import urljoin
+from playwright.async_api import async_playwright
+
 from .base_scraper import BaseScraper
+from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
 
-class GlobeAirScraper(BaseScraper):
+class GlobeairScraper(BaseScraper):
     """
-    Scraper for GlobeAir Careers
-    URL: https://www.globeair.com/career
+    Scraper for GlobeAir using Playwright.
+    URL: https://www.globeair.com/career#openpositions
     """
 
-    def __init__(self, config, db_manager=None):
+    def __init__(self, config: Dict, db_manager=None):
         super().__init__(config, site_key="globeair", db_manager=db_manager)
         self.base_url = "https://www.globeair.com/career"
         self.company_name = "GlobeAir"
 
-    async def fetch_jobs(self) -> list:
+    async def fetch_jobs(self) -> List[Dict]:
         jobs = []
-        logger.info(f"[{self.site_key}] Fetching GlobeAir careers page...")
 
-        try:
-            resp = requests.get(self.base_url, timeout=20)
-            resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, "html.parser")
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=self.headless)
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            page = await context.new_page()
 
-            links = soup.find_all("a")
-            for a in links:
-                href = a.get("href", "")
-                if "globeair.com/j/" in href:
+            try:
+                logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
+                await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
+                await page.wait_for_timeout(5000)
+                
+                # Scroll a bit to trigger lazy loading
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await page.wait_for_timeout(3000)
+
+                # Look for open positions container
+                job_elements = await page.query_selector_all('a[href*="job"], a[href*="position"]')
+                
+                logger.info(f"[{self.site_key}] Found {len(job_elements)} potential job links.")
+
+                for el in job_elements:
+                    href = await el.get_attribute("href")
+                    if not href or "faq" in href.lower() or "career" not in href.lower() and "job" not in href.lower():
+                        continue
+                        
+                    title = await el.inner_text()
+                    title = title.strip()
+                    
+                    if not title or len(title) < 3:
+                        continue
+                        
+                    job_url = urljoin(self.base_url, href)
+                    
+                    if not self.should_process_job(title):
+                        continue
+
+                    job_id = f"{self.site_key}_{hash(job_url)}"
+                    
+                    job = get_job_dict(
+                        job_id=job_id,
+                        title=title,
+                        company=self.company_name,
+                        location="Unknown",
+                        url=job_url,
+                        source_url=self.base_url,
+                        description="GlobeAir Career Opportunity.",
+                        apply_url=job_url,
+                        source=self.site_key
+                    )
+                    
+                    jobs.append(job)
+
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
 
-                    parent = a.find_parent("div")
-                    # Usually the title is the first text block in the parent
-                    # For example an h3 or h4
-                    title_elem = parent.find(["h3", "h4", "h5", "strong"])
-                    if title_elem:
-                        title = title_elem.text.strip()
-                    else:
-                        # Fallback: extract the text before 'View opportunity'
-                        text_blocks = [
-                            t
-                            for t in parent.stripped_strings
-                            if "opportunity" not in t.lower() and t != "→"
-                        ]
-                        title = (
-                            text_blocks[0] if text_blocks else "GlobeAir Opportunity"
-                        )
+                return jobs
 
-                    url = href
-                    job_id = url.split("/")[-1]
-
-                    jobs.append(
-                        {
-                            "company": self.company_name,
-                            "title": title,
-                            "location": "Europe/Austria",  # GlobeAir is mostly Austria based (Linz)
-                            "url": url,
-                            "source_url": self.base_url,
-                            "apply_url": url,
-                            "is_active": True,
-                            "job_seq_no": job_id,
-                        }
-                    )
-        except Exception as e:
-            logger.error(f"[{self.site_key}] Error fetching jobs: {e}")
-
-        return jobs
-
-    async def fetch_job_descriptions(self, jobs) -> list:
-        if not jobs:
-            return []
-
-        logger.info(
-            f"[{self.site_key}] Fetching descriptions for {len(jobs)} matched jobs..."
-        )
-
-        for job in jobs:
-            job.pop("job_seq_no", None)
-            url = job["url"]
-
-            try:
-                resp = requests.get(url, timeout=20)
-                if resp.status_code == 200:
-                    soup = BeautifulSoup(resp.text, "html.parser")
-                    # Just grab the main body of the job description, often in a container
-                    content_div = (
-                        soup.find("div", class_="content")
-                        or soup.find("main")
-                        or soup.find("body")
-                    )
-                    if content_div:
-                        job["description"] = content_div.text.strip()
             except Exception as e:
-                logger.warning(
-                    f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}"
-                )
-
-            await asyncio.sleep(0.5)
-
-        return jobs
+                logger.error(f"[{self.site_key}] Error scraping: {e}")
+                return jobs
+            finally:
+                await browser.close()
 
     async def run(self):
         self.print_header()
         jobs = await self.fetch_jobs()
-        if not jobs:
-            return []
+        jobs = [j for j in jobs if j is not None]
 
-        if self.use_filter and self.filter_manager:
-            jobs, _, _ = self.apply_title_filter(jobs)
-            if not jobs:
-                return []
+        if self.use_filter and self.filter_manager and jobs:
+            logger.info(f"[{self.site_key}] Applying final filter check...")
+            jobs, _, filter_stats = self.apply_title_filter(jobs)
+            self.filter_manager.print_filter_stats(filter_stats)
 
-        jobs, _ = await self.filter_new_jobs(jobs)
-        if not jobs:
-            return []
-
-        jobs = await self.fetch_job_descriptions(jobs)
         await self.save_results(jobs)
         return jobs

@@ -15,9 +15,10 @@ class FedexScraper(BaseScraper):
     URL: https://careers.fedex.com/jobs
     """
 
-    def __init__(self, config, db_manager=None):
-        super().__init__(config, site_key="fedex", db_manager=db_manager)
-        self.base_url = "https://careers.fedex.com/jobs"
+    def __init__(self, config, db_manager=None, site_key="fedex"):
+        super().__init__(config, site_key=site_key, db_manager=db_manager)
+        self.site_config = config.get("sites", {}).get(site_key, {})
+        self.base_url = self.site_config.get("jobs_url", "https://careers.fedex.com/jobs")
         self.company_name = "FedEx"
 
     async def fetch_jobs(self) -> list:
@@ -306,3 +307,13 @@ class FedexScraper(BaseScraper):
         if "/job/" not in url:
             return False
         return True
+
+class FedexEuroDispatchScraper(FedexScraper):
+    """Scraper for FedEx European Operations Dispatch"""
+    def __init__(self, config, db_manager=None):
+        super().__init__(config, db_manager=db_manager, site_key="fedex_euro_dispatch")
+
+class AirCanadaScraper(FedexScraper):
+    """Scraper for Air Canada (Phenom People)"""
+    def __init__(self, config, db_manager=None):
+        super().__init__(config, db_manager=db_manager, site_key="air_canada")

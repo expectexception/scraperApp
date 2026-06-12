@@ -574,11 +574,100 @@ class LocationManager:
         "weiswampach (lu)": "Luxembourg",
         "bangalore ho": "India",
         "europe/austria": "Austria",
+        "geilenkirchen": "Germany",
+        "moose jaw": "Canada",
+        "langenhagen": "Germany",
+        "deisslingen": "Germany",
+        "weiswampach": "Luxembourg",
+        "grace-hollogne": "Belgium",
+        "luqa": "Malta",
+        "ta'xbiex": "Malta",
+        "lillestroem": "Norway",
+        "lillestrøm": "Norway",
+        "helsingborg": "Sweden",
+        "kloten": "Switzerland",
+        "spata": "Greece",
+        "colombo": "Sri Lanka",
+        "pune": "India",
+        "mumbai": "India",
+        "bangalore": "India",
+        "boston": "United States",
+        "smyrna": "United States",
+        "wichita": "United States",
+        "seattle": "United States",
+        "mesa": "United States",
+        "las vegas": "United States",
+        "los angeles": "United States",
+        "everett": "United States",
+        "tulsa": "United States",
+        "atlanta": "United States",
+        "cleveland": "United States",
+        "erlanger": "United States",
+        "oxford": "United States",
+        "mirabel": "Canada",
+        "hamilton": "Canada",
+        "moncton": "Canada",
+        "heathrow": "United Kingdom",
+        "maidstone": "United Kingdom",
+        "deutsch-wagram": "Austria",
+        "klagenfurt": "Austria",
+        "ferlach": "Austria",
     }
 
     # Map for specific postal codes reported by user
     SPECIAL_IDENTIFIERS = {
         "lu2 9ly": "United Kingdom",  # Luton Airport
+    }
+
+    COMPANY_TO_LOCATION = {
+        "air wisconsin": "Appleton, United States",
+        "air transport services group": "Wilmington, United States",
+        "atsg": "Wilmington, United States",
+        "gridiron air": "United States",
+        "frontier airlines": "Denver, United States",
+        "mountain air cargo": "Denver, United States",
+        "sun country airlines": "Minneapolis, United States",
+        "cae": "Montreal, Canada",
+        "air india": "India",
+        "indigo": "India",
+        "emirates": "Dubai, United Arab Emirates",
+        "wizz air": "Budapest, Hungary",
+        "ita airways": "Rome, Italy",
+        "aegean airlines": "Athens, Greece",
+        "lufthansa": "Germany",
+        "british airways": "London, United Kingdom",
+        "qatar": "Doha, Qatar",
+        "singapore": "Singapore",
+        "cathay": "Hong Kong",
+        "ryanair": "Dublin, Ireland",
+        "easyjet": "London, United Kingdom",
+        "jetblue": "New York, United States",
+        "southwest": "Dallas, United States",
+        "american airlines": "Fort Worth, United States",
+        "delta airlines": "Atlanta, United States",
+        "fedex": "Memphis, United States",
+        "ups airlines": "Louisville, United States",
+        "boeing": "Arlington, United States",
+        "airbus": "Toulouse, France",
+        "jost group": "Luxembourg",
+    }
+
+    US_STATES = {
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+        "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
+        "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
+        "maine", "maryland", "massachusetts", "michigan", "minnesota",
+        "mississippi", "missouri", "montana", "nebraska", "nevada",
+        "new hampshire", "new jersey", "new mexico", "new york",
+        "north carolina", "north dakota", "ohio", "oklahoma", "oregon",
+        "pennsylvania", "rhode island", "south carolina", "south dakota",
+        "tennessee", "texas", "utah", "vermont", "virginia", "washington",
+        "west virginia", "wisconsin", "wyoming"
     }
 
     # Label prefixes to strip
@@ -600,13 +689,27 @@ class LocationManager:
 
     @classmethod
     def normalize_location(
-        cls, location_text: str, hint_country: Optional[str] = None
+        cls, location_text: str, hint_country: Optional[str] = None, company: Optional[str] = None
     ) -> str:
         """
         Main entry point for normalizing a location string.
         Returns: "City, Country" or just "Country".
         """
+        # Step 0: Handle Unknown / Empty locations by mapping company name
+        is_unknown = False
         if not location_text or not isinstance(location_text, str):
+            is_unknown = True
+        else:
+            cleaned_check = cls.LABEL_PREFIXES_RE.sub("", location_text).strip()
+            if not cleaned_check or cleaned_check.lower() in ("unknown", "n/a", "none", "remote/unknown"):
+                is_unknown = True
+
+        if is_unknown:
+            if company and isinstance(company, str):
+                comp_lower = company.lower()
+                for comp_key, fallback_loc in cls.COMPANY_TO_LOCATION.items():
+                    if comp_key in comp_lower:
+                        return fallback_loc
             return "Unknown"
 
         # Step 1: Strip labels and clean whitespace
@@ -617,8 +720,7 @@ class LocationManager:
         if not cleaned:
             return "Unknown"
 
-        # Step 1b: Strip area/region suffixes added by job boards (e.g. "Toulouse Area" → "Toulouse")
-        # Only strip from single-segment locations (no commas) to avoid stripping valid region names
+        # Step 1b: Strip area/region suffixes
         if "," not in cleaned:
             cleaned_no_area = cls.AREA_SUFFIX_RE.sub("", cleaned).strip()
             if cleaned_no_area:
@@ -640,187 +742,157 @@ class LocationManager:
                 return f"{city}, {country}"
 
         # Step 3b: Handle Workday style locations (US-TX-Irving)
-        # ^([A-Z]{2})-([A-Z]{2,3})-(.+)$ -> \3, \2, \1
+        detected_country = None
         workday_match = re.match(r"^([A-Z]{2})-([A-Z]{2,3})-(.+)$", cleaned)
         if workday_match:
+            country_code = workday_match.group(1).upper()
+            if country_code in cls.CC_TO_NAME:
+                detected_country = cls.CC_TO_NAME[country_code]
             cleaned = f"{workday_match.group(3)}, {workday_match.group(2)}, {workday_match.group(1)}"
 
-        # Step 4: Split by common delimiters (comma, hyphen, slash)
-        # Normalize delimiters to comma for processing
-        normalized_delimiters = re.sub(r"\s+[-/|]\s+", ", ", cleaned)
+        # Step 4: Extract Country Code inside parentheses, e.g. Weiswampach (LU)
+        if not detected_country:
+            paren_match = re.search(r"\(([A-Za-z]{2})\)", cleaned)
+            if paren_match:
+                code = paren_match.group(1).upper()
+                if code in cls.CC_TO_NAME:
+                    detected_country = cls.CC_TO_NAME[code]
+
+        # Split by common delimiters (comma, hyphen, slash, semicolon)
+        normalized_delimiters = re.sub(r"\s+[-/|;]\s+", ", ", cleaned)
         parts = [p.strip() for p in normalized_delimiters.split(",")]
 
-        # New: Check EACH part for hub codes, postal code or country indicators
-        new_parts = []
-        is_us = False
-        us_states = {
-            "AL",
-            "AK",
-            "AZ",
-            "AR",
-            "CA",
-            "CO",
-            "CT",
-            "DE",
-            "FL",
-            "GA",
-            "HI",
-            "ID",
-            "IL",
-            "IN",
-            "IA",
-            "KS",
-            "KY",
-            "LA",
-            "ME",
-            "MD",
-            "MA",
-            "MI",
-            "MN",
-            "MS",
-            "MO",
-            "MT",
-            "NE",
-            "NV",
-            "NH",
-            "NJ",
-            "NM",
-            "NY",
-            "NC",
-            "ND",
-            "OH",
-            "OK",
-            "OR",
-            "PA",
-            "RI",
-            "SC",
-            "SD",
-            "TN",
-            "TX",
-            "UT",
-            "VT",
-            "VA",
-            "WA",
-            "WV",
-            "WI",
-            "WY",
-        }
-
-        for part in parts:
-            part_clean = part.strip()
-            if not part_clean:
-                continue
-            part_upper = part_clean.upper()
-
-            # 1. Aviation Hub Match - Keep original part
-            if len(part_clean) == 3 and part_upper in cls.HUB_TO_COUNTRY:
-                new_parts.append(part_clean)
-                continue
-
-            # 2. Try postal prefix match - Keep original part
-            m = cls.POSTAL_PREFIX_RE.match(part_clean)
-            if m:
-                new_parts.append(part_clean)
-                continue
-
-            # 3. ISO Country Code Match - Be careful with 2-letter codes
-            if part_upper in cls.CC_TO_NAME:
-                # If it's 2-letters, keep it, we'll resolve later in Step 6
-                # This prevents 'Aracaju - SE' -> 'Aracaju - Sweden'
-                new_parts.append(part_clean)
-                if part_upper == "US":
-                    is_us = True
-                continue
-
-            # 4. US State Match
-            if part_upper in us_states:
-                new_parts.append(part_clean)
-                is_us = True
-                continue
-
-            # 5. Common Airport Abbreviations
-            if part_upper in ["USA", "U.S.", "U.S.A"]:
-                new_parts.append("United States")
-                is_us = True
-                continue
-            if part_upper in ["UK", "U.K."]:
-                new_parts.append("United Kingdom")
-                continue
-
-            new_parts.append(part_clean)
-
-        parts = []
-        for p in new_parts:
-            if p.upper() == "US" and is_us:
-                continue
-            parts.append(p)
-
-        if is_us and "United States" not in [p.strip() for p in parts]:
-            parts.append("United States")
-
-        # Step 5: Check city mapping for first part if country is unknown/missing
+        # If no delimiters, check if any city from CITY_TO_COUNTRY is in the text
         if len(parts) == 1:
-            city_lower = parts[0].lower()
-            if city_lower in cls.CITY_TO_COUNTRY:
-                return f"{parts[0]}, {cls.CITY_TO_COUNTRY[city_lower]}"
-            # Also check if it IS a country name already
-            for cc, name in cls.CC_TO_NAME.items():
-                if city_lower == name.lower():
-                    return name
+            text_lower = cleaned.lower()
+            for city_key, country_val in cls.CITY_TO_COUNTRY.items():
+                if re.search(r'\b' + re.escape(city_key) + r'\b', text_lower):
+                    city_name = city_key.title()
+                    return f"{city_name}, {country_val}"
 
-        # Final assembly
-        # Filter out duplicates (if city and country became same)
-        seen_parts = set()
-        final_parts = []
-        for p in parts:
-            p_clean = p.strip()
-            if p_clean.lower() not in seen_parts:
-                final_parts.append(p_clean)
-                seen_parts.add(p_clean.lower())
-
-        # Step 6: Ensure Country Presence
-        # a. Try to resolve country from city or hub mapping first (High confidence)
-        resolved_country = None
-        for p in final_parts:
-            p_lower = p.lower()
-            if p_lower in cls.CITY_TO_COUNTRY:
-                resolved_country = cls.CITY_TO_COUNTRY[p_lower]
-                break
-            p_upper = p.upper()
-            if len(p) == 3 and p_upper in cls.HUB_TO_COUNTRY:
-                resolved_country = cls.HUB_TO_COUNTRY[p_upper]
-                break
-
-        # b. Check if any recognized full country name is already in final_parts
-        has_full_country = False
-        country_names_lower = [name.lower() for name in cls.CC_TO_NAME.values()]
-        for p in final_parts:
-            if p.lower() in country_names_lower:
-                has_full_country = True
-                break
-
-        # c. If no full country name, but we have a resolved_country, append it
-        if not has_full_country:
-            if resolved_country:
-                if resolved_country.lower() not in seen_parts:
-                    final_parts.append(resolved_country)
-                    has_full_country = True
-            elif hint_country:
-                if hint_country.lower() not in seen_parts:
-                    final_parts.append(hint_country)
-                    has_full_country = True
-
-        # d. Only if still no country, look for remaining 2-letter codes that might be countries
-        if not has_full_country:
-            for p in final_parts:
-                if len(p) == 2 and p.upper() in cls.CC_TO_NAME:
-                    # Final guard: SE is almost always Sweden unless we have a Brazil hint
-                    if p.upper() == "SE" and hint_country == "Brazil":
-                        continue
-                    final_parts[final_parts.index(p)] = cls.CC_TO_NAME[p.upper()]
+        # Detect country (full country names as substrings first, sorted by length desc)
+        if not detected_country:
+            sorted_countries = sorted(cls.CC_TO_NAME.values(), key=len, reverse=True)
+            text_lower = cleaned.lower()
+            for country_name in sorted_countries:
+                if re.search(r'\b' + re.escape(country_name.lower()) + r'\b', text_lower):
+                    detected_country = country_name
                     break
 
-        return ", ".join(final_parts)
+        # If still not found, check parts for exact codes or abbreviations (in reverse order to find country first)
+        if not detected_country:
+            for part in reversed(parts):
+                part_clean = part.strip()
+                if not part_clean:
+                    continue
+                part_upper = part_clean.upper()
+                
+                # Check 2-letter or 3-letter codes
+                if part_upper in cls.CC_TO_NAME:
+                    detected_country = cls.CC_TO_NAME[part_upper]
+                    break
+                elif re.search(r'\b(?:USA|U\.S\.|U\.S\.A\.)\b', part_upper):
+                    detected_country = "United States"
+                    break
+                elif re.search(r'\b(?:UK|U\.K\.)\b', part_upper):
+                    detected_country = "United Kingdom"
+                    break
+
+        # Check hint_country
+        if not detected_country and hint_country:
+            detected_country = hint_country
+
+        # Check company-to-location mapping
+        if not detected_country and company:
+            comp_lower = company.lower()
+            for comp_key, fallback_loc in cls.COMPANY_TO_LOCATION.items():
+                if comp_key in comp_lower:
+                    if "," in fallback_loc:
+                        detected_country = fallback_loc.split(",")[-1].strip()
+                    else:
+                        detected_country = fallback_loc
+                    break
+
+        # Check CITY_TO_COUNTRY keys
+        if not detected_country:
+            for part in parts:
+                part_lower = part.lower()
+                if part_lower in cls.CITY_TO_COUNTRY:
+                    detected_country = cls.CITY_TO_COUNTRY[part_lower]
+                    break
+
+        # Final fallback check for country: check if any part is a US state abbreviation/name
+        if not detected_country:
+            for part in parts:
+                part_clean = part.strip()
+                if part_clean.upper() in cls.US_STATES or part_clean.lower() in cls.US_STATES:
+                    detected_country = "United States"
+                    break
+
+        # If we still don't have a country, check if any part is 2-letters in CC_TO_NAME
+        if not detected_country:
+            for p in parts:
+                if len(p) == 2 and p.upper() in cls.CC_TO_NAME:
+                    detected_country = cls.CC_TO_NAME[p.upper()]
+                    break
+
+        # If we still have no country, return the cleaned text
+        if not detected_country:
+            return cleaned
+
+        # CRITICAL: Check if any known city for this country is mentioned in the parts
+        for part in parts:
+            part_lower = part.lower()
+            for city_key, country_val in cls.CITY_TO_COUNTRY.items():
+                if country_val.lower() == detected_country.lower():
+                    if re.search(r'\b' + re.escape(city_key) + r'\b', part_lower):
+                        return f"{city_key.title()}, {detected_country}"
+
+        # Now identify valid city candidates from parts
+        def is_valid_city(part_str: str) -> bool:
+            part_str_clean = part_str.strip()
+            if not part_str_clean:
+                return False
+            # Check if it matches detected_country
+            if part_str_clean.lower() == detected_country.lower():
+                return False
+            # Check if it is a country code
+            if part_str_clean.upper() in cls.CC_TO_NAME:
+                return False
+            # Check if it has street address or building indicator
+            address_indicators = [
+                "straße", "strasse", "street", "road", "way", "fokkerweg", "close", "ave", 
+                "avenue", "st.", "suite", "building", "airport", "headquarters", "home based",
+                "flughafen", "location"
+            ]
+            if any(ind in part_str_clean.lower() for ind in address_indicators):
+                return False
+            # Check if it has digits (mostly postal/street numbers)
+            digit_count = sum(c.isdigit() for c in part_str_clean)
+            if digit_count > 0:
+                return False
+            # Check if it is a US state name/abbreviation
+            if part_str_clean.upper() in cls.US_STATES or part_str_clean.lower() in cls.US_STATES:
+                return False
+            # Check for generic region/area names
+            region_indicators = ["lower", "baden", "region", "area", "province", "county", "metropolitan"]
+            if part_str_clean.lower() in region_indicators:
+                return False
+            return True
+
+        city_candidates = [p for p in parts if is_valid_city(p)]
+
+        if city_candidates:
+            # Pick first candidate
+            city = city_candidates[0]
+            # Strip trailing parentheses, e.g. "Weiswampach (LU)" -> "Weiswampach"
+            city = re.sub(r"\s*\([^)]*\)", "", city).strip()
+            # If city is same as country, return country only
+            if city.lower() == detected_country.lower():
+                return detected_country
+            return f"{city}, {detected_country}"
+        
+        return detected_country
 
     @classmethod
     def extract_country_code(cls, normalized_location: str) -> Optional[str]:
