@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import requests
+import json
 
 from .base_scraper import BaseScraper
 
@@ -47,10 +47,17 @@ class CAEScraper(BaseScraper):
             }
 
             try:
-                resp = requests.post(
-                    self.api_url, json=payload, headers=headers, timeout=20
+                resp = await self.make_request(
+                    self.api_url, 
+                    method="POST",
+                    json=payload, 
+                    headers=headers, 
+                    timeout=20
                 )
-                resp.raise_for_status()
+                if not resp or resp.status_code != 200:
+                    logger.warning(f"[{self.site_key}] API extraction failed with status {resp.status_code if resp else 'None'}")
+                    break
+                    
                 data = resp.json()
 
                 postings = data.get("jobPostings", [])
@@ -90,31 +97,39 @@ class CAEScraper(BaseScraper):
             return []
 
         logger.info(
-            f"[{self.site_key}] Fetching descriptions for {len(jobs)} matched jobs via API..."
+            f"[{self.site_key}] Fetching descriptions for {len(jobs)} matched jobs via API concurrently..."
         )
 
         headers = {"Accept": "application/json", "User-Agent": "Mozilla/5.0"}
 
-        for job in jobs:
+        async def fetch_desc(job):
             external_path = job.pop("job_seq_no", None)
             if not external_path:
-                continue
-
+                return
             try:
                 detail_url = f"{self.detail_api_url}{external_path}"
-                resp = requests.get(detail_url, headers=headers, timeout=20)
-                if resp.status_code == 200:
+                resp = await self.make_request(
+                    detail_url, 
+                    method="GET",
+                    headers=headers, 
+                    timeout=20
+                )
+                if resp and resp.status_code == 200:
                     data = resp.json()
                     desc = data.get("jobPostingInfo", {}).get("jobDescription", "")
                     if desc:
                         job["description"] = desc
-
             except Exception as e:
                 logger.warning(
                     f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}"
                 )
 
-            await asyncio.sleep(0.1)
+        # Process in chunks to avoid rate limiting
+        chunk_size = 10
+        for i in range(0, len(jobs), chunk_size):
+            chunk = jobs[i:i+chunk_size]
+            await asyncio.gather(*(fetch_desc(job) for job in chunk))
+            await asyncio.sleep(0.5)
 
         return jobs
 

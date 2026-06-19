@@ -278,7 +278,7 @@ class BaseScraper:
         if not self.use_filter or not self.filter_manager:
             return True
 
-        matches, categories, score, details = self.filter_manager.matches_filter(title)
+        matches, categories, score, details = self.filter_manager.matches_filter(title, self.company_name)
         if not matches:
             logger.info(
                 f"[{self.site_key}] Skipping job: '{title}' (Title doesn't match filter)"

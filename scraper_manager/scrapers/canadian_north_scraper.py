@@ -89,11 +89,18 @@ class CanadianNorthScraper(BaseScraper):
 
                     # Get location
                     location = "Unknown"
-                    loc_el = await el.query_selector(
-                        '[data-automation="job-location"], .opportunity-location'
-                    )
-                    if loc_el:
-                        location = (await loc_el.inner_text()).strip()
+                    for selector in [
+                        '[data-automation="city-state-zip-country-label"]',
+                        '[data-automation="job-location"]',
+                        '[data-automation="job-address"]',
+                        '.opportunity-location'
+                    ]:
+                        loc_el = await el.query_selector(selector)
+                        if loc_el:
+                            location_text = (await loc_el.inner_text()).strip()
+                            if location_text:
+                                location = location_text
+                                break
 
                     # Early filtering by title
                     if not self.should_process_job(title):
@@ -136,17 +143,38 @@ class CanadianNorthScraper(BaseScraper):
                     except:
                         description = "Description timeout or not found."
 
+                    # Try to fetch location from details page if it is Unknown
+                    location = item["location"]
+                    if location == "Unknown" or not location:
+                        for selector in [
+                            '[data-automation="city-state-zip-country-label"]',
+                            '[data-automation="job-location"]',
+                            '[data-automation="job-address"]',
+                            '.opportunity-location'
+                        ]:
+                            detail_loc_el = await page.query_selector(selector)
+                            if detail_loc_el:
+                                text = (await detail_loc_el.inner_text()).strip()
+                                if text:
+                                    location = text
+                                    break
+                    
+                    # Default fallback to Canada
+                    if location == "Unknown" or not location:
+                        location = "Canada"
+
                     job = get_job_dict(
                         job_id=f"{self.site_key}_{hash(item['url'])}",
                         title=item["title"],
                         company=self.company_name,
-                        location=item["location"],
+                        location=location,
                         url=item["url"],
                         source_url=self.base_url,
                         description=description,
                         apply_url=item["url"],
                         source=self.site_key
                     )
+                    logger.info(f"[{self.site_key}] Extracted job: '{item['title']}' in '{location}'")
                     jobs.append(job)
 
                     if self.max_jobs and len(jobs) >= self.max_jobs:

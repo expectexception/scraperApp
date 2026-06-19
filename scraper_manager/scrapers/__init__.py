@@ -162,6 +162,7 @@ from .caa_uk_scraper import CaaUkScraper
 from .dgca_india_scraper import DgcaIndiaScraper
 from .iag_scraper import IagScraper
 from .lufthansa_group_scraper import LufthansaGroupScraper
+from .lufthansagroup_scraper import LufthansagroupScraper
 from .american_airlines_scraper import (
     AmericanAirlinesScraper as AmericanAirlinesCareersScraper,
 )
@@ -192,6 +193,54 @@ from .glock_scraper import GlockScraper
 from .aircanada_scraper import AirCanadaScraper
 from .cevalogistics_scraper import ChallengeGroupScraper
 from .amazonair_scraper import AmazonAirScraper
+from .ameriflight_scraper import AmeriflightScraper
+from .pacificaviation_scraper import PacificAviationScraper
+from .lynn_scraper import LynnScraper
+from .starlinkaviation_scraper import StarlinkAviationScraper
+from .sunairjets_scraper import SunAirJetsScraper
+from .moncton_adp_scraper import MonctonAdpScraper
+from .hyperion_scraper import HyperionScraper
+from .magma_scraper import MagmaScraper
+from .maersk_scraper import MaerskScraper
+from .pngair_scraper import PngAirScraper
+from .flyalliance_scraper import FlyAllianceScraper
+from .flyscoot_scraper import FlyScootScraper
+from .flytropic_scraper import FlyTropicScraper
+from .flyflair_scraper import FlyFlairScraper
+from .jetex_scraper import JetexScraper
+from .helinet_scraper import HelinetScraper
+from .nationalairlines_scraper import NationalAirlinesScraper
+from .flyafricaworld_scraper import FlyAfricaWorldScraper
+from .allegiantair_scraper import AllegiantAirScraper
+from .dcaviation_scraper import DCAviationScraper
+from .virginaustralia_scraper import VirginAustraliaScraper
+from .airasia_scraper import AirAsiaScraper
+from .bbnairlines_scraper import BBNAirlinesScraper
+from .maximusair_scraper import MaximusAirScraper
+from .volotea_scraper import VoloteaScraper
+from .philippineairlines_scraper import PhilippineAirlinesScraper
+from .adp_fbb94cb3_scraper import AdpFbb94cb3Scraper
+from .flyporter_scraper import FlyPorterScraper
+from .alexjets_scraper import AlexJetsScraper
+from .templerecruitment_scraper import TempleRecruitmentScraper
+from .airx_scraper import AirXScraper
+from .astonjet_scraper import AstonjetScraper
+from .helvetic_scraper import HelveticScraper
+from .hadid_scraper import HadidScraper
+from .singaporeair_scraper import SingaporeAirScraper
+from .vistaglobal_scraper import VistaGlobalScraper
+from .transavia_fr_scraper import TransaviaFrScraper
+from .latestpilotjobs_scraper import LatestPilotJobsScraper
+from .aviationcareers_scraper import AviationCareersScraper
+from .flyinggroup_scraper import FlyingGroupScraper
+from .luxaviation_scraper import LuxaviationScraper
+from .twenty_one_air_scraper import TwentyOneAirScraper
+from .sterling_scraper import SterlingScraper
+from .uchealth_scraper import UCHealthScraper
+from .usajet_scraper import USAJetScraper
+from .igoxair_scraper import IGoxAirScraper
+from .phoenix_air_group_scraper import PhoenixAirGroupScraper
+from .cutter_scraper import CutterScraper
 
 # Available scrapers
 SCRAPERS = {
@@ -255,6 +304,7 @@ SCRAPERS = {
     "itaairways": ITAScraper,
     "klm": KLMScraper,
     "lufthansacityline": LufthansaCityLineScraper,
+    "lufthansa": LufthansagroupScraper,
     "norwegian": NorwegianScraper,
     "olympicair": OlympicAirScraper,
     "ryanair": RyanairScraper,
@@ -382,6 +432,54 @@ SCRAPERS = {
     "challenge_group": ChallengeGroupScraper,
     "glock": GlockScraper,
     "amazon_air": AmazonAirScraper,
+    "ameriflight": AmeriflightScraper,
+    "pacificaviation": PacificAviationScraper,
+    "lynn": LynnScraper,
+    "starlinkaviation": StarlinkAviationScraper,
+    "sunairjets": SunAirJetsScraper,
+    "moncton_adp": MonctonAdpScraper,
+    "hyperion": HyperionScraper,
+    "magma": MagmaScraper,
+    "maersk": MaerskScraper,
+    "pngair": PngAirScraper,
+    "flyalliance": FlyAllianceScraper,
+    "flyscoot": FlyScootScraper,
+    "flytropic": FlyTropicScraper,
+    "flyflair": FlyFlairScraper,
+    "jetex": JetexScraper,
+    "helinet": HelinetScraper,
+    "nationalairlines": NationalAirlinesScraper,
+    "flyafricaworld": FlyAfricaWorldScraper,
+    "allegiantair": AllegiantAirScraper,
+    "dcaviation": DCAviationScraper,
+    "virgin_australia": VirginAustraliaScraper,
+    "airasia": AirAsiaScraper,
+    "bbnairlines": BBNAirlinesScraper,
+    "maximusair": MaximusAirScraper,
+    "volotea": VoloteaScraper,
+    "philippineairlines": PhilippineAirlinesScraper,
+    "adp_fbb94cb3": AdpFbb94cb3Scraper,
+    "flyporter": FlyPorterScraper,
+    "alexjets": AlexJetsScraper,
+    "templerecruitment": TempleRecruitmentScraper,
+    "airx": AirXScraper,
+    "astonjet": AstonjetScraper,
+    "helvetic": HelveticScraper,
+    "hadid": HadidScraper,
+    "singaporeair": SingaporeAirScraper,
+    "vistaglobal": VistaGlobalScraper,
+    "transavia_fr": TransaviaFrScraper,
+    "latestpilotjobs": LatestPilotJobsScraper,
+    "aviationcareers": AviationCareersScraper,
+    "flyinggroup": FlyingGroupScraper,
+    "luxaviation": LuxaviationScraper,
+    "twenty_one_air": TwentyOneAirScraper,
+    "sterling": SterlingScraper,
+    "uchealth": UCHealthScraper,
+    "usajet": USAJetScraper,
+    "igoxair": IGoxAirScraper,
+    "phoenix_air_group": PhoenixAirGroupScraper,
+    "cutter": CutterScraper,
 }
 
 

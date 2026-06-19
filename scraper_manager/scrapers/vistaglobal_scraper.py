@@ -18,7 +18,8 @@ class VistaGlobalScraper(BaseScraper):
 
     def __init__(self, config: Dict, db_manager=None):
         super().__init__(config, site_key="vistaglobal", db_manager=db_manager)
-        self.base_url = "https://hub-vistaglobal.icims.com/jobs/search?ss=1&in_iframe=1"
+        self.site_config = config.get("sites", {}).get("vistaglobal", {})
+        self.base_url = self.site_config.get("jobs_url", "https://hub-vistaglobal.icims.com/jobs/search?ss=1&in_iframe=1")
         self.company_name = "Vista Global"
 
     async def fetch_jobs(self) -> List[Dict]:

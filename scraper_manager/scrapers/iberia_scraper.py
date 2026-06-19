@@ -15,7 +15,7 @@ class IberiaScraper(BaseScraper):
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="iberia", db_manager=db_manager)
-        self.base_url = "https://trabajaconnosotros.iberia.es/"
+        self.base_url = "https://trabajaconnosotros.iberia.es/search/?createNewAlert=false&q="
         self.company_name = "Iberia"
 
     async def fetch_jobs(self) -> list:

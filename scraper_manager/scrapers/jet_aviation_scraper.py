@@ -16,8 +16,7 @@ class JetAviationScraper(BaseScraper):
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="jet_aviation", db_manager=db_manager)
         self.base_url = "https://jobs.jetaviation.com"
-        # The specific search URL provided by the user
-        self.search_url = "https://jobs.jetaviation.com/go/Europe/8766702/?q=&q2=&alertId=&title=dispatch&location=&facility=&date=#searchresults"
+        self.search_url = config.get("sites", {}).get("jet_aviation", {}).get("jobs_url", "https://jobs.jetaviation.com/go/Europe/8766702/")
         self.company_name = "Jet Aviation"
 
     async def fetch_jobs(self) -> list:

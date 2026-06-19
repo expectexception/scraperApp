@@ -21,8 +21,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--age-days",
             type=int,
-            default=7,
-            help="Only check jobs last checked older than this many days",
+            default=0,
+            help="Only check jobs last checked older than this many days (default 0 checks all)",
         )
         parser.add_argument(
             "--dry-run", action="store_true", help="Do not persist changes"
@@ -31,16 +31,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         source = options.get("source")
         limit = options.get("limit", 0)
-        age_days = options.get("age_days", 7)
+        age_days = options.get("age_days", 0)
         dry = options.get("dry_run", False)
 
         dbm = DjangoDBManager()
 
-        qs = Job.objects.filter(status__in=["new", "active"], posted_by__isnull=True)
-        cutoff = timezone.now() - timezone.timedelta(days=age_days)
-        qs = qs.filter(
-            models.Q(last_checked__lt=cutoff) | models.Q(last_checked__isnull=True)
-        )
+        qs = Job.objects.filter(status__in=["new", "active"], is_verified=False, posted_by__isnull=True)
+        if age_days > 0:
+            cutoff = timezone.now() - timezone.timedelta(days=age_days)
+            qs = qs.filter(
+                models.Q(last_checked__lt=cutoff) | models.Q(last_checked__isnull=True)
+            )
         if source:
             qs = qs.filter(source__iexact=source)
         qs = qs.order_by("last_checked")
@@ -50,7 +51,7 @@ class Command(BaseCommand):
         jobs = list(qs)
         total = len(jobs)
         self.stdout.write(
-            f"Processing {total} jobs with status new/active and last_checked older than {age_days} days (source={source}, dry_run={dry})"
+            f"Processing {total} active/unverified jobs (source={source}, age_days={age_days}, dry_run={dry})"
         )
 
         updated = 0

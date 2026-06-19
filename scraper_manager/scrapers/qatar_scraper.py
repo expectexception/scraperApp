@@ -87,7 +87,8 @@ class QatarAirwaysScraper(BaseScraper):
                 # Pagination using jobOffset
                 # We'll crawl until max_jobs or no more result cards
                 for offset in range(0, 300, self.records_per_page):
-                    current_url = f"{self.jobs_url}?jobRecordsPerPage={self.records_per_page}&jobOffset={offset}"
+                    separator = "&" if "?" in self.jobs_url else "?"
+                    current_url = f"{self.jobs_url}{separator}jobRecordsPerPage={self.records_per_page}&jobOffset={offset}"
                     print(f"Loading Qatar Airways careers page (offset={offset})...")
 
                     await page.goto(current_url, wait_until="load", timeout=45000)

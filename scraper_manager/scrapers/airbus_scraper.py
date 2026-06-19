@@ -50,14 +50,14 @@ class AirbusScraper(BaseScraper):
                 search_queries = site_config.get("search_queries", []) or [""]
 
                 for query in search_queries:
-                    if len(jobs) >= self.max_jobs:
+                    if self.max_jobs is not None and len(jobs) >= self.max_jobs:
                         break
 
                     logger.info(f"[{self.site_key}] Searching for: {query}")
                     offset = 0
                     limit = 20
 
-                    while len(jobs) < self.max_jobs:
+                    while self.max_jobs is None or len(jobs) < self.max_jobs:
                         payload = {
                             "appliedFacets": {},
                             "limit": limit,
@@ -88,7 +88,7 @@ class AirbusScraper(BaseScraper):
                             )
 
                             for item in job_items:
-                                if len(jobs) >= self.max_jobs:
+                                if self.max_jobs is not None and len(jobs) >= self.max_jobs:
                                     break
 
                                 external_path = item.get("externalPath") or ""

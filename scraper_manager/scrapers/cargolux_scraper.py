@@ -17,6 +17,7 @@ class CargoluxScraper(JpmcScraper):
             "https://cargolux-iajigs.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
         )
         self.site_number = self.site_config.get("site_number", "CargoluxGroundStaff")
+        self.search_keyword = None
         
         # Override company name in job data extraction
     def _extract_job_data(self, job: Dict) -> Dict:

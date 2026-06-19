@@ -18,6 +18,7 @@ class JpmcScraper(BaseScraper):
             "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
         )
         self.site_number = self.site_config.get("site_number", "CX_1001")
+        self.search_keyword = "dispatcher"
 
     async def fetch_jobs_from_api(self) -> List[Dict]:
         """Fetch basic job data from Oracle Cloud API"""
@@ -36,10 +37,16 @@ class JpmcScraper(BaseScraper):
                 break
             
             print(f"  Fetching page {page_count + 1} (offset {offset})...")
+            
+            finder_str = f"findReqs;siteNumber={self.site_number}"
+            if getattr(self, "search_keyword", None):
+                finder_str += f",keyword={self.search_keyword}"
+            finder_str += f",facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS,limit=25,sortBy=POSTING_DATES_DESC,offset={offset}"
+
             params = {
                 "onlyData": "true",
                 "expand": "requisitionList.workLocation,requisitionList.otherWorkLocations",
-                "finder": f"findReqs;siteNumber={self.site_number},facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS,limit=25,sortBy=POSTING_DATES_DESC,offset={offset}",
+                "finder": finder_str,
             }
             
             try:
@@ -165,6 +172,11 @@ class JpmcScraper(BaseScraper):
             return []
 
         print(f"\n✓ Fetched {len(jobs)} jobs from API")
+
+        # Programmatically filter JPMC jobs to only "Flight Dispatcher"
+        if self.site_key == "jpmc":
+            jobs = [j for j in jobs if j.get("title", "").strip().lower() == "flight dispatcher"]
+            print(f"✓ Filtered to 'Flight Dispatcher' only: {len(jobs)} jobs remaining")
 
         # Step 2: Apply title filtering BEFORE fetching descriptions
         if self.use_filter and self.filter_manager:

@@ -63,10 +63,8 @@ class SkyExpressScraper(BaseScraper):
                 # EForms don't have descriptions visible on the main page, so we use a placeholder
                 desc = "Sky Express career opportunities. Please visit the official career portal to apply."
                 
-                # EForms don't specify location except sometimes in the title
+                # Location refined to country as requested
                 location = "Greece"
-                if "Athens" in title:
-                    location = "Athens, Greece"
 
                 job_id = f"skyexpress_{hash(url)}"
 

@@ -155,9 +155,8 @@ class EmiratesScraper(BaseScraper):
             title_el = await page.query_selector("h4.job-title")
             title = await title_el.text_content() if title_el else meta["title"]
 
-            # Location
-            loc_el = await page.query_selector("h6.location")
-            location = await loc_el.text_content() if loc_el else "UAE"
+            # Location refined to country
+            location = "United Arab Emirates"
 
             # Closing Date
             closing_date = None

@@ -17,7 +17,8 @@ class UnitedScraper(BaseScraper):
 
     def __init__(self, config: Dict[str, Any], db_manager=None):
         super().__init__(config, site_key="united", db_manager=db_manager)
-        self.base_url = "https://careers.united.com/us/en/search-results"
+        self.base_url = config.get("sites", {}).get("united", {}).get("base_url", "https://careers.united.com")
+        self.jobs_url = config.get("sites", {}).get("united", {}).get("jobs_url", "https://careers.united.com/us/en/operations-search-results-page")
         self.company_name = "United Airlines"
 
     async def fetch_jobs(self) -> List[Dict[str, Any]]:
@@ -39,7 +40,7 @@ class UnitedScraper(BaseScraper):
 
                 try:
                     await page.goto(
-                        self.base_url, wait_until="domcontentloaded", timeout=60000
+                        self.jobs_url, wait_until="domcontentloaded", timeout=60000
                     )
                     await page.wait_for_timeout(5000)
 

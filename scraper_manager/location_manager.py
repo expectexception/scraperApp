@@ -715,8 +715,8 @@ class LocationManager:
         # Step 1: Strip labels and clean whitespace
         cleaned = cls.LABEL_PREFIXES_RE.sub("", location_text).strip()
         cleaned = re.sub(r"\s+", " ", cleaned)
-        # Strip trailing punctuation (e.g., ;, ., ,)
-        cleaned = cleaned.rstrip(";.,: ")
+        # Strip trailing punctuation and underscores (e.g., ;, ., ,, _)
+        cleaned = cleaned.rstrip(";.,:_ ")
         if not cleaned:
             return "Unknown"
 
@@ -746,7 +746,7 @@ class LocationManager:
         workday_match = re.match(r"^([A-Z]{2})-([A-Z]{2,3})-(.+)$", cleaned)
         if workday_match:
             country_code = workday_match.group(1).upper()
-            if country_code in cls.CC_TO_NAME:
+            if workday_match.group(1).upper() in cls.CC_TO_NAME:
                 detected_country = cls.CC_TO_NAME[country_code]
             cleaned = f"{workday_match.group(3)}, {workday_match.group(2)}, {workday_match.group(1)}"
 
@@ -777,6 +777,14 @@ class LocationManager:
             for country_name in sorted_countries:
                 if re.search(r'\b' + re.escape(country_name.lower()) + r'\b', text_lower):
                     detected_country = country_name
+                    break
+
+        # Check if any part is a known city in CITY_TO_COUNTRY (prevents country/state collisions like IL -> Israel)
+        if not detected_country:
+            for part in parts:
+                part_lower = part.lower().strip()
+                if part_lower in cls.CITY_TO_COUNTRY:
+                    detected_country = cls.CITY_TO_COUNTRY[part_lower]
                     break
 
         # If still not found, check parts for exact codes or abbreviations (in reverse order to find country first)

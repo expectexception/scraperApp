@@ -159,6 +159,8 @@ SCRAPER_SETTINGS = {
         "saudia": "medium",
         "wmd": "medium",
         "flydubai": "medium",
+        "ameriflight": "medium",
+        "pacificaviation": "medium",
         "airarabia": "medium",
         "airarabia_auh": "medium",
         "royaljet": "medium",
@@ -198,6 +200,52 @@ SCRAPER_SETTINGS = {
         "swissport": "medium",
         "menzies": "medium",
         "united": "high",
+        "lynn": "medium",
+        "starlinkaviation": "medium",
+        "sunairjets": "medium",
+        "moncton_adp": "medium",
+        "hyperion": "medium",
+        "magma": "medium",
+        "maersk": "medium",
+        "hevenaerotech": "medium",
+        "pngair": "medium",
+        "flyalliance": "medium",
+        "flyscoot": "medium",
+        "flytropic": "medium",
+        "flyflair": "medium",
+        "jetex": "medium",
+        "helinet": "medium",
+        "nationalairlines": "medium",
+        "flyafricaworld": "medium",
+        "allegiantair": "medium",
+        "dcaviation": "medium",
+        "airasia": "medium",
+        "bbnairlines": "medium",
+        "maximusair": "medium",
+        "volotea": "medium",
+        "philippineairlines": "medium",
+        "adp_fbb94cb3": "medium",
+        "flyporter": "medium",
+        "alexjets": "medium",
+        "templerecruitment": "medium",
+        "astonjet": "medium",
+        "airx": "medium",
+        "helvetic": "medium",
+        "hadid": "medium",
+        "singaporeair": "medium",
+        "vistaglobal": "medium",
+        "transavia_fr": "medium",
+        "latestpilotjobs": "medium",
+        "aviationcareers": "medium",
+        "flyinggroup": "medium",
+        "luxaviation": "medium",
+        "twenty_one_air": "medium",
+        "sterling": "medium",
+        "uchealth": "medium",
+        "usajet": "medium",
+        "igoxair": "medium",
+        "phoenix_air_group": "medium",
+        "cutter": "medium",
         "ups": "medium",
         "havenasg": "medium",
         "contour": "medium",
@@ -471,6 +519,10 @@ SCRAPERS = {
     },
     "flydubai": {
     },
+    "ameriflight": {
+    },
+    "pacificaviation": {
+    },
     "airarabia": {
     },
     "airarabia_auh": {
@@ -565,6 +617,84 @@ SCRAPERS = {
     },
     "united": {
     },
+    "lynn": {
+    },
+    "starlinkaviation": {
+    },
+    "sunairjets": {
+    },
+    "moncton_adp": {
+    },
+    "hyperion": {
+    },
+    "magma": {
+    },
+    "maersk": {
+    },
+    "hevenaerotech": {
+    },
+    "pngair": {
+    },
+    "flyalliance": {
+    },
+    "flyscoot": {
+    },
+    "flytropic": {
+    },
+    "flyflair": {
+    },
+    "jetex": {
+    },
+    "helinet": {
+    },
+    "nationalairlines": {
+    },
+    "flyafricaworld": {
+    },
+    "allegiantair": {
+    },
+    "dcaviation": {
+    },
+    "airasia": {
+    },
+    "bbnairlines": {
+    },
+    "maximusair": {
+    },
+    "volotea": {
+    },
+    "philippineairlines": {
+    },
+    "adp_fbb94cb3": {
+    },
+    "flyporter": {
+    },
+    "alexjets": {
+    },
+    "templerecruitment": {
+    },
+    "astonjet": {
+    },
+    "airx": {
+    },
+    "helvetic": {
+    },
+    "hadid": {
+    },
+    "singaporeair": {
+    },
+    "vistaglobal": {
+    },
+    "transavia_fr": {
+    },
+    "latestpilotjobs": {
+    },
+    "aviationcareers": {
+    },
+    "flyinggroup": {
+    },
+    "luxaviation": {
+    },
     "ups": {
     },
     "havenasg": {
@@ -590,6 +720,21 @@ SCRAPERS = {
     "flexjet": {
     },
     "skyexpress": {
+    },
+    "twenty_one_air": {
+    },
+    "sterling": {
+    },
+    "uchealth": {
+        "headless": False,
+    },
+    "usajet": {
+    },
+    "igoxair": {
+    },
+    "phoenix_air_group": {
+    },
+    "cutter": {
     },
 }
 
@@ -630,6 +775,8 @@ SITES = {
         "base_url": "https://careers.virginaustralia.com",
         "jobs_url": "https://careers.virginaustralia.com/jobs/search",
         "description": "Virgin Australia Careers",
+        "class": "VirginAustraliaScraper",
+        "module": "scraper_manager.scrapers.virginaustralia_scraper",
     },
     "usajobs": {
         "name": "USAJOBS",
@@ -740,7 +887,7 @@ SITES = {
         "name": "Qatar Airways",
         "enabled": True,
         "base_url": "https://careers.qatarairways.com",
-        "jobs_url": "https://careers.qatarairways.com/global/SearchJobs/?jobRecordsPerPage=6&jobOffset=0",
+        "jobs_url": "https://careers.qatarairways.com/global/SearchJobs?7330=57893&listFilterMode=1",
         "description": "Qatar Airways careers",
     },
     "dnatabrasil": {
@@ -780,6 +927,286 @@ SITES = {
         "jobs_url": "https://recruiting2.ultipro.com/MEN1002MENZI/JobBoard/c62dfe4d-64ad-4642-8cd0-17a30715a697/?q=&o=postedDateDesc",
         "description": "Menzies Aviation UltiPro Job Board",
     },
+    "united": {
+        "name": "United Airlines",
+        "enabled": True,
+        "base_url": "https://careers.united.com",
+        "jobs_url": "https://careers.united.com/us/en/operations-search-results-page",
+        "description": "United Airlines Careers",
+    },
+    "lynn": {
+        "name": "Lynn",
+        "enabled": True,
+        "base_url": "https://lynn.wd5.myworkdayjobs.com/Careers",
+        "jobs_url": "https://lynn.wd5.myworkdayjobs.com/Careers",
+        "description": "Lynn Careers (Workday)",
+    },
+    "starlinkaviation": {
+        "name": "Starlink Aviation",
+        "enabled": True,
+        "base_url": "https://starlinkaviation.com/careers/job-openings/",
+        "jobs_url": "https://starlinkaviation.com/careers/job-openings/",
+        "description": "Starlink Aviation Careers",
+    },
+    "sunairjets": {
+        "name": "Sun Air Jets",
+        "enabled": True,
+        "base_url": "https://www.sunairjets.com/careers/",
+        "jobs_url": "https://www.sunairjets.com/careers/",
+        "description": "Sun Air Jets Careers",
+    },
+    "moncton_adp": {
+        "name": "Moncton Aviation (ADP)",
+        "enabled": True,
+        "base_url": "https://workforcenow.adp.com",
+        "jobs_url": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=06351502-0666-4c6f-9a0b-165c5faeab35&ccId=9200784035909_2&lang=en_CA",
+        "description": "Moncton Aviation ADP Job Board",
+    },
+    "hyperion": {
+        "name": "Hyperion Aviation",
+        "enabled": True,
+        "base_url": "https://hyperion.aero/job-openings/",
+        "jobs_url": "https://hyperion.aero/job-openings/",
+        "description": "Hyperion Aviation Careers",
+    },
+    "magma": {
+        "name": "Magma Aviation",
+        "enabled": True,
+        "base_url": "https://magma.aero/careers/",
+        "jobs_url": "https://magma.aero/careers/",
+        "description": "Magma Aviation Careers",
+    },
+    "maersk": {
+        "name": "Maersk Air Freight",
+        "enabled": True,
+        "base_url": "https://www.maersk.com/careers/",
+        "jobs_url": "https://www.maersk.com/careers/vacancies?continent=&category=Air+Freight&country=&searchText=&limit=24",
+        "description": "Maersk Air Freight Jobs",
+    },
+    "hevenaerotech": {
+        "name": "Heven Aerotech",
+        "enabled": True,
+        "base_url": "https://job-boards.greenhouse.io/hevenaerotech",
+        "jobs_url": "https://boards-api.greenhouse.io/v1/boards/hevenaerotech/jobs",
+        "description": "Heven Aerotech Jobs (Greenhouse)",
+    },
+    "pngair": {
+        "name": "PNG Air",
+        "enabled": True,
+        "base_url": "https://www.pngworkforce.com/jobs/view-company/2787/png-air",
+        "jobs_url": "https://www.pngworkforce.com/jobs/view-company/2787/png-air",
+        "description": "PNG Air Careers",
+    },
+    "flyalliance": {
+        "name": "Fly Alliance",
+        "enabled": True,
+        "base_url": "https://flyalliance.com/careers/",
+        "jobs_url": "https://flyalliance.com/careers/",
+        "description": "Fly Alliance Careers",
+    },
+    "flyscoot": {
+        "name": "Scoot",
+        "enabled": True,
+        "base_url": "https://careers.flyscoot.com/jobs-board?department=flight%20operations",
+        "jobs_url": "https://careers.flyscoot.com/jobs-board?department=flight%20operations",
+        "description": "Scoot Jobs",
+    },
+    "flytropic": {
+        "name": "Tropic Ocean Airways",
+        "enabled": True,
+        "base_url": "https://flytropic.com/careers-full-description-and-applications/",
+        "jobs_url": "https://flytropic.com/careers-full-description-and-applications/",
+        "description": "Tropic Ocean Airways Jobs",
+    },
+    "flyflair": {
+        "name": "Flair Airlines",
+        "enabled": True,
+        "base_url": "https://career.flyflair.com/jobs",
+        "jobs_url": "https://career.flyflair.com/jobs?search=&trk=public_post_reshare-text",
+        "description": "Flair Airlines Careers",
+    },
+    "jetex": {
+        "name": "Jetex",
+        "enabled": True,
+        "base_url": "https://careers.jetex.com/",
+        "jobs_url": "https://careers.jetex.com/",
+        "description": "Jetex Careers",
+    },
+    "helinet": {
+        "name": "Helinet",
+        "enabled": True,
+        "base_url": "https://helinet.com/careers/",
+        "jobs_url": "https://helinet.com/careers/#see-careers",
+        "description": "Helinet Careers",
+    },
+    "nationalairlines": {
+        "name": "National Airlines",
+        "enabled": True,
+        "base_url": "https://www.nationalairlines.com/careers/",
+        "jobs_url": "https://www.nationalairlines.com/careers/",
+        "description": "National Airlines Careers",
+    },
+    "flyafricaworld": {
+        "name": "Africa World Airlines",
+        "enabled": True,
+        "base_url": "https://recruitment.apps-flyafricaworld.com/",
+        "jobs_url": "https://recruitment.apps-flyafricaworld.com/",
+        "description": "Africa World Airlines Careers",
+    },
+    "allegiantair": {
+        "name": "Allegiant Air",
+        "enabled": True,
+        "base_url": "https://www.allegiantair.jobs/see-all-jobs/",
+        "jobs_url": "https://www.allegiantair.jobs/see-all-jobs/",
+        "description": "Allegiant Air Careers",
+    },
+    "dcaviation": {
+        "name": "DC Aviation",
+        "enabled": True,
+        "base_url": "https://dcaviationgmbh.recruitee.com/l/en/",
+        "jobs_url": "https://dcaviationgmbh.recruitee.com/l/en/",
+        "description": "DC Aviation Careers",
+    },
+    "airasia": {
+        "name": "AirAsia",
+        "enabled": True,
+        "base_url": "https://mycareer.airasia.com/gb/en/search-results",
+        "jobs_url": "https://mycareer.airasia.com/gb/en/search-results",
+        "description": "AirAsia Careers",
+    },
+    "bbnairlines": {
+        "name": "BBN Airlines",
+        "enabled": True,
+        "base_url": "https://bbnairlines.aero/careers/",
+        "jobs_url": "https://bbnairlines.aero/careers/",
+        "description": "BBN Airlines Careers",
+    },
+    "maximusair": {
+        "name": "Maximus Air",
+        "enabled": True,
+        "base_url": "https://www.maximus-air.com/careers",
+        "jobs_url": "https://www.maximus-air.com/careers",
+        "description": "Maximus Air Careers",
+    },
+    "volotea": {
+        "name": "Volotea",
+        "enabled": True,
+        "base_url": "https://jobs.volotea.com/hq/",
+        "jobs_url": "https://jobs.volotea.com/hq/",
+        "description": "Volotea Careers",
+    },
+    "philippineairlines": {
+        "name": "Philippine Airlines",
+        "enabled": True,
+        "base_url": "https://careers.philippineairlines.com/go/Ground-And-Admin-Employees/734744/",
+        "jobs_url": "https://careers.philippineairlines.com/go/Ground-And-Admin-Employees/734744/",
+        "description": "Philippine Airlines Careers",
+    },
+    "adp_fbb94cb3": {
+        "name": "Aviation Charter Broker (ADP)",
+        "enabled": True,
+        "base_url": "https://workforcenow.adp.com",
+        "jobs_url": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=fbb94cb3-cbb5-4d4b-8225-770829b92d51&ccId=19000101_000001&lang=en_US",
+        "description": "ADP Company fbb94cb3 Careers",
+    },
+    "flyporter": {
+        "name": "Porter Airlines",
+        "enabled": True,
+        "base_url": "https://careers.flyporter.com/jobs",
+        "jobs_url": "https://careers.flyporter.com/jobs",
+        "description": "Porter Airlines Careers",
+    },
+    "alexjets": {
+        "name": "Alex Jets",
+        "enabled": True,
+        "base_url": "https://alexjets.com/modern/career",
+        "jobs_url": "https://alexjets.com/modern/career",
+        "description": "Alex Jets Careers",
+    },
+    "templerecruitment": {
+        "name": "Temple Recruitment",
+        "enabled": True,
+        "base_url": "https://templerecruitment.ie/jobs/",
+        "jobs_url": "https://templerecruitment.ie/jobs/",
+        "description": "Temple Recruitment Careers",
+    },
+    "astonjet": {
+        "name": "Astonjet",
+        "enabled": True,
+        "base_url": "https://astonjet.com/careers/",
+        "jobs_url": "https://astonjet.recruitee.com/",
+        "description": "Astonjet Careers",
+    },
+    "airx": {
+        "name": "AirX",
+        "enabled": True,
+        "base_url": "https://www.airx.aero/careers/",
+        "jobs_url": "https://www.airx.aero/careers/",
+        "description": "AirX Careers",
+    },
+    "helvetic": {
+        "name": "Helvetic Airways",
+        "enabled": True,
+        "base_url": "https://career.helvetic.com/vacancies",
+        "jobs_url": "https://career.helvetic.com/vacancies",
+        "description": "Helvetic Airways Careers",
+    },
+    "hadid": {
+        "name": "Hadid Aviation",
+        "enabled": True,
+        "base_url": "https://hadid.aero/job-vacancies/list",
+        "jobs_url": "https://hadid.aero/job-vacancies/list",
+        "description": "Hadid Aviation Careers",
+    },
+    "singaporeair": {
+        "name": "Singapore Airlines",
+        "enabled": True,
+        "base_url": "https://careers.singaporeair.com/sia/go/Ground-Professionals/689144/",
+        "jobs_url": "https://careers.singaporeair.com/sia/go/Ground-Professionals/689144/",
+        "description": "Singapore Airlines Careers",
+    },
+    "vistaglobal": {
+        "name": "Vista Global",
+        "enabled": True,
+        "base_url": "https://hub-vistaglobal.icims.com/jobs/search?ss=1&in_iframe=1",
+        "jobs_url": "https://hub-vistaglobal.icims.com/jobs/search?ss=1&searchCategory=109470&searchCategory=17882&searchCategory=17912&searchCategory=17886&searchCategory=8748&searchCategory=17898&searchCategory=54473&searchCategory=57874&mobile=false&width=1296&height=500&bga=true&needsRedirect=false&jan1offset=330&jun1offset=330",
+        "description": "Vista Global Careers",
+    },
+    "transavia_fr": {
+        "name": "Transavia France",
+        "enabled": True,
+        "base_url": "https://recrutement.transavia.com/fr/annonces",
+        "jobs_url": "https://recrutement.transavia.com/fr/annonces",
+        "description": "Transavia France Careers",
+    },
+    "latestpilotjobs": {
+        "name": "Latest Pilot Jobs",
+        "enabled": True,
+        "base_url": "https://www.latestpilotjobs.com",
+        "jobs_url": "https://www.latestpilotjobs.com/jobs/category/id/ground_crew_jobs.html",
+        "description": "LatestPilotJobs Ground Crew listings",
+    },
+    "aviationcareers": {
+        "name": "Aviation Careers CA",
+        "enabled": True,
+        "base_url": "https://aviationcareers.ca",
+        "jobs_url": "https://aviationcareers.ca/careersection/2/jobsearch.ftl?lang=en",
+        "description": "Aviation Careers Canada (Taleo)",
+    },
+    "flyinggroup": {
+        "name": "FLYINGGROUP",
+        "enabled": True,
+        "base_url": "https://www.flyinggroup.aero",
+        "jobs_url": "https://www.flyinggroup.aero/jobs/",
+        "description": "FLYINGGROUP Careers",
+    },
+    "luxaviation": {
+        "name": "Luxaviation",
+        "enabled": True,
+        "base_url": "https://luxaviation.bamboohr.com",
+        "jobs_url": "https://luxaviation.bamboohr.com/careers",
+        "description": "Luxaviation Careers (BambooHR)",
+    },
     "gojet": {
         "name": "GoJet Airlines",
         "category": "airline",
@@ -805,7 +1232,7 @@ SITES = {
         "name": "Air Canada",
         "category": "airline",
         "base_url": "https://careers.aircanada.com",
-        "jobs_url": "https://careers.aircanada.com/ca/en/search-results",
+        "jobs_url": "https://careers.aircanada.com/ca/en",
         "description": "Air Canada Phenom People Job Board",
     },
     "challenge_group": {
@@ -861,8 +1288,10 @@ SITES = {
         "name": "Aegean Airlines",
         "enabled": True,
         "base_url": "https://jobs.aegeanair.com",
-        "jobs_url": "https://jobs.aegeanair.com/",
+        "jobs_url": "https://jobs.aegeanair.com/search/?createNewAlert=false&q=",
         "description": "Aegean Airlines careers",
+        "class": "AegeanScraper",
+        "module": "scraper_manager.scrapers.aegean_scraper",
     },
     "aena": {
         "name": "Aena",
@@ -987,8 +1416,10 @@ SITES = {
         "name": "Southwest Airlines",
         "enabled": True,
         "base_url": "https://careers.southwestair.com",
-        "jobs_url": "https://careers.southwestair.com/us/en/search-results",
+        "jobs_url": "https://careers.southwestair.com/us/en/c/corporate-careers-jobs",
         "description": "Southwest Airlines careers (Phenom People)",
+        "class": "SouthwestScraper",
+        "module": "scraper_manager.scrapers.southwest_scraper",
     },
     "carpatair": {
         "name": "Carpatair",
@@ -1029,7 +1460,7 @@ SITES = {
         "name": "Jetfly",
         "enabled": True,
         "base_url": "https://jetfly.com",
-        "jobs_url": "https://jetfly.com/apply-for-a-job",
+        "jobs_url": "https://jetfly.com/careers",
         "description": "Jetfly careers page",
         "class": "JetflyScraper",
         "module": "scraper_manager.scrapers.jetfly_scraper",
@@ -1038,8 +1469,10 @@ SITES = {
         "name": "easyJet",
         "enabled": True,
         "base_url": "https://careers.easyjet.com",
-        "jobs_url": "https://careers.easyjet.com/en",
+        "jobs_url": "https://easyjet.taleo.net/careersection/2/jobsearch.ftl?f=JOB_FIELD(30305011999,34305011999,34405011999,9570751484,10670751484,28205011999,36405011999,8670751484,16170701859,34205011999,8770751484,34705011999,34105011999,30205011999,32805011999,34905011999,16270701859,8270751484,10370751484,10070751484,8970751484,24105011999,24205011999,24405011999,26105011999,24305011999,32705011999,10270751484,35005011999,9970751484,10570751484,36305011999,9370751484,32605011999,34505011999,9470751484,32505011999,8370751484,9070751484,9870751484,9670751484,34805011999,32105011999,8470751484,18270701859)&ignoreSavedQuery&ej_consent_marketing=false&ej_consent_perf=false#",
         "description": "easyJet careers",
+        "class": "EasyJetScraper",
+        "module": "scraper_manager.scrapers.easyjet_scraper",
     },
     "edelweiss": {
         "name": "Edelweiss Air",
@@ -1101,7 +1534,7 @@ SITES = {
         "name": "Iberia",
         "enabled": True,
         "base_url": "https://www.iberia.com",
-        "jobs_url": "https://portal.iberia.es/portal/site/Iberia/menuitem.944252622416f0ce3f0ce310f2108a0c/",
+        "jobs_url": "https://trabajaconnosotros.iberia.es/search/?createNewAlert=false&q=",
         "description": "Iberia careers",
     },
     "spirit": {
@@ -1182,7 +1615,7 @@ SITES = {
         "name": "Flexjet",
         "enabled": True,
         "base_url": "https://careers.flexjet.com",
-        "jobs_url": "https://careers.flexjet.com/us/en/search-results",
+        "jobs_url": "https://careers.flexjet.com/us/en/eu-all-categories",
         "description": "Flexjet careers (Phenom People)",
     },
     "amerijet": {
@@ -1239,7 +1672,7 @@ SITES = {
         "name": "Iberia Express",
         "enabled": True,
         "base_url": "https://iberiaexpress.com",
-        "jobs_url": "https://portalempleo.iberiaexpress.com/",
+        "jobs_url": "https://trabajaconnosotros.iberia.es/search/?createNewAlert=false&q=Express",
         "description": "Iberia Express careers (Custom Portal)",
     },
     "icelandair": {
@@ -1295,7 +1728,7 @@ SITES = {
         "name": "SAS Scandinavian Airlines",
         "enabled": True,
         "base_url": "https://careers.sasgroup.net",
-        "jobs_url": "https://careers.sasgroup.net/",
+        "jobs_url": "https://careers.sasgroup.net/go/All-SAS-Jobs/4164001/",
         "description": "SAS Scandinavian Airlines careers",
     },
     "smartwings": {
@@ -1323,7 +1756,7 @@ SITES = {
         "name": "TUI Airways",
         "enabled": True,
         "base_url": "https://careers.tuigroup.com/en",
-        "jobs_url": "https://careers.tuigroup.com/en/search-jobs",
+        "jobs_url": "https://careers.tuigroup.com/en/search-jobs?acm=32141888,32173952&alrpm=ALL&ascf=[%7B%22key%22:%22custom_fields.subcategories%22,%22value%22:%22Engineering+%26+Maintenance%22%7D,%7B%22key%22:%22custom_fields.subcategories%22,%22value%22:%22Airline+Engineering%22%7D,%7B%22key%22:%22custom_fields.subcategories%22,%22value%22:%22Engineering+Apprentice%22%7D,%7B%22key%22:%22custom_fields.subcategories%22,%22value%22:%22Ground+Ops%22%7D,%7B%22key%22:%22custom_fields.subcategories%22,%22value%22:%22Aviation%22%7D]",
         "description": "TUI Airways careers",
         "class": "TuiAirwaysScraper",
         "module": "scraper_manager.scrapers.tuiairways_scraper",
@@ -1411,7 +1844,10 @@ SITES = {
         "name": "Emirates Group Careers",
         "enabled": True,
         "base_url": "https://www.emiratesgroupcareers.com",
+        "jobs_url": "https://www.emiratesgroupcareers.com/search-and-apply/#all",
         "description": "Official career site for Emirates Group",
+        "class": "EmiratesScraper",
+        "module": "scraper_manager.scrapers.emirates_scraper",
     },
     "boeing": {
         "name": "Boeing Careers",
@@ -1486,7 +1922,10 @@ SITES = {
         "name": "Lufthansa Group",
         "enabled": True,
         "base_url": "https://apply.lufthansagroup.careers",
+        "jobs_url": "https://apply.lufthansagroup.careers/index.php?ac=search_result&search_criterion_channel%5B%5D=12&language=2&pk_vid=65d4beac5e416cfb178150183991a939",
         "description": "Lufthansa Group careers portal",
+        "class": "LufthansagroupScraper",
+        "module": "scraper_manager.scrapers.lufthansagroup_scraper",
     },
     "ba": {
         "name": "British Airways",
@@ -1494,6 +1933,8 @@ SITES = {
         "base_url": "https://careers.ba.com",
         "jobs_url": "https://careers.ba.com/search-jobs",
         "description": "British Airways careers portal",
+        "class": "BritishAirwaysScraper",
+        "module": "scraper_manager.scrapers.ba_scraper",
     },
     "cathay": {
         "name": "Cathay Pacific",
@@ -1537,8 +1978,22 @@ SITES = {
         "name": "Flydubai",
         "enabled": True,
         "base_url": "https://careers.flydubai.com",
-        "jobs_url": "https://careers.flydubai.com/jobs",
+        "jobs_url": "https://careers.flydubai.com/jobs?page=1&categories=Behind%20the%20Scenes",
         "description": "Flydubai careers portal",
+    },
+    "ameriflight": {
+        "name": "Ameriflight",
+        "enabled": True,
+        "base_url": "https://recruiting.paylocity.com",
+        "jobs_url": "https://recruiting.paylocity.com/recruiting/jobs/All/ffb2b81c-27ab-41d2-959e-56f9349360aa/Ameriflight-LLC",
+        "description": "Ameriflight careers (Paylocity)",
+    },
+    "pacificaviation": {
+        "name": "Pacific Aviation",
+        "enabled": True,
+        "base_url": "https://apply.workable.com",
+        "jobs_url": "https://apply.workable.com/pacificaviation/?lng=en",
+        "description": "Pacific Aviation careers (Workable)",
     },
     "airarabia": {
         "name": "Air Arabia",
@@ -1711,7 +2166,7 @@ SITES = {
         "name": "DHL Aviation",
         "enabled": True,
         "base_url": "https://careers.dhl.com",
-        "jobs_url": "https://careers.dhl.com",
+        "jobs_url": "https://careers.dhl.com/global/en/c/operations-jobs",
         "description": "DHL Aviation careers (SmartRecruiters)",
     },
     "cae": {
@@ -1766,7 +2221,7 @@ SITES = {
         "name": "JPMorgan Chase",
         "enabled": True,
         "base_url": "https://jpmc.fa.oraclecloud.com",
-        "jobs_url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?mode=location",
+        "jobs_url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs",
         "api_url": "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions",
         "site_number": "CX_1001",
         "description": "JPMorgan Chase careers portal (Oracle Cloud HCM)",
@@ -1900,7 +2355,7 @@ SITES = {
         "name": "CMA CGM",
         "enabled": True,
         "base_url": "https://jobs.cmacgm-group.com",
-        "jobs_url": "https://jobs.cmacgm-group.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_shifttype=",
+        "jobs_url": "https://jobs.cmacgm-group.com/go/Air-Freight-2/9716801/",
         "description": "CMA CGM careers (SuccessFactors)",
         "class": "CmacgmScraper",
         "module": "scraper_manager.scrapers.cmacgm_scraper",
@@ -1927,7 +2382,7 @@ SITES = {
         "name": "Air Arabia",
         "enabled": True,
         "base_url": "https://www.airarabiagroupcareers.com",
-        "jobs_url": "https://www.airarabiagroupcareers.com/gb/en/search-results",
+        "jobs_url": "https://www.airarabiagroupcareers.com/gb/en/flight-operations",
         "description": "Air Arabia Careers",
         "class": "AirArabiaScraper",
         "module": "scraper_manager.scrapers.airarabia_scraper",
@@ -1954,7 +2409,7 @@ SITES = {
         "name": "Flexjet",
         "enabled": True,
         "base_url": "https://careers.flexjet.com",
-        "jobs_url": "https://careers.flexjet.com/us/en/search-results",
+        "jobs_url": "https://careers.flexjet.com/us/en/eu-all-categories",
         "description": "Flexjet Careers",
         "class": "FlexjetScraper",
         "module": "scraper_manager.scrapers.flexjet_scraper",
@@ -2003,6 +2458,69 @@ SITES = {
         "description": "Aeroitalia Careers",
         "class": "AeroitaliaScraper",
         "module": "scraper_manager.scrapers.aeroitalia_scraper",
+    },
+    "twenty_one_air": {
+        "name": "21 Air",
+        "enabled": True,
+        "base_url": "https://recruiting.paylocity.com/recruiting/jobs/All/bf3ab0f0-77a0-4342-8ff8-83069b83bd23/21-AIR-LLC",
+        "jobs_url": "https://recruiting.paylocity.com/recruiting/jobs/All/bf3ab0f0-77a0-4342-8ff8-83069b83bd23/21-AIR-LLC",
+        "description": "21 Air Careers",
+        "class": "TwentyOneAirScraper",
+        "module": "scraper_manager.scrapers.twenty_one_air_scraper",
+    },
+    "sterling": {
+        "name": "Sterling Airways",
+        "enabled": True,
+        "base_url": "https://flysterling.com/careers/",
+        "jobs_url": "https://flysterling.com/careers/",
+        "description": "Sterling Airways Careers",
+        "class": "SterlingScraper",
+        "module": "scraper_manager.scrapers.sterling_scraper",
+    },
+    "uchealth": {
+        "name": "UCHealth",
+        "enabled": True,
+        "base_url": "https://careers.uchealth.org/search/jobs",
+        "jobs_url": "https://careers.uchealth.org/search/jobs",
+        "description": "UCHealth Careers",
+        "class": "UCHealthScraper",
+        "module": "scraper_manager.scrapers.uchealth_scraper",
+    },
+    "usajet": {
+        "name": "USA Jet",
+        "enabled": True,
+        "base_url": "https://usajet.aero/flight-operations/",
+        "jobs_url": "https://ascentgl.wd1.myworkdayjobs.com/USJ",
+        "description": "USA Jet Careers",
+        "class": "USAJetScraper",
+        "module": "scraper_manager.scrapers.usajet_scraper",
+    },
+    "igoxair": {
+        "name": "iGox Air",
+        "enabled": True,
+        "base_url": "https://www.igoxair.com/opportunities",
+        "jobs_url": "https://www.igoxair.com/opportunities",
+        "description": "iGox Air Careers",
+        "class": "IGoxAirScraper",
+        "module": "scraper_manager.scrapers.igoxair_scraper",
+    },
+    "phoenix_air_group": {
+        "name": "Phoenix Air Group",
+        "enabled": True,
+        "base_url": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=0e1b54aa-e5af-4e0b-90d1-e04e6d0be023&ccId=19000101_000001&lang=en_US",
+        "jobs_url": "https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid=0e1b54aa-e5af-4e0b-90d1-e04e6d0be023&ccId=19000101_000001&lang=en_US",
+        "description": "Phoenix Air Group Careers",
+        "class": "PhoenixAirGroupScraper",
+        "module": "scraper_manager.scrapers.phoenix_air_group_scraper",
+    },
+    "cutter": {
+        "name": "Cutter Aviation",
+        "enabled": True,
+        "base_url": "https://cutteraviation.com/careers/",
+        "jobs_url": "https://recruiting.paylocity.com/recruiting/v2/api/feed/jobs/e31122d0-2189-4eb9-8b32-a8dd1dafea6c",
+        "description": "Cutter Aviation Careers",
+        "class": "CutterScraper",
+        "module": "scraper_manager.scrapers.cutter_scraper",
     },
 }
 

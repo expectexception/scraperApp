@@ -66,7 +66,9 @@ class JobFilterManager:
             r"\b(bartender|chef|waiter|waitress|catering)\b",
             r"\b(delivery driver|truck driver|courier|warehouse associate)\b",
             # Non-Aviation Dispatch & Transport
-            r"\b(truck dispatcher|trucking dispatcher|freight dispatcher|logistics dispatcher|bus dispatcher|taxi dispatcher|rail dispatcher|train dispatcher|train driver|bus driver|taxi driver|courier dispatcher|emergency dispatcher|911 dispatcher|police dispatcher|tow dispatcher|fleet dispatcher)\b",
+            r"\b(truck dispatcher|trucking dispatcher|freight dispatcher|logistics dispatcher|bus dispatcher|taxi dispatcher|rail dispatcher|train dispatcher|train driver|bus driver|taxi driver|courier dispatcher|emergency dispatcher|911 dispatcher|police dispatcher|tow dispatcher|fleet dispatcher|linehaul dispatcher|linehaul)\b",
+            # HR, Recruitment & Corporate Support (e.g. HR Operations Analyst, Recruiter, HRBP)
+            r"\b(hr|human resources|recruiter|recruitment|talent acquisition|headhunter|people partner|hrbp|rh|relations humaines|ressources humaines|talent partner|acquisition de talents)\b",
         ]
 
         # Category weights for scoring (higher = more important)
@@ -204,8 +206,22 @@ class JobFilterManager:
         return bool(self._neg_pattern_cache[key].search(title_lower))
 
     @lru_cache(maxsize=10000)
-    def _matches_filter_impl(self, title_lower: str) -> Tuple[bool, Tuple, float, Dict]:
+    def _matches_filter_impl(self, title_lower: str, company_lower: str = "") -> Tuple[bool, Tuple, float, Dict]:
         """Internal implementation of filter matching - optimized for speed"""
+        # Exclude generic dispatchers at logistics/trucking/freight/carrier/transport companies
+        if company_lower:
+            logistics_keywords = {"ceva", "fedex", "dhl", "ups", "logistics", "trucking", "transport", "freight", "carrier"}
+            has_logistics_comp = any(lk in company_lower for lk in logistics_keywords)
+            if has_logistics_comp:
+                title_clean = title_lower.replace("-", " ").replace("/", " ")
+                words = set(title_clean.split())
+                has_dispatch = "dispatcher" in words or "dispatch" in words
+                if has_dispatch:
+                    aviation_keywords = {"flight", "aircraft", "airline", "aviation", "crew", "occ", "iocc", "cargo", "airside", "airport", "ground"}
+                    has_aviation_word = any(aw in title_lower for aw in aviation_keywords)
+                    if not has_aviation_word:
+                        return False, tuple(), 0.0, {"reason": "excluded_logistics_dispatch"}
+
         # Fast exclusion pattern check (early return)
         for pattern in self.exclusion_compiled:
             if pattern.search(title_lower):
@@ -327,7 +343,7 @@ class JobFilterManager:
 
         return categories
 
-    def matches_filter(self, job_title: str) -> Tuple[bool, List[Dict], float, Dict]:
+    def matches_filter(self, job_title: str, company: str = "") -> Tuple[bool, List[Dict], float, Dict]:
         """
         Advanced filter matching with scoring - optimized for speed
 
@@ -338,22 +354,23 @@ class JobFilterManager:
             return False, [], 0.0, {}
 
         title_lower = job_title.lower()
+        company_lower = company.lower() if company else ""
 
         # Try cache first (dict lookup is O(1))
         if self.use_cache:
-            cache_key = title_lower
+            cache_key = (title_lower, company_lower)
             if cache_key in self.filter_cache:
                 self.perf_stats["cache_hits"] += 1
                 return self.filter_cache[cache_key]
             self.perf_stats["cache_misses"] += 1
 
         # Perform actual filtering
-        is_match, categories, score, details = self._matches_filter_impl(title_lower)
+        is_match, categories, score, details = self._matches_filter_impl(title_lower, company_lower)
         result = (is_match, list(categories), score, details)
 
         # Cache result if enabled
         if self.use_cache:
-            self.filter_cache[title_lower] = result
+            self.filter_cache[cache_key] = result
 
         return result
 
@@ -403,7 +420,8 @@ class JobFilterManager:
                 stats["rejected"] += 1
                 continue
 
-            matches, categories, score, details = self.matches_filter(title)
+            company = job.get("company", "")
+            matches, categories, score, details = self.matches_filter(title, company)
 
             if matches:
                 # Batch set fields (fewer individual assignments)

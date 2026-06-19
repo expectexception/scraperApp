@@ -83,7 +83,7 @@ class FlydubaiScraper(BaseScraper):
                 )
                 await self.random_delay(2, 4)
                 await page.goto(
-                    "https://careers.flydubai.com/jobs",
+                    self.jobs_url,
                     wait_until="networkidle",
                     timeout=90000,
                 )
