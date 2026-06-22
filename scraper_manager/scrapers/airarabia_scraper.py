@@ -72,10 +72,7 @@ class AirArabiaScraper(BaseScraper):
             logger.info(f"[{self.site_key}] API returned {len(raw_jobs)} jobs")
 
             for j in raw_jobs:
-                link = (
-                    j.get("applyUrl")
-                    or f"https://www.airarabiagroupcareers.com/gb/en/job/{j.get('jobId')}"
-                )
+                link = f"https://www.airarabiagroupcareers.com/gb/en/job/{j.get('jobId')}"
                 
                 location = j.get("cityStateCountry") or j.get("location") or "Unknown"
 

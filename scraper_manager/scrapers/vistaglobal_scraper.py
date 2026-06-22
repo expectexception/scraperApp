@@ -27,10 +27,7 @@ class VistaGlobalScraper(BaseScraper):
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            )
-            page = await context.new_page()
+            page, context = await self.setup_stealth_page(browser)
 
             try:
                 page_num = 0
@@ -115,6 +112,7 @@ class VistaGlobalScraper(BaseScraper):
                 logger.error(f"[{self.site_key}] Error scraping: {e}")
                 return jobs
             finally:
+                await context.close()
                 await browser.close()
 
     async def run(self):

@@ -72,10 +72,7 @@ class RtxScraper(BaseScraper):
             logger.info(f"[{self.site_key}] API returned {len(raw_jobs)} jobs")
 
             for j in raw_jobs:
-                link = (
-                    j.get("applyUrl")
-                    or f"https://careers.rtx.com/global/en/job/{j.get('jobId')}"
-                )
+                link = f"https://careers.rtx.com/global/en/job/{j.get('jobId')}"
                 jobs.append(
                     {
                         "company": self.company_name,

@@ -1,134 +1,110 @@
-import logging
 import asyncio
-from typing import List, Dict
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+import logging
+from typing import List, Dict, Any
+from playwright.async_api import async_playwright
+import requests
 
 from .base_scraper import BaseScraper
 from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
-
 class JetflyScraper(BaseScraper):
-    """Scraper for Jetfly careers site using statically embedded HTML (fast)."""
-
-    def __init__(self, config: Dict, db_manager=None):
+    """
+    Scraper for Jetfly (BambooHR)
+    URL: https://jetfly.bamboohr.com/careers
+    """
+    def __init__(self, config: Dict[str, Any], db_manager=None):
         super().__init__(config, site_key="jetfly", db_manager=db_manager)
-        self.base_url = "https://jetfly.com/apply-for-a-job"
+        self.api_url = "https://jetfly.bamboohr.com/careers/list"
+        self.base_url = "https://jetfly.bamboohr.com/careers"
+        self.company_name = "Jetfly"
 
-    async def fetch_jobs(self) -> List[Dict]:
-        """Fetch and parse jobs directly from the static HTML using curl_cffi."""
+    async def fetch_jobs(self) -> List[Dict[str, Any]]:
         jobs = []
-
+        logger.info(f"[{self.site_key}] Querying BambooHR API...")
         try:
-            logger.info(f"[{self.site_key}] Fetching jobs from {self.base_url}...")
-
-            import requests
-
-            def fetch_url():
-                return requests.get(
-                    self.base_url,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                    },
-                    timeout=30.0,
-                )
-
-            response = await asyncio.to_thread(fetch_url)
-            html_content = response.text
-
-            if not html_content or response.status_code != 200:
-                logger.error(
-                    f"[{self.site_key}] Failed to retrieve HTML: Status {response.status_code}"
-                )
-                return jobs
-
-            soup = BeautifulSoup(html_content, "html.parser")
-
-            # Find all job cards
-            job_cards = soup.find_all("div", class_="card-careers")
-            logger.info(
-                f"[{self.site_key}] Found {len(job_cards)} job cards on the page."
-            )
-
-            for card in job_cards:
-                # Need to check limits
-                if self.max_jobs and len(jobs) >= self.max_jobs:
-                    logger.info(
-                        f"[{self.site_key}] Reached max jobs limit ({self.max_jobs})"
-                    )
-                    break
-
-                # Extract link wrapper
-                a_tag = card.find("a", href=True)
-                if not a_tag:
-                    continue
-
-                job_url = a_tag["href"]
-
-                # Make URL absolute if necessary
-                if not job_url.startswith("http"):
-                    job_url = urljoin(self.base_url, job_url)
-
-                # Extract title
-                title_tag = card.find("h3")
-                if not title_tag:
-                    continue
-                title = title_tag.text.strip()
-
-                # Early filtering: Should we even process this job?
-                if not self.should_process_job(title):
-                    continue
-
-                # Duplicate check
-                if await self.is_url_already_scraped(job_url):
-                    continue
-
-                # Extract location (optional)
-                location = "Unknown"
-                loc_div = card.find("div", class_="city-name")
-                if loc_div:
-                    location = loc_div.text.strip()
-
-                # Extract type/duration (optional)
-                job_type = ""
-                dur_div = card.find("div", class_="duration")
-                if dur_div:
-                    job_type = dur_div.text.strip()
-
-                job = get_job_dict(
-                    job_id=f"{self.site_key}_{hash(job_url)}",
-                    title=title,
-                    company=self.company_name,
-                    location=location,
-                    url=job_url,
-                    source_url=self.base_url if hasattr(self, 'base_url') else job_url,
-                    description=f"Role: {title}\nType: {job_type}",
-                    apply_url=job_url,
-                    source=self.site_key
-                )
-                jobs.append(job)
-
-            logger.info(
-                f"[{self.site_key}] Successfully parsed {len(jobs)} potential new jobs to filter."
-            )
-            return jobs
-
+            resp = await asyncio.to_thread(requests.get, self.api_url, timeout=20)
+            if resp.status_code == 200:
+                data = resp.json()
+                results = data.get("result", [])
+                
+                for item in results:
+                    if self.max_jobs and len(jobs) >= self.max_jobs: break
+                    
+                    job_id = item.get("id")
+                    title = item.get("jobOpeningName")
+                    
+                    if not job_id or not title: continue
+                    
+                    url = f"{self.base_url}/{job_id}"
+                    
+                    loc_dict = item.get("location", {})
+                    city = loc_dict.get("city", "") if loc_dict else ""
+                    state = loc_dict.get("state", "") if loc_dict else ""
+                    location = f"{city}, {state}".strip(", ") if city or state else "Unknown"
+                    
+                    jobs.append({
+                        "job_id": f"jetfly_{job_id}",
+                        "title": title,
+                        "company": self.company_name,
+                        "source": self.site_key,
+                        "url": url,
+                        "apply_url": url,
+                        "location": location,
+                    })
         except Exception as e:
-            logger.error(f"[{self.site_key}] Error during fetching: {e}")
-            return jobs
+            logger.error(f"[{self.site_key}] Failed to fetch jobs: {e}")
+            
+        logger.info(f"[{self.site_key}] Found {len(jobs)} jobs")
+        return jobs
+
+    async def fetch_job_descriptions(self, jobs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not jobs: return []
+        logger.info(f"[{self.site_key}] Fetching details for {len(jobs)} jobs...")
+        
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=self.headless)
+            
+            for job in jobs:
+                try:
+                    page, context = await self.setup_stealth_page(browser)
+                    await page.goto(job["url"], wait_until="domcontentloaded", timeout=30000)
+                    await page.wait_for_timeout(2000)
+                    
+                    # BambooHR stores description in a script tag or div
+                    desc = ""
+                    try:
+                        div = await page.wait_for_selector(".jss-html-container, .job-description, [data-testid='JobDescription']", timeout=5000)
+                        if div:
+                            desc = await div.inner_text()
+                    except:
+                        pass
+                        
+                    if not desc:
+                        desc = await self.extract_description_from_page(page)
+                        
+                    job["description"] = desc
+                    
+                except Exception as e:
+                    logger.warning(f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}")
+                finally:
+                    await context.close()
+                await asyncio.sleep(0.5)
+            await browser.close()
+            
+        return jobs
 
     async def run(self):
-        """Standard run flow tailored for fast static parsing."""
         self.print_header()
-
-        jobs = await self.fetch_jobs()
-
-        # Apply strict title filtering against our advanced manager
-        matched_jobs, rejected_jobs, stats = self.apply_title_filter(jobs)
-
-        # save_results in BaseScraper handles DB persisting
-        await self.save_results(matched_jobs)
-
-        return matched_jobs
+        jobs_raw = await self.fetch_jobs()
+        jobs = [get_job_dict(**job) for job in jobs_raw]
+        if not jobs: return []
+        if self.use_filter and self.filter_manager:
+            jobs, _, _ = self.apply_title_filter(jobs)
+            if not jobs: return []
+        jobs, _ = await self.filter_new_jobs(jobs)
+        if not jobs: return []
+        jobs = await self.fetch_job_descriptions(jobs)
+        await self.save_results(jobs)
+        return jobs

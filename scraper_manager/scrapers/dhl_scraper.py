@@ -72,10 +72,7 @@ class DHLScraper(BaseScraper):
             logger.info(f"[{self.site_key}] API returned {len(raw_jobs)} jobs")
 
             for j in raw_jobs:
-                link = (
-                    j.get("applyUrl")
-                    or f"https://careers.dhl.com/global/en/job/{j.get('jobId')}"
-                )
+                link = f"https://careers.dhl.com/global/en/job/{j.get('jobId')}"
                 
                 # DHL Phenom returns location in 'cityStateCountry' or 'location'
                 location = j.get("cityStateCountry") or j.get("location") or "Unknown"

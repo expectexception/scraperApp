@@ -47,6 +47,14 @@ SCRAPER_SETTINGS = {
     "request_delay_min": 2,  # Minimum delay between requests (seconds)
     "request_delay_max": 5,  # Maximum delay between requests (seconds)
     "page_load_delay": 3,  # Extra delay after page load (seconds)
+    # Network timeouts (seconds) so a hung host can never stall a scraper.
+    # request_timeout = total budget for an HTTP request (curl_cffi).
+    # connect_timeout = TCP/TLS connect budget.
+    # nav_timeout_ms / action_timeout_ms = Playwright page navigation/action budgets.
+    "request_timeout": 30,
+    "connect_timeout": 15,
+    "nav_timeout_ms": 45000,
+    "action_timeout_ms": 30000,
     "random_scroll": True,  # Simulate human scrolling
     "random_mouse": True,  # Simulate mouse movements
     # Browser impersonation targets for TLS fingerprinting (curl_cffi)
@@ -152,12 +160,19 @@ SCRAPER_SETTINGS = {
         "flynas": "medium",
         "gulfair": "medium",
         "jetfly": "medium",
+        "avconjet": "medium",
+        "travelcoup": "medium",
         "kuwaitairways": "medium",
         "nesma": "medium",
         "omanair": "medium",
         "salamair": "medium",
         "saudia": "medium",
         "wmd": "medium",
+        "dea": "medium",
+        "jet2": "medium",
+        "k5aviation": "medium",
+    },
+    "Low": {
         "flydubai": "medium",
         "ameriflight": "medium",
         "pacificaviation": "medium",
@@ -211,6 +226,16 @@ SCRAPER_SETTINGS = {
         "pngair": "medium",
         "flyalliance": "medium",
         "flyscoot": "medium",
+        "jetstar": "medium",
+        "hkexpress": "medium",
+        "singaporeair": "medium",
+        "fedex_hk_noc": "high",
+        "quest_global": "medium",
+        "solitair": "medium",
+        "aslaviation": "medium",
+        "nicholasair": "medium",
+        "adani_airports": "medium",
+        "cargolux_ground": "medium",
         "flytropic": "medium",
         "flyflair": "medium",
         "jetex": "medium",
@@ -537,6 +562,10 @@ SCRAPERS = {
     },
     "jetfly": {
     },
+    "avconjet": {
+    },
+    "travelcoup": {
+    },
     "kuwaitairways": {
     },
     "flyadeal": {
@@ -638,6 +667,14 @@ SCRAPERS = {
     "flyalliance": {
     },
     "flyscoot": {
+        "headless": False,
+    },
+    "jetstar": {
+        "headless": False,
+    },
+    "hkexpress": {
+    },
+    "fedex_hk_noc": {
     },
     "flytropic": {
     },
@@ -1010,6 +1047,29 @@ SITES = {
         "base_url": "https://careers.flyscoot.com/jobs-board?department=flight%20operations",
         "jobs_url": "https://careers.flyscoot.com/jobs-board?department=flight%20operations",
         "description": "Scoot Jobs",
+    },
+    "jetstar": {
+        "name": "Jetstar",
+        "enabled": True,
+        "base_url": "https://careers.jetstar.com/jobs/",
+        "jobs_url": "https://careers.jetstar.com/jobs/",
+        "description": "Jetstar Careers",
+    },
+    "hkexpress": {
+        "name": "HK Express",
+        "enabled": True,
+        "base_url": "https://careers.hkexpress.com/en/listing/?page-items=100",
+        "jobs_url": "https://careers.hkexpress.com/en/listing/?page-items=100",
+        "description": "HK Express Careers",
+    },
+    "fedex_hk_noc": {
+        "name": "FedEx HK Network Operations Control Specialist",
+        "enabled": True,
+        "base_url": "https://careers.fedex.com",
+        "jobs_url": "https://careers.fedex.com/network-operations-control-specialist-flight-operations-controller-contract/job/8191C613C72EB977BF9E2EC103BD772E",
+        "description": "FedEx HK Network Operations Control Specialist (Direct Link)",
+        "class": "FedexHkNocScraper",
+        "module": "scraper_manager.scrapers.fedex_scraper",
     },
     "flytropic": {
         "name": "Tropic Ocean Airways",
@@ -1459,11 +1519,29 @@ SITES = {
     "jetfly": {
         "name": "Jetfly",
         "enabled": True,
-        "base_url": "https://jetfly.com",
-        "jobs_url": "https://jetfly.com/careers",
-        "description": "Jetfly careers page",
+        "base_url": "https://jetfly.bamboohr.com/careers",
+        "jobs_url": "https://jetfly.bamboohr.com/careers",
+        "description": "Jetfly careers page (BambooHR)",
         "class": "JetflyScraper",
         "module": "scraper_manager.scrapers.jetfly_scraper",
+    },
+    "avconjet": {
+        "name": "Avcon Jet",
+        "enabled": True,
+        "base_url": "https://www.avconjet.at",
+        "jobs_url": "https://www.avconjet.at/career/#vacancies",
+        "description": "Avcon Jet careers page",
+        "class": "AvconJetScraper",
+        "module": "scraper_manager.scrapers.avconjet_scraper",
+    },
+    "travelcoup": {
+        "name": "Travelcoup",
+        "enabled": True,
+        "base_url": "https://www.travelcoup.com/careers",
+        "jobs_url": "https://www.travelcoup.com/careers",
+        "description": "Travelcoup careers page",
+        "class": "TravelcoupScraper",
+        "module": "scraper_manager.scrapers.travelcoup_scraper",
     },
     "easyjet": {
         "name": "easyJet",
@@ -1721,7 +1799,7 @@ SITES = {
         "name": "Ryanair",
         "enabled": True,
         "base_url": "https://careers.ryanair.com",
-        "jobs_url": "https://careers.ryanair.com/search/",
+        "jobs_url": "https://careers.ryanair.com/jobs/?search=Dispa&page=1",
         "description": "Ryanair careers",
     },
     "sas": {
@@ -1851,7 +1929,7 @@ SITES = {
     },
     "boeing": {
         "name": "Boeing Careers",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://jobs.boeing.com",
         "description": "Boeing Career Site",
     },
@@ -2171,7 +2249,7 @@ SITES = {
     },
     "cae": {
         "name": "CAE",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://cae.wd3.myworkdayjobs.com/en-US/career/",
         "jobs_url": "https://cae.wd3.myworkdayjobs.com/wday/cxs/cae/career/jobs",
         "description": "CAE careers (Workday API)",
@@ -2210,7 +2288,7 @@ SITES = {
     },
     "cevalogistics": {
         "name": "CEVA Logistics",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://jobs.cmacgm-group.com",
         "jobs_url": "https://jobs.cmacgm-group.com/CEVALogistics/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_shifttype=",
         "description": "CEVA Logistics careers portal (SuccessFactors)",
@@ -2522,6 +2600,81 @@ SITES = {
         "class": "CutterScraper",
         "module": "scraper_manager.scrapers.cutter_scraper",
     },
+    "quest_global": {
+        "name": "Quest Global",
+        "enabled": True,
+        "base_url": "https://careers.quest-global.com/global/en",
+        "jobs_url": "https://careers.quest-global.com/global/en",
+        "description": "Quest Global Careers",
+        "class": "QuestGlobalScraper",
+        "module": "scraper_manager.scrapers.quest_scraper",
+    },
+    "solitair": {
+        "name": "Solitair Holding",
+        "enabled": True,
+        "base_url": "https://www.solitairholding.careers/jobs",
+        "jobs_url": "https://www.solitairholding.careers/jobs",
+        "description": "Solitair Holding Careers",
+        "class": "SolitairScraper",
+        "module": "scraper_manager.scrapers.solitair_scraper",
+    },
+    "aslaviation": {
+        "name": "ASL Aviation Group",
+        "enabled": True,
+        "base_url": "https://cezanneondemand.intervieweb.it/aslaviationgroup/en/career",
+        "jobs_url": "https://cezanneondemand.intervieweb.it/aslaviationgroup/en/career",
+        "description": "ASL Aviation Group Careers",
+        "class": "AslAviationScraper",
+        "module": "scraper_manager.scrapers.aslaviation_scraper",
+    },
+    "nicholasair": {
+        "name": "Nicholas Air",
+        "enabled": True,
+        "base_url": "https://www.nicholasair.com/careers/flight-support",
+        "jobs_url": "https://www.nicholasair.com/careers/flight-support",
+        "description": "Nicholas Air Flight Support Careers",
+        "class": "NicholasAirScraper",
+        "module": "scraper_manager.scrapers.nicholasair_scraper",
+    },
+    "adani_airports": {
+        "name": "Adani Airports",
+        "enabled": True,
+        "base_url": "https://eibd.fa.em2.oraclecloud.com",
+        "api_url": "https://eibd.fa.em2.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions",
+        "site_number": "CX_2009",
+        "search_keyword": "",
+        "company_name": "Adani Airports",
+        "description": "Adani Airports Oracle HCM Careers",
+        "class": "AdaniScraper",
+        "module": "scraper_manager.scrapers.adani_scraper",
+    },
+    "dea": {
+        "name": "DEA Aviation",
+        "enabled": True,
+        "base_url": "https://dea.pinpointhq.com/jobs",
+        "jobs_url": "https://dea.pinpointhq.com/jobs",
+        "description": "DEA Aviation Careers",
+        "class": "DeaScraper",
+        "module": "scraper_manager.scrapers.dea_scraper",
+    },
+    "jet2": {
+        "name": "Jet2",
+        "enabled": True,
+        "base_url": "https://jet2careers.com/search-careers/",
+        "jobs_url": "https://jet2careers.com/search-careers/",
+        "description": "Jet2 Careers",
+        "class": "Jet2Scraper",
+        "module": "scraper_manager.scrapers.jet2_scraper",
+    },
+    "k5aviation": {
+        "name": "K5 Aviation",
+        "enabled": True,
+        "base_url": "https://www.k5-aviation.com/en/k5-inside-en/",
+        "jobs_url": "https://www.k5-aviation.com/en/k5-inside-en/",
+        "description": "K5 Aviation Careers",
+        "class": "K5AviationScraper",
+        "module": "scraper_manager.scrapers.k5_aviation_scraper",
+    }
 }
 
 

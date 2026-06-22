@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 class SkyExpressScraper(BaseScraper):
     """
     Scraper for Sky Express
-    URL: https://www.skyexpress.gr/en/company/careers
+    URL: https://www.skyexpress.gr/fr/company/careers
     """
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="skyexpress", db_manager=db_manager)
-        self.base_url = "https://www.skyexpress.gr/en/company/careers"
+        self.base_url = "https://www.skyexpress.gr/fr/company/careers"
         self.company_name = "Sky Express"
 
     async def fetch_jobs(self) -> list:

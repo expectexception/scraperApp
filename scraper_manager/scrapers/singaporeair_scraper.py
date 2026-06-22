@@ -43,7 +43,7 @@ class SingaporeAirScraper(BaseScraper):
                         if not href or len(text) < 5: continue
                         
                         href_lower = href.lower()
-                        if "singaporeair.com/job/" in href_lower:
+                        if "singaporeair.com/sia/job/" in href_lower or "singaporeair.com/job/" in href_lower:
                             if text.lower() in ["read more", "apply", "apply now", "view details", "jobs"]:
                                 continue
                                 

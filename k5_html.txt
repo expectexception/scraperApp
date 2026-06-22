@@ -1,0 +1,818 @@
+
+	<div id="page-container">
+<div id="et-boc" class="et-boc">
+			
+		<header class="et-l et-l--header">
+			<div class="et_builder_inner_content et_pb_gutters3"><div class="et_pb_section et_pb_section_0_tb_header et_pb_sticky_module et_pb_with_background et_section_regular et_pb_section--with-menu">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_0_tb_header et_pb_row--with-menu" style="z-index: 3;">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_0_tb_header  et_pb_css_mix_blend_mode_passthrough et-last-child et_pb_column--with-menu">
+				
+				
+				
+				
+				<div class="et_pb_with_border et_pb_module et_pb_menu et_pb_menu_0_tb_header et_pb_bg_layout_light  et_pb_text_align_right et_dropdown_animation_fade et_pb_menu--with-logo et_pb_menu--style-left_aligned">
+					
+					
+					
+					
+					<div class="et_pb_menu_inner_container clearfix">
+						<div class="et_pb_menu__logo-wrap">
+			  <div class="et_pb_menu__logo">
+				<a href="https://www.k5-aviation.com/en/"><img decoding="async" width="150" height="95" src="/wp-content/uploads/2023/11/k5_logo1.png" alt="" class="wp-image-129"></a>
+			  </div>
+			</div>
+						<div class="et_pb_menu__wrap">
+							<div class="et_pb_menu__menu">
+								<nav class="et-menu-nav"><ul id="menu-main-menu-en" class="et-menu nav"><li class="et_pb_menu_page_id-home menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-688"><a href="https://www.k5-aviation.com/en/">Home</a></li>
+<li class="et_pb_menu_page_id-624 menu-item menu-item-type-post_type menu-item-object-page menu-item-662"><a href="https://www.k5-aviation.com/en/fleet/">Fleet</a></li>
+<li class="et_pb_menu_page_id-621 menu-item menu-item-type-post_type menu-item-object-page menu-item-692"><a href="https://www.k5-aviation.com/en/charter-en/">Charter</a></li>
+<li class="et_pb_menu_page_id-634 menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-634 current_page_item menu-item-763"><a href="https://www.k5-aviation.com/en/k5-inside-en/" aria-current="page">K5 Inside</a></li>
+<li class="et_pb_menu_page_id-614 menu-item menu-item-type-post_type menu-item-object-page menu-item-665"><a href="https://www.k5-aviation.com/en/sale-purchase/">Sale &amp; Purchase</a></li>
+<li class="et_pb_menu_page_id-618 menu-item menu-item-type-post_type menu-item-object-page menu-item-661"><a href="https://www.k5-aviation.com/en/contact/">Contact</a></li>
+<li class="lang-item lang-item-9 lang-item-de lang-item-first menu-item menu-item-type-custom menu-item-object-custom menu-item-666-de"><a href="https://www.k5-aviation.com/k5-inside/" lang="de-DE" hreflang="de-DE">DE</a></li>
+<li class="lang-item lang-item-14 lang-item-en current-lang menu-item menu-item-type-custom menu-item-object-custom menu-item-666-en"><a href="https://www.k5-aviation.com/en/k5-inside-en/" lang="en-US" hreflang="en-US">EN</a></li>
+</ul></nav>
+							</div>
+							
+							
+							<div class="et_mobile_nav_menu">
+				<div class="mobile_nav closed">
+					<span class="mobile_menu_bar"></span>
+				<ul id="mobile_menu1" class="et_mobile_menu"><li class="et_pb_menu_page_id-home menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-688 et_first_mobile_item"><a href="https://www.k5-aviation.com/en/">Home</a></li>
+<li class="et_pb_menu_page_id-624 menu-item menu-item-type-post_type menu-item-object-page menu-item-662"><a href="https://www.k5-aviation.com/en/fleet/">Fleet</a></li>
+<li class="et_pb_menu_page_id-621 menu-item menu-item-type-post_type menu-item-object-page menu-item-692"><a href="https://www.k5-aviation.com/en/charter-en/">Charter</a></li>
+<li class="et_pb_menu_page_id-634 menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-634 current_page_item menu-item-763"><a href="https://www.k5-aviation.com/en/k5-inside-en/" aria-current="page">K5 Inside</a></li>
+<li class="et_pb_menu_page_id-614 menu-item menu-item-type-post_type menu-item-object-page menu-item-665"><a href="https://www.k5-aviation.com/en/sale-purchase/">Sale &amp; Purchase</a></li>
+<li class="et_pb_menu_page_id-618 menu-item menu-item-type-post_type menu-item-object-page menu-item-661"><a href="https://www.k5-aviation.com/en/contact/">Contact</a></li>
+<li class="lang-item lang-item-9 lang-item-de lang-item-first menu-item menu-item-type-custom menu-item-object-custom menu-item-666-de"><a href="https://www.k5-aviation.com/k5-inside/" lang="de-DE" hreflang="de-DE">DE</a></li>
+<li class="lang-item lang-item-14 lang-item-en current-lang menu-item menu-item-type-custom menu-item-object-custom menu-item-666-en"><a href="https://www.k5-aviation.com/en/k5-inside-en/" lang="en-US" hreflang="en-US">EN</a></li>
+</ul></div>
+			</div>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div>		</div>
+	</header>
+	<div id="et-main-area">
+	
+<div id="main-content">
+
+
+			
+				<article id="post-634" class="post-634 page type-page status-publish hentry">
+
+				
+					<div class="entry-content">
+					<div class="et-l et-l--post">
+			<div class="et_builder_inner_content et_pb_gutters3">
+		<div class="et_pb_section et_pb_section_0 et_pb_with_background et_section_regular">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_0">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_0  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_0  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h1>K5 Inside</h1></div>
+			</div><div class="et_pb_module et_pb_text et_pb_text_1  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><p>management | career</p></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div><div class="et_pb_section et_pb_section_1 et_pb_with_background et_section_regular">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_1">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_1  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_2  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h2>K5 is different</h2></div>
+			</div><div class="et_pb_module et_pb_text et_pb_text_3  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><p>K5-Aviation GmbH was founded in 2010 as an independent company, and it offers individually tailored management and commercial charter services for long-range aircraft.</p>
+<p>Originally, K5-Aviation started operations with a VVIP Airbus A319 Corporate Jet (ACJ319) and obtained approval for commercial flights (AOC) in June 2011. Special permits for low visibility approach (CAT IIIb) and long-distance operations (ETOPS180) followed shortly afterwards. In the subsequent years, K5-Aviation enlarged its fleet constantly, and it currently operates three Airbus A319 Corporate Jets and one Bombardier Global 7500. One of the ACJ319 is a A319NEO, which was delivered to K5-Aviation, as the launch customer, in the second quarter of 2019. Shortly after K5-Aviation became on of the first operators to commercially operate a Bombardier Global 7500 and with those two new aircraft types K5-Aviation is setting new standards in long-haul flights. In 2021 K5-Aviation extends its approval with the additional types A330 and A350. K5-Aviation deliberately specializes in this small number of aircraft types, in order to offer precisely customized service. This enables it to be an expert partner to aircraft owners for all their individual needs.</p>
+<p>The K5-Aviation range of services encompasses</p>
+<ul>
+<li>Aircraft management for aircraft that are only used by their owners,</li>
+<li>Aircraft chartering for aircraft to be offered for profit to the market and</li>
+<li>Mixtures of these two variations tailored to each customer’s needs.</li>
+</ul>
+<p>Alongside individually customized support and highly professional operations, accurate and cost-efficient planning of maintenance and on-board safety are always our highest priorities. The foundation of this is K5-Aviation’s decision to limit its fleet to a small number of aircraft types. K5’s independence enables it to make that kind of decision, and that is part of what make us so unique.</p></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div><div id="jobs-en" class="et_pb_section et_pb_section_2 et_pb_with_background et_section_regular">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_2">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_2  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_4  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h2>Jobs</h2></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div><div class="et_pb_row et_pb_row_3">
+				<div class="et_pb_column et_pb_column_2_3 et_pb_column_3  et_pb_css_mix_blend_mode_passthrough">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_toggle et_pb_toggle_0 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">First Officer (m/f/d)</h3>
+				<div class="et_pb_toggle_content clearfix"><p>K5-Aviation GmbH was founded in 2010 and offers aircraft management and charter operations for VIP long-haul aircraft. K5-Aviation currently operates three Airbus A319 corporate jets, one Airbus A330 and one Bombardier Global 7500 worldwide, with a fleet that continues to grow.<br>We are looking for a <strong>co-pilot (m/f/d)</strong> Airbus A320FAM with a valid type rating to join our team as soon as possible at our locations in Germany: Munich, Berlin, Hamburg, Stuttgart, Frankfurt or Düsseldorf.</p>
+<p>&nbsp;</p>
+<p><strong>We offer you</strong></p>
+<ul>
+<li>Long-term, full-time employment with a permanent contract.</li>
+<li>Modern VVIP Airbus Corporate Jets.</li>
+<li>Interesting circulations worldwide.</li>
+<li>Flat hierarchies.</li>
+<li>Attractive salary.</li>
+<li>Pleasant working atmosphere.</li>
+<li>Corporate Benefits.</li>
+<li>JobRad.</li>
+</ul>
+<p>&nbsp;</p>
+<p><strong>Requirements</strong></p>
+<ul>
+<li>Valid EASA-License with A320FAM Type Rating.</li>
+<li>Medical Class 1.</li>
+<li>ICAO Language Proficiency Level 4 (Minimum).</li>
+<li>At least 300 Flight hours Experience on Type (A320FAM).</li>
+<li>Long-haul flight experience is an advantage.</li>
+<li>Fluent in spoken and written German and English.</li>
+<li>Well-groomed, open-minded and friendly manner.</li>
+<li>High flexibility and resilience.</li>
+<li>Valid ZÜP.</li>
+</ul>
+<p>&nbsp;</p>
+<p>If our advertisement has convinced you, we look forward to receiving your application. Please send your complete application, including your CV and photo, exclusively in electronic form with attachments as PDF files to: <a href="mailto:jobs@k5-group.com">jobs@k5-group.com</a></p></div>
+			</div><div class="et_pb_module et_pb_toggle et_pb_toggle_1 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Crew Controller (m/f/d)</h3>
+				<div class="et_pb_toggle_content clearfix">K5-Aviation GmbH was founded in 2010 and offers aircraft management and charter operations for VIP long-haul aircraft. Currently, K5-Aviation operates three Airbus A319 corporate jets, an Airbus A330 and a Bombardier Global 7500 in worldwide service with a growing fleet.<p></p>
+<p>We are looking for a Crew Controller to strengthen our team in Moosburg an der Isar as soon as possible.</p>
+<p><strong></strong></p>
+<p><strong>We offer</strong></p>
+<ul>
+<li>Long-term full-time cooperation with a permanent employment contract.</li>
+<li>A young team with friendly and collegial interaction.</li>
+<li>Flat hierarchies.</li>
+<li>Performance-related remuneration.</li>
+<li>Independent and exciting activity.</li>
+<li>Corporate Benefits.</li>
+</ul>
+<p><strong></strong></p>
+<p><strong>Tasks</strong></p>
+<ul>
+<li>Planning of the crew for flight operations, taking into account qualifications and taking into account duty and rest periods.</li>
+<li>Creation and publication of monthly duty rosters.</li>
+<li>Adjustment of duty rosters in the event of changes to the flight schedule.</li>
+<li>Close communication with crews and all operational departments.</li>
+<li>Booking of hotels and positioning flights of our crews.</li>
+</ul>
+<p><strong></strong></p>
+<p><strong>Preconditions</strong></p>
+<ul>
+<li>Experience in the aviation industry (crew control experience desirable).</li>
+<li>Ability to work in a team and communicate.</li>
+<li>Organizational and disposition skills.</li>
+<li>Very good knowledge of German and English.</li>
+<li>Willingness to take on shift work.</li>
+</ul>
+<p>&nbsp;</p>
+<p>If we have been able to convince you with our advertisement, we look forward to receiving your application, please send it completely including CV and photo exclusively electronically with attachments as a PDF to: <a href="mailto:jobs@k5-group.com">jobs@k5-group.com</a></p></div>
+			</div><div class="et_pb_module et_pb_toggle et_pb_toggle_2 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Certifying Staff CAT-B1 as a flying mechanic (Flying Spanner) (m/f/d)</h3>
+				<div class="et_pb_toggle_content clearfix">K5-Aviation GmbH was founded in 2010 and offers aircraft management and charter operations for VIP long-haul aircraft. In addition, we provide technical support for other aircraft, including two Airbus wide-body aircraft.<p></p>
+<p>To strengthen our CAMO and Maintenance team, we are looking for the following at the Moosburg an der Isar site as soon as possible:</p>
+<p style="text-align: center;"><strong>CERTIFYING STAFF CAT-B1 (m/f/d)</strong><br>
+<strong>as a flying mechanic (Flying Spanner)</strong></p>
+<p><strong></strong></p>
+<p><strong>We offer</strong></p>
+<ul>
+<li>Long-term full-time cooperation with a permanent employment contract</li>
+<li>A young, collegial and supportive team</li>
+<li>Innovative and modern corporate structures</li>
+<li>Attractive remuneration and flexible working hours</li>
+<li>Independent work and development opportunities within the company</li>
+<li>Corporate Benefits</li>
+<li>JobRad</li>
+</ul>
+<ul></ul>
+<p><strong>These are your tasks</strong></p>
+<ul>
+<li>Worldwide deployment as a flying technician on the A330/350 aircraft types</li>
+<li>Carrying out maintenance and servicing work as a Certifying Staff CAT-B1 and this on the aircraft and in the cabin at the highest level</li>
+<li>Control and documentation of the maintenance and repair work carried out</li>
+<li>Testing and approval of the aircraft after maintenance work</li>
+<li>Maintaining, adapting and updating internal manuals (e.g. CAME, OAMP)</li>
+<li>Regular review and evaluation of official requirements and technical manufacturer recommendations</li>
+<li>Maintenance of compliance status and maintenance documentation (CAMP software)</li>
+<li>Effective maintenance planning and work order creation</li>
+<li>Supervision of idle times at the maintenance company on site</li>
+<li>Project management for maintenance and modifications to aircraft</li>
+<li>Taking on additional tasks within CAMO and other areas of the organization</li>
+</ul>
+<p><strong></strong></p>
+<p><strong>Preconditions</strong></p>
+<ul>
+<li>Very good knowledge of German and English, both written and spoken</li>
+<li>Completed vocational training as an aircraft mechanic (m/f/d) with a focus on maintenance or engine technology</li>
+<li>EASA Part-66 Category B1 licence with type entries for the A320 Family, A330 and A350 as well as relevant professional experience</li>
+<li>Careful and conscientious way of working with a high degree of self-organization</li>
+<li>Willingness to be on call, business trips at home and abroad as well as work outside regular working hours</li>
+<li>A well-groomed and professional appearance</li>
+<li>Fully valid EU passport</li>
+<li>Class B driving licence or comparable EU standard</li>
+</ul>
+<p>&nbsp;</p>
+<p>If we have aroused your interest, we look forward to receiving your application! Please send your complete documents, including CV and photo, exclusively electronically as a PDF to: <a href="mailto:jobs@k5-group.com">jobs@k5-group.com</a></p></div>
+			</div><div class="et_pb_module et_pb_toggle et_pb_toggle_3 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Cabin Attendant (m/f/d)</h3>
+				<div class="et_pb_toggle_content clearfix"><p>K5-Aviation GmbH offers aircraft management and charter operations for VIP long-haul aircraft. Currently, K5-Aviation operates three Airbus A319 Corporate Jets, one Bombardier Global 7500 and one Airbus A330 is about to be introduced into service. The fleet continues to grow.</p>
+<p>We are looking for <strong>VVIP flight attendants</strong> to strengthen our team as soon as possible for our Base in Munich, Berlin, Hamburg, Stuttgart, Frankfurt or Düsseldorf.</p>
+<p><strong>What we offer</strong></p>
+<ul>
+<li>Modern VVIP Airbus A319 Corporate Jets with 19 passenger seats</li>
+<li>Permanent employment contract in full-time</li>
+<li>Monthly duty roster: 21 days on, 9 days off</li>
+<li>Corporate Benefits</li>
+<li>Interesting perspectives for the future</li>
+<li>Innovative and modern structures</li>
+<li>Exciting rotations worldwide</li>
+</ul>
+<p><strong>Role overview</strong></p>
+<ul>
+<li>Responsibility for compliance with cabin safety standards and requirements</li>
+<li>In charge for the cabin experience including VVIP inflight service and cabin presentation</li>
+<li>Independent organization of catering and customer-specific requests</li>
+<li>Self-responsible care and maintenance of the cabin, including cleaning as well as the administration of stock lists</li>
+</ul>
+<p><strong>Requirements</strong></p>
+<ul>
+<li>Fluent in English (written and spoken)</li>
+<li>Experience in First- or Businessclass</li>
+<li>Excellent personal presentation with a positive and friendly attitude</li>
+<li>High flexibility and resilience</li>
+<li>A valid flight attendant license (Cabin Crew Attestation) and background check are helpful</li>
+</ul>
+<p><strong>Your application</strong></p>
+<p>Please forward your application, including your CV and professional application photo, electronically with attachments as PDF to: <a href="mailto:jobs@k5-group.com">jobs@k5-group.com</a></p></div>
+			</div>
+			</div><div class="et_pb_column et_pb_column_1_3 et_pb_column_4  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_5  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner">Please send your application documents including CV and professional application photo exclusively electronically with attachments as a PDF to<br>
+<a href="mailto:jobs@k5-group.com">jobs@k5-group.com</a>.</div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div><div class="et_pb_section et_pb_section_3 et_pb_with_background et_section_regular">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_4">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_5  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_6  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h2>Manage­ment</h2></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div><div class="et_pb_row et_pb_row_5">
+				<div class="et_pb_column et_pb_column_2_3 et_pb_column_6  et_pb_css_mix_blend_mode_passthrough">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_toggle et_pb_toggle_4 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Tanja Scheidt</h3>
+				<div class="et_pb_toggle_content clearfix"><div class="columnleft"><img loading="lazy" decoding="async" src="/wp-content/uploads/2023/12/internet_tanja_scheidt.jpg" width="107" height="160" alt="" class="wp-image-423 alignnone size-full"></div>
+<div class="columnright">
+<p>DIPL.ING.(FH) TANJA SCHEIDT</p>
+<p>Owner of K5-Group<br>
+Nominated Person Ground Operations and Deputy Trainings Manager<br>
+Pilot of Airbus A320FAM</p>
+<p><a href="mailto:t.scheidt@k5-group.com">t.scheidt@k5-group.com</a></p>
+<p>Tanja Scheidt graduated in aircraft enginering and started her career in aviation with MBB/Airbus. Shortly after, she became a pilot for an airline until she concentrated on business aviation. She holds her pilot licence (ATPL) since 1996 and has gained experience of more than 8.000 flight hours. Mrs. Scheidt founded K5-Aviation together with her husband, Erik Scheidt, and has since then maintained the spirit in the company. At K5-Aviation she is Nominated Person Ground Operations and is in addition responsible for all trainings off light and ground crew.
+</p></div></div>
+			</div><div class="et_pb_module et_pb_toggle et_pb_toggle_5 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Erik Scheidt</h3>
+				<div class="et_pb_toggle_content clearfix"><div class="columnleft"><img loading="lazy" decoding="async" src="/wp-content/uploads/2023/12/internet_ScheidtErik2web.jpg" width="107" height="161" alt="" class="wp-image-422 alignnone size-full"></div>
+<div class="columnright">
+<p>ERIK SCHEIDT</p>
+<p>Owner of K5-Group<br>Managing Director of K5-Aviation GmbH<br>Nominated Person Flight Operations<br>Pilot and Type Rating Instructor / Examiner for the Airbus A320FAM, A330, A350</p>
+<p><a href="mailto:e.scheidt@k5-group.com">e.scheidt@k5-group.com</a></p>
+<p>Erik Scheidt is the founder of K5-Group. After more than 20 years in a responsible position in for an aircraft operator Mr. Scheidt incorporated K5-Aviation GmbH together with his wife Tanja Scheidt with the intention to operate big VVIP aircraft professionally. As a pilot with over 10.000 flight hours he flies K5-Aviation’s ACJs regularly and ensures the high standard on board personally. In addition, he trains and checks all AJC pilots of K5-Aviation in the simulator as instructor/examiner.</p>
+</div></div>
+			</div><div class="et_pb_module et_pb_toggle et_pb_toggle_6 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Luca Madone</h3>
+				<div class="et_pb_toggle_content clearfix"><div class="columnleft"><img loading="lazy" decoding="async" src="/wp-content/uploads/2023/12/internet_lucaMadone.jpg" width="107" height="160" alt="" class="wp-image-421 alignnone size-full"></div>
+<div class="columnright">
+<p>LUCA MADONE</p>
+<p>Accountable Manager<br>Prokurist<br>Aircraft Charter, Sales &amp; Acquisition</p>
+<p><a href="mailto:l.madone@k5-group.com">l.madone@k5-group.com</a></p>
+<p>After finishing his master degree in Geneva in 2004 Luca Madone concentrated on business aviation. He started his occupacional carrier with two well know companies in Geneva and Zurich. In 2010 he incorporated his own aircraft charter company together with two shareholders in Zug. Another business focussing on purchase and sale of aircraft that Mr. Madone still manages followed in 2015.<br>At the beginning of 2017 he sold his shares in the charter company and has taken over the responsibilities as Accountable Manager for K5-Aviation.</p>
+</div></div>
+			</div><div class="et_pb_module et_pb_toggle et_pb_toggle_7 et_pb_toggle_item  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Alexander Kuchta</h3>
+				<div class="et_pb_toggle_content clearfix"><div class="columnleft"><img loading="lazy" decoding="async" src="https://www.k5-aviation.com/wp-content/uploads/2024/08/alex_kuchta2024-e1722852022202.jpg" width="107" height="143" alt="" class="wp-image-1058 alignnone size-full"></div>
+<div class="columnright">
+<p>DIPL. BETRIEBSWIRT ALEXANDER KUCHTA</p>
+<p>Compliance Monitoring and Quality Manager<br>Postholder Accident Prevention<br>Safety Manager and Security Officer</p>
+<p><a href="mailto:a.kuchta@k5-group.com">a.kuchta@k5-group.com</a></p>
+<p>Alexander Kuchta graduated in Business Administration (touristic/ travel) and is training supervisor. Mr. Kuchta is in the aviation business since 2011 and started for a medium size aircraft operator in charter sales and operations department, later he became Administration and Safety Manager. He introduced the flight operations software FOS (Flight Operations Systems by Rockwell Collins) in all departments. At K5-Aviation Mr. Kuchta mainly works in the field Compliance Monitoring, inclusive Safety/ Security Management. In addition, Mr. Kuchta is managing director of K5-Travel GmbH, the travel agency of K5-Group.</p>
+</div></div>
+			</div>
+			</div><div class="et_pb_column et_pb_column_1_3 et_pb_column_7  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_7  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h4>K5 is different</h4>
+<p>K5-Aviation’s strength lies in its independent stakeholder structure and an extremely efficient executive management. Direct communication and simple decision-making processes enable K5-Aviation to respond to client inquiries quickly, efficiently and individually. To make that possible for even complex customer queries, the company’s management is available 24/7. K5-Aviation chooses not to use customer service representatives or assistants as middlemen: aircraft owners can always contact someone with decision-making powers at K5-Aviation, because client satisfaction has top priority for us.</p></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div><div class="et_pb_row et_pb_row_6">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_8  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_8  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner">K5-Aviation deals with your issues efficiently and without detours. We operate your aircraft in the most professional way conceivable, while remaining flexible to the wishes of owners and passengers alike. Some of our management staff are qualified pilots who fly with the K5 fleet, so you always know that the quality and safety on board are constantly being inspected and ensured by experts.<p></p>
+<p>In order to continue to be able to provide this efficiency and flexibility to the aircraft owners in the future, the management of K5-Aviation keeps its fleet size small – a liberty that only an independent company can allow itself.</p></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div><div id="genehmigungen" class="et_pb_section et_pb_section_4 et_pb_with_background et_section_regular">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_7">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_9  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_9  et_pb_text_align_left et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h2>APPROVALS</h2></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div><div class="et_pb_row et_pb_row_8">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_10  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_accordion et_pb_accordion_0">
+				
+				
+				
+				
+				<div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_0  et_pb_toggle_open">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Air Operations Certificate</h3>
+				<div class="et_pb_toggle_content clearfix"><p>The Operating Licence and the AOC number D-181EG was issued by the German Aviation Authority Luftfahrt Bundesamt (LBA) initially in June 2011. It includes the following special approvals:</p>
+<p>&nbsp;</p>
+<ul>
+<li>Commercial Air Transportation for passengers and cargo</li>
+<li>Worldwide operation</li>
+<li>All Weather Operations for landing: Cat IIIb without decision height for Airbus A320 family</li>
+<li>All Weather Operations for take-off: RVR 125m</li>
+<li>ETOPS 180 for Airbus , EROPS 180 for Global Express</li>
+<li>RNAV / MNPS (unrestricted) / RVSM</li>
+</ul></div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_1  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Continued Airworthiness Management Organization (CAMO)</h3>
+				<div class="et_pb_toggle_content clearfix"><ul>
+<li>CAMO approval under number DE.MG181AOC issued by the German Aviation Authority Luftfahrt Bundesamt (LBA) initially in June 2011.</li>
+<li>Approved Scope: A320FAM, A350, BD700-1A10, BD700-2A12</li>
+<li>Certified to extend Airworthiness Review Certificates (ARC) for aircraft on AOC or A320FAM and BD700 operated privately</li>
+</ul></div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_2  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">U.S. Operations</h3>
+				<div class="et_pb_toggle_content clearfix">As an approved member of the U.S. Visa Waiver Program K5-Aviation can offer visa free entry for passengers from certain countries when entering the U.S. on board K5-Aviation’s aircraft.<p></p>
+<p>K5-Aviation has the approval to conduct commercial flights to and from the USA under Part-129 and OPS-Specs.</p></div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_3  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Canadian Operations</h3>
+				<div class="et_pb_toggle_content clearfix">The Canadian FOAC was issued in April 2014, it allows commercial flights from Europe to Canada.</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_4  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">United Kingdom Operations</h3>
+				<div class="et_pb_toggle_content clearfix">The TCO (Third Country Operator) permit allows K5-Aviation to operate non-scheduled commercial flights between the EU and the UK (Block Permit) and non-EU countries and the UK (Single Permit).</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_5  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Australia</h3>
+				<div class="et_pb_toggle_content clearfix">The Secretary-Issued Transport Security Program (TSP) allows K5-Aviation to operate non-scheduled flights to Australia.</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_6  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Mexico</h3>
+				<div class="et_pb_toggle_content clearfix">With the Mexican Foreign Air Operator Certificate (Mexican FAOC), K5 was able to apply for the Indefinite Blanket Permit (IBP), with which flights to and from Mexico can be operated at any time.</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_7  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">United Arab Emirates</h3>
+				<div class="et_pb_toggle_content clearfix">With the UAE GCAA Foreign Operator Registration (FOR) and the GCAP Number, K5-Aviation can operate commercial flights to the United Arab Emirates.</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_8  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Malaysia</h3>
+				<div class="et_pb_toggle_content clearfix">Thanks to the Malayan Foreign Aircraft Operator Certificate (FAOC) K5-aviation is allowed to operate non-scheduled flights to Malaysia.</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_9  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Singapore</h3>
+				<div class="et_pb_toggle_content clearfix">With the Singapore OPS Permit K5-Aviation may operate non-scheduled commercial flights to Singapore.</div>
+			</div><div class="et_pb_toggle et_pb_module et_pb_accordion_item et_pb_accordion_item_10  et_pb_toggle_close">
+				
+				
+				
+				
+				<h3 class="et_pb_toggle_title">Bahamas</h3>
+				<div class="et_pb_toggle_content clearfix">Thanks to the Bahamas Air Transport License K5-Aviation may conduct non-scheduled commercial flights to the Bahamas.</div>
+			</div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div>		</div>
+	</div>
+						</div>
+
+				
+				</article>
+
+			
+
+</div>
+
+	<footer class="et-l et-l--footer">
+			<div class="et_builder_inner_content et_pb_gutters3"><div class="et_pb_section et_pb_section_0_tb_footer eng-footer et_pb_with_background et_section_regular">
+				
+				
+				
+				
+				
+				
+				<div class="et_pb_row et_pb_row_0_tb_footer">
+				<div class="et_pb_column et_pb_column_4_4 et_pb_column_0_tb_footer  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_image et_pb_image_0_tb_footer">
+				
+				
+				
+				
+				<span class="et_pb_image_wrap "><img loading="lazy" decoding="async" width="2092" height="853" src="/wp-content/uploads/2023/11/k5_aviation_mitDREIflieger2023umgedrehtDklGrau2.jpg" alt="" title="k5_aviation_mitDREIflieger2023umgedrehtDklGrau2" srcset="https://www.k5-aviation.com/wp-content/uploads/2023/11/k5_aviation_mitDREIflieger2023umgedrehtDklGrau2.jpg 2092w, https://www.k5-aviation.com/wp-content/uploads/2023/11/k5_aviation_mitDREIflieger2023umgedrehtDklGrau2-1280x522.jpg 1280w, https://www.k5-aviation.com/wp-content/uploads/2023/11/k5_aviation_mitDREIflieger2023umgedrehtDklGrau2-980x400.jpg 980w, https://www.k5-aviation.com/wp-content/uploads/2023/11/k5_aviation_mitDREIflieger2023umgedrehtDklGrau2-480x196.jpg 480w" sizes="(min-width: 0px) and (max-width: 480px) 480px, (min-width: 481px) and (max-width: 980px) 980px, (min-width: 981px) and (max-width: 1280px) 1280px, (min-width: 1281px) 2092px, 100vw" class="wp-image-171"></span>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div><div class="et_pb_row et_pb_row_1_tb_footer et_pb_gutters1">
+				<div class="et_pb_column et_pb_column_1_3 et_pb_column_1_tb_footer  et_pb_css_mix_blend_mode_passthrough">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_0_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h3>Important</h3></div>
+			</div><div class="et_pb_module et_pb_text et_pb_text_1_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><a href="/terms-of-transportation">Terms of Transportation</a><p></p>
+<p><a href="/wp-content/uploads/2025/07/K5_PAX_Info_DGR_SEC_2023_Rev_1.pdf" target="_blank" rel="noopener">Dangerous and prohibited Goods</a></p>
+<p><a href="/terms-and-conditions">General Terms of Business</a></p>
+<p><a href="/k5-inside-en#genehmigungen">Approvals</a></p>
+<p><a href="/privacy-statement">Privacy Statement</a></p>
+<p><a href="/legal-notice">Legal Notice</a></p></div>
+			</div>
+			</div><div class="et_pb_column et_pb_column_1_3 et_pb_column_2_tb_footer  et_pb_css_mix_blend_mode_passthrough">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_2_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><h3>Contact</h3></div>
+			</div><div class="et_pb_module et_pb_text et_pb_text_3_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><p><strong>Aircraft Operation &amp; Management<br></strong><strong>K5-Aviation GmbH<br></strong>Katharinazell 5<br>D-85408 Gammelsdorf<br>Phone: <a href="tel:+49 8754 36 799-0">+49 (8754) 36 799-0</a><br>E-Mail: <a href="mailto:aviation@k5-group.com">aviation@k5-group.com</a></p></div>
+			</div>
+			</div><div class="et_pb_column et_pb_column_1_3 et_pb_column_3_tb_footer  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_4_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				
+			</div><div class="et_pb_module et_pb_text et_pb_text_5_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><p><strong>Aircraft Charter, Sales &amp; Acquisition</strong><br><strong>K5-Aviation GmbH<br></strong>Baarerstrasse 88<br>CH-6300 Zug<br>Phone: <a href="tel:+41 41 2288020">+41 (41) 228 80 20</a><br>Email: <a href="mailto:charter@k5-group.com">charter@k5-group.com</a></p></div>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div><div class="et_pb_row et_pb_row_2_tb_footer et_pb_equal_columns et_pb_row_3-4_1-4">
+				<div class="et_pb_column et_pb_column_3_4 et_pb_column_4_tb_footer  et_pb_css_mix_blend_mode_passthrough">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_text et_pb_text_6_tb_footer  et_pb_text_align_left et_pb_text_align_center-phone et_pb_bg_layout_light">
+				
+				
+				
+				
+				<div class="et_pb_text_inner"><p>Copyright © 2023 K5-Aviation GmbH | Alle Rechte vorbehalten</p></div>
+			</div>
+			</div><div class="et_pb_column et_pb_column_1_4 et_pb_column_5_tb_footer  et_pb_css_mix_blend_mode_passthrough et-last-child">
+				
+				
+				
+				
+				<div class="et_pb_module et_pb_image et_pb_image_1_tb_footer">
+				
+				
+				
+				
+				<a href="https://www.k5-aviation.com/en/"><span class="et_pb_image_wrap "><img loading="lazy" decoding="async" width="150" height="95" src="/wp-content/uploads/2023/11/k5_logo1.png" alt="" title="k5_logo1" class="wp-image-129"></span></a>
+			</div>
+			</div>
+				
+				
+				
+				
+			</div>
+				
+				
+			</div>		</div>
+	</footer>
+		</div>
+
+			
+		</div>
+		</div>
+
+			<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/k5aviation-child/*","/wp-content/themes/Divi/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+		<script type="application/javascript">
+			(function() {
+				var file     = ["https:\/\/www.k5-aviation.com\/wp-content\/et-cache\/634\/et-divi-dynamic-tb-62-tb-567-634-late.css"];
+				var handle   = document.getElementById('divi-style-parent-inline-inline-css');
+				var location = handle.parentNode;
+
+				if (0===document.querySelectorAll('link[href="' + file + '"]').length) {
+					var link  = document.createElement('link');
+					link.rel  = 'stylesheet';
+					link.id   = 'et-dynamic-late-css';
+					link.href = file;
+
+					location.insertBefore(link, handle.nextSibling);
+				}
+			})();
+		</script>
+		<script id="jquery-core-js" src="https://www.k5-aviation.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>
+<script id="jquery-migrate-js" src="https://www.k5-aviation.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"></script>
+<script id="jquery-js-after">
+jqueryParams.length&&$.each(jqueryParams,function(e,r){if("function"==typeof r){var n=String(r);n.replace("$","jQuery");var a=new Function("return "+n)();$(document).ready(a)}});
+//# sourceURL=jquery-js-after
+</script>
+<script id="divi-custom-script-js-extra">
+var DIVI = {"item_count":"%d Item","items_count":"%d Items"};
+var et_builder_utils_params = {"condition":{"diviTheme":true,"extraTheme":false},"scrollLocations":["app","top"],"builderScrollLocations":{"desktop":"app","tablet":"app","phone":"app"},"onloadScrollLocation":"app","builderType":"fe"};
+var et_frontend_scripts = {"builderCssContainerPrefix":"#et-boc","builderCssLayoutPrefix":"#et-boc .et-l"};
+var et_pb_custom = {"ajaxurl":"https://www.k5-aviation.com/wp-admin/admin-ajax.php","images_uri":"https://www.k5-aviation.com/wp-content/themes/Divi/images","builder_images_uri":"https://www.k5-aviation.com/wp-content/themes/Divi/includes/builder/images","et_frontend_nonce":"79507de6da","subscription_failed":"Please, check the fields below to make sure you entered the correct information.","et_ab_log_nonce":"9d837ecdb2","fill_message":"Please, fill in the following fields:","contact_error_message":"Please, fix the following errors:","invalid":"Invalid email","captcha":"Captcha","prev":"Prev","previous":"Previous","next":"Next","wrong_captcha":"You entered the wrong number in captcha.","wrong_checkbox":"Checkbox","ignore_waypoints":"no","is_divi_theme_used":"1","widget_search_selector":".widget_search","ab_tests":[],"is_ab_testing_active":"","page_id":"634","unique_test_id":"","ab_bounce_rate":"5","is_cache_plugin_active":"no","is_shortcode_tracking":"","tinymce_uri":"https://www.k5-aviation.com/wp-content/themes/Divi/includes/builder/frontend-builder/assets/vendors","accent_color":"#7EBEC5","waypoints_options":[]};
+var et_pb_box_shadow_elements = [];
+//# sourceURL=divi-custom-script-js-extra
+</script>
+<script id="divi-custom-script-js" src="https://www.k5-aviation.com/wp-content/themes/Divi/js/scripts.min.js?ver=4.27.6"></script>
+<script id="et-core-common-js" src="https://www.k5-aviation.com/wp-content/themes/Divi/core/admin/js/common.js?ver=4.27.6"></script>
+<script id="et-builder-modules-script-sticky-js-extra">
+var et_pb_sticky_elements = {"et_pb_section_0_tb_header":{"id":"et_pb_section_0_tb_header","selector":".et_pb_section_0_tb_header","position":"top","topOffset":"0px","bottomOffset":"0px","topLimit":"none","bottomLimit":"none","offsetSurrounding":"on","transition":"on","styles":{"module_alignment":{"desktop":"","tablet":"","phone":""},"positioning":"relative"},"stickyStyles":{"position_origin_r":"top_left","horizontal_offset":"","vertical_offset":""}}};
+//# sourceURL=et-builder-modules-script-sticky-js-extra
+</script>
+<script id="et-builder-modules-script-sticky-js" src="https://www.k5-aviation.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/sticky-elements.js?ver=4.27.6"></script>
+	
+			<span class="et_pb_scroll_top et-pb-icon"></span>
+	
+

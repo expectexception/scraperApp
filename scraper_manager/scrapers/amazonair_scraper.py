@@ -47,44 +47,36 @@ class AmazonAirScraper(BaseScraper):
                     except Exception:
                         break
                 
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll("a")).map(a => ({
-                        href: a.href,
-                        text: a.innerText || a.textContent
-                    }));
+                cards_data = await page.evaluate('''() => {
+                    let cardElements = Array.from(document.querySelectorAll("div[class*='job-card-module_root']"));
+                    return cardElements.map(card => {
+                        let anchor = card.querySelector("a[href*='/jobs/']");
+                        if (!anchor) return null;
+                        let lines = card.innerText.split('\\n').map(l => l.trim()).filter(l => l);
+                        return {
+                            href: anchor.href,
+                            title: lines[0] || anchor.innerText.trim(),
+                            location: lines[1] || "Unknown"
+                        };
+                    }).filter(c => c !== null);
                 }''')
                 
                 seen = set()
-                for link in links:
+                for c in cards_data:
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                         
-                    href = link.get("href", "")
-                    if not href or "/jobs/" not in href.lower():
-                        continue
-                        
-                    text_parts = link.get("text", "").strip().split("\\n")
-                    if not text_parts or len(text_parts[0]) < 5:
-                        continue
-                        
-                    title = text_parts[0].strip()
-                    if title.lower() in ["read more", "apply", "apply now", "save job"]:
-                        continue
-                        
-                    job_url = href if href.startswith("http") else self.base_url.rstrip("/") + "/" + href.lstrip("/")
-                    
+                    job_url = c["href"]
                     if job_url in seen:
                         continue
                     seen.add(job_url)
                     
-                    # Extract location from text if possible
-                    location = "Unknown"
-                    if len(text_parts) > 1:
-                        for part in text_parts[1:]:
-                            if len(part) > 3 and "Posted" not in part and "Category" not in part:
-                                location = part.strip()
-                                break
-                                
+                    title = c["title"]
+                    location = c["location"]
+                    
+                    # Normalize location
+                    location = self.normalize_location(location)
+                    
                     job_id = f"amazonair_{abs(hash(job_url)) % 10000000}"
                     
                     jobs.append({

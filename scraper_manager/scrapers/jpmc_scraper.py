@@ -9,16 +9,17 @@ from .job_schema import get_job_dict
 class JpmcScraper(BaseScraper):
     """Scraper for JPMorgan Chase (JPMC) Oracle Cloud HCM job postings"""
 
-    def __init__(self, config: dict, db_manager=None):
-        super().__init__(config, "jpmc", db_manager=db_manager)
-        self.site_config = config.get("sites", {}).get("jpmc", {})
+    def __init__(self, config: dict, db_manager=None, site_key="jpmc"):
+        super().__init__(config, site_key, db_manager=db_manager)
+        self.site_config = config.get("sites", {}).get(site_key, {})
         self.base_url = self.site_config.get("base_url", "https://jpmc.fa.oraclecloud.com")
         self.api_url = self.site_config.get(
             "api_url",
-            "https://jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
+            f"{self.base_url}/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
         )
         self.site_number = self.site_config.get("site_number", "CX_1001")
-        self.search_keyword = "dispatcher"
+        self.search_keyword = self.site_config.get("search_keyword", "dispatcher" if site_key == "jpmc" else "")
+        self.company_name = self.site_config.get("company_name", "JPMorgan Chase")
 
     async def fetch_jobs_from_api(self) -> List[Dict]:
         """Fetch basic job data from Oracle Cloud API"""
@@ -98,9 +99,9 @@ class JpmcScraper(BaseScraper):
         )
 
         return {
-            "job_id": f"jpmc_{job_id}",
+            "job_id": f"{self.site_key}_{job_id}",
             "title": job.get("Title", ""),
-            "company": "JPMorgan Chase",
+            "company": self.company_name,
             "source": self.site_key,
             "url": f"{self.base_url}/hcmUI/CandidateExperience/en/sites/{self.site_number}/job/{job_id}",
             "apply_url": f"{self.base_url}/hcmUI/CandidateExperience/en/sites/{self.site_number}/job/{job_id}",

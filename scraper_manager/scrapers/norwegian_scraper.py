@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 class NorwegianScraper(BaseScraper):
     """
     Scraper for Norwegian Air Shuttle.
-    URL: https://careers.norwegian.com/viewalljobs/
+    URL: https://careers.norwegian.com/go/Administration/777902/
     """
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="norwegian", db_manager=db_manager)
-        self.base_url = "https://careers.norwegian.com/search/"
+        self.base_url = "https://careers.norwegian.com/go/Administration/777902/"
         self.company_name = "Norwegian Air Shuttle"
 
     async def fetch_jobs(self) -> list:
@@ -30,61 +30,77 @@ class NorwegianScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
 
             try:
-                await page.goto(self.base_url, wait_until="networkidle", timeout=60000)
+                await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
+                await page.wait_for_timeout(8000)
                 await self.simulate_human_behavior(page)
 
-                # Handle cookie banner
-                try:
-                    cookie_btn = page.locator(
-                        '#cookie-acknowledge, text="Accept All", text="Allow All"'
-                    ).first
-                    if await cookie_btn.is_visible():
-                        await cookie_btn.click()
-                        await page.wait_for_timeout(1000)
-                except:
-                    pass
-
-                # SuccessFactors interaction: Click search to reveal jobs
-                try:
-                    search_btn = page.locator('button:has-text("Search Jobs")').first
-                    if await search_btn.is_visible():
-                        await search_btn.click()
-                        await page.wait_for_selector("a.jobTitle-link", timeout=20000)
-                    else:
-                        # Sometimes it loads automatically, but wait for indicator
-                        await page.wait_for_selector("a.jobTitle-link", timeout=10000)
-                except:
-                    logger.warning(
-                        f"[{self.site_key}] Job list did not appear after interaction."
-                    )
-
-                # Fetch job links from the SuccessFactors list
-                links = await page.evaluate("""() => {
+                # Fetch job links and their location from the card layout
+                extracted_jobs = await page.evaluate("""() => {
+                    const rows = Array.from(document.querySelectorAll('div.job-row, tr.data-row'));
+                    if (rows.length > 0) {
+                        return rows.map(row => {
+                            const a = row.querySelector('a.jobTitle-link');
+                            if (!a) return null;
+                            
+                            // Find location element inside row
+                            let locText = "";
+                            const locEl = row.querySelector('[class*="location"], [class*="multilocation"]');
+                            if (locEl) {
+                                locText = locEl.innerText.trim()
+                                    .replace("Other Locations", "")
+                                    .replace("Location", "")
+                                    .trim();
+                            }
+                            
+                            return {
+                                title: a.innerText.trim(),
+                                href: a.href,
+                                location: locText
+                            };
+                        }).filter(j => j !== null);
+                    }
+                    
+                    // Fallback to simple links
                     return Array.from(document.querySelectorAll('a.jobTitle-link'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
+                        .map(a => ({
+                            title: a.innerText.trim(),
+                            href: a.href,
+                            location: ""
+                        }));
                 }""")
 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
+                logger.info(f"[{self.site_key}] Found {len(extracted_jobs)} potential jobs")
 
                 seen_urls = set()
-                job_urls = []
-                for link in links:
-                    href = link["h"]
-                    title = link["t"]
-                    if href and href not in seen_urls and self.is_job_link(title, href):
-                        seen_urls.add(href)
-                        job_urls.append((href, title))
+                for job_data in extracted_jobs:
+                    url = job_data["href"]
+                    title = job_data["title"]
+                    location = job_data["location"]
+                    
+                    if not url or url in seen_urls:
+                        continue
+                    seen_urls.add(url)
+                    
+                    if not self.should_process_job(title):
+                        continue
 
-                for i, (url, title) in enumerate(job_urls):
-                    if self.max_jobs and len(jobs) >= self.max_jobs:
-                        break
+                    # Refine location from URL slug if empty
+                    if not location or location.lower() == "unknown" or location.lower() == "norway":
+                        try:
+                            path_parts = url.split("/job/")
+                            if len(path_parts) > 1:
+                                slug = path_parts[1].split("/")[0]
+                                city = slug.split("-")[0]
+                                location = city
+                        except:
+                            location = "Norway"
+
+                    if await self.is_url_already_scraped(url):
+                        continue
 
                     try:
-                        if not self.should_process_job(title):
-                            continue
-
-                        if await self.is_url_already_scraped(url):
-                            continue
+                        if self.max_jobs and len(jobs) >= self.max_jobs:
+                            break
 
                         logger.info(f"[{self.site_key}] Fetching details for: {url}")
                         detail_page = await context.new_page()
@@ -101,7 +117,6 @@ class NorwegianScraper(BaseScraper):
                                 real_title = extracted
 
                         description = ""
-                        # SuccessFactors often has job description in a specific div
                         for loc in [
                             ".jobdescription",
                             ".content",
@@ -118,25 +133,14 @@ class NorwegianScraper(BaseScraper):
                                 detail_page
                             )
 
-                        # SuccessFactors location extraction
-                        location = "Norway"
-                        try:
-                            loc_val = await detail_page.evaluate("""() => {
-                                let label = Array.from(document.querySelectorAll('span')).find(s => s.innerText.includes('Location'));
-                                if(label && label.nextElementSibling) return label.nextElementSibling.innerText.trim();
-                                return "";
-                            }""")
-                            if loc_val:
-                                location = loc_val
-                        except:
-                            pass
-
                         posted_date = await self.extract_posted_date_from_page(
                             detail_page
                         )
 
                         job_id = f"norwegian_{hash(url)}"
-                        match = re.search(r"job-id=(\d+)", url)
+                        match = re.search(r"job/.*?/(\d+)", url)
+                        if not match:
+                            match = re.search(r"job-id=(\d+)", url)
                         if match:
                             job_id = f"norwegian_{match.group(1)}"
 
@@ -144,7 +148,7 @@ class NorwegianScraper(BaseScraper):
                             job_id=job_id,
                             title=real_title,
                             company=self.company_name,
-                            location=location,
+                            location=location or "Norway",
                             url=url,
                             source_url=self.base_url,
                             description=description,

@@ -30,6 +30,45 @@ class FedexScraper(BaseScraper):
 
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
+                
+                # Support direct job URLs
+                if "/job/" in self.base_url:
+                    logger.info(f"[{self.site_key}] Direct job URL detected: {self.base_url}")
+                    await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
+                    await page.wait_for_timeout(5000)
+                    
+                    title = await page.title()
+                    if " | FedEx Careers" in title:
+                        title = title.split(" | FedEx Careers")[0]
+                    if " in " in title:
+                        title = title.split(" in ")[0]
+                        
+                    location = await self.extract_location_from_detail_page(page) or "Hong Kong"
+                    
+                    description = ""
+                    phenom_desc = await page.query_selector(".job-description, .job-details-brief")
+                    if phenom_desc:
+                        description = await phenom_desc.inner_text()
+                    else:
+                        description = await self.extract_description_from_page(page)
+                        
+                    job_id_match = re.search(r"/job/([^/]+)", self.base_url)
+                    job_id = f"fedex_{job_id_match.group(1)}" if job_id_match else f"fedex_{hash(self.base_url)}"
+                    
+                    job = get_job_dict(
+                        job_id=job_id,
+                        title=title.strip(),
+                        company=self.company_name,
+                        location=location,
+                        url=self.base_url,
+                        source_url=self.base_url,
+                        description=description,
+                        apply_url=self.base_url,
+                        posted_date=None,
+                        source=self.site_key,
+                    )
+                    return [job]
+
                 await page.goto(
                     self.base_url, wait_until="domcontentloaded", timeout=60000
                 )
@@ -317,3 +356,8 @@ class AirCanadaScraper(FedexScraper):
     """Scraper for Air Canada (Phenom People)"""
     def __init__(self, config, db_manager=None):
         super().__init__(config, db_manager=db_manager, site_key="air_canada")
+
+class FedexHkNocScraper(FedexScraper):
+    """Scraper for FedEx HK Network Operations Control Specialist (Direct Link)"""
+    def __init__(self, config, db_manager=None):
+        super().__init__(config, db_manager=db_manager, site_key="fedex_hk_noc")

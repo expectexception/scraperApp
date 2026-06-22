@@ -105,7 +105,7 @@ from .jet_aviation_scraper import JetAviationScraper
 from .riyadh_air_scraper import RiyadhAirScraper
 from .global_jet_scraper import GlobalJetScraper
 from .aar_corp_scraper import AARCorpScraper
-from .fedex_scraper import FedexScraper, FedexEuroDispatchScraper
+from .fedex_scraper import FedexScraper, FedexEuroDispatchScraper, FedexHkNocScraper
 from .kalitta_air_scraper import KalittaAirScraper
 from .envoy_air_scraper import EnvoyAirScraper
 from .atlas_air_scraper import AtlasAirScraper
@@ -148,6 +148,11 @@ from .flix_scraper import FlixScraper
 from .tradewind_scraper import TradewindScraper
 from .psa_scraper import PsaScraper
 from .gridiron_scraper import GridironScraper
+from .quest_scraper import QuestGlobalScraper
+from .solitair_scraper import SolitairScraper
+from .aslaviation_scraper import AslAviationScraper
+from .nicholasair_scraper import NicholasAirScraper
+from .adani_scraper import AdaniScraper
 from .usajobs_scraper import UsajobsScraper
 from .usajobs_api_scraper import UsajobsApiScraper
 from .canada_gc_scraper import CanadaGcScraper
@@ -241,9 +246,19 @@ from .usajet_scraper import USAJetScraper
 from .igoxair_scraper import IGoxAirScraper
 from .phoenix_air_group_scraper import PhoenixAirGroupScraper
 from .cutter_scraper import CutterScraper
+from .jetstar_scraper import JetstarScraper
+from .hkexpress_scraper import HKExpressScraper
+from .dea_scraper import DeaScraper
+from .jet2_scraper import Jet2Scraper
+from .k5_aviation_scraper import K5AviationScraper
+from .avconjet_scraper import AvconJetScraper
+from .travelcoup_scraper import TravelcoupScraper
 
 # Available scrapers
 SCRAPERS = {
+    "dea": DeaScraper,
+    "jet2": Jet2Scraper,
+    "k5aviation": K5AviationScraper,
     "virgin_australia": VirginAustraliaScraper,
     "lar": LarScraper,
     "dlr": DlrScraper,
@@ -480,6 +495,16 @@ SCRAPERS = {
     "igoxair": IGoxAirScraper,
     "phoenix_air_group": PhoenixAirGroupScraper,
     "cutter": CutterScraper,
+    "jetstar": JetstarScraper,
+    "hkexpress": HKExpressScraper,
+    "fedex_hk_noc": FedexHkNocScraper,
+    "quest_global": QuestGlobalScraper,
+    "solitair": SolitairScraper,
+    "aslaviation": AslAviationScraper,
+    "nicholasair": NicholasAirScraper,
+    "adani_airports": AdaniScraper,
+    "avconjet": AvconJetScraper,
+    "travelcoup": TravelcoupScraper,
 }
 
 

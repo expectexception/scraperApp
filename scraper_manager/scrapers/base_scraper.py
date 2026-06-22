@@ -99,6 +99,13 @@ class BaseScraper:
             else "chrome110"
         )
 
+        # Network timeouts (seconds / ms). Without these a hung host stalls the
+        # whole scraper forever, holding the celery worker and the job row.
+        self.request_timeout = scraper_settings.get("request_timeout", 30)
+        self.connect_timeout = scraper_settings.get("connect_timeout", 15)
+        self.nav_timeout_ms = scraper_settings.get("nav_timeout_ms", 45000)
+        self.action_timeout_ms = scraper_settings.get("action_timeout_ms", 30000)
+
         # Headless setting (can be overridden per-site in config.py)
         # Default to True, but check if explicitly set in scraper config
         self.headless = (
@@ -304,6 +311,11 @@ class BaseScraper:
 
     async def save_results(self, jobs: List[Dict], filename: Optional[str] = None):
         """Save results to database only (no file generation)"""
+
+        # Force apply_url to be the same as url so users see the job details page
+        for job in jobs:
+            if "url" in job and job["url"]:
+                job["apply_url"] = job["url"]
 
         # Calculate duration
         duration = 0
@@ -516,6 +528,11 @@ class BaseScraper:
         if self.rotate_proxy and self.proxy_list and "proxies" not in kwargs:
             proxy_url = random.choice(self.proxy_list)
             kwargs["proxies"] = {"http": proxy_url, "https": proxy_url}
+
+        # Enforce a hard timeout so a hung/slow host can never block forever.
+        # curl_cffi accepts (connect, read) tuple, same as requests.
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = (self.connect_timeout, self.request_timeout)
 
         # Use AsyncSession for async requests
         async with curl_requests.AsyncSession() as s:
@@ -980,6 +997,12 @@ class BaseScraper:
 
         # Create context
         context = await browser.new_context(**context_options)
+
+        # Bound every navigation/action so a stuck page can't hang the scraper.
+        # Playwright's own default is 30s; make it explicit + configurable here so
+        # all scrapers built on setup_stealth_page inherit a sane ceiling.
+        context.set_default_navigation_timeout(self.nav_timeout_ms)
+        context.set_default_timeout(self.action_timeout_ms)
 
         # Create page
         page = await context.new_page()

@@ -16,7 +16,7 @@ class RyanairScraper(BaseScraper):
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="ryanair", db_manager=db_manager)
-        self.base_url = "https://careers.ryanair.com/search/"
+        self.base_url = self.site_config.get("jobs_url", "https://careers.ryanair.com/search/")
         self.company_name = "Ryanair"
 
     async def fetch_jobs(self) -> list:

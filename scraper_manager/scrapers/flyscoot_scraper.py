@@ -25,45 +25,68 @@ class FlyScootScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
-                await page.goto(self.base_url, wait_until="networkidle", timeout=60000)
-                await self.random_delay(3, 5)
-
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll("a")).map(a => ({
-                        href: a.href,
-                        text: a.innerText || a.textContent
-                    }));
-                }''')
+                await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
+                await page.wait_for_timeout(5000)
                 
-                for link in links:
-                    if self.max_jobs and len(jobs) >= self.max_jobs: break
+                try:
+                    await page.wait_for_selector(".job-card", timeout=15000)
+                except Exception as e:
+                    logger.warning(f"[{self.site_key}] Timeout waiting for .job-card: {e}")
+                    return []
+
+                cards = await page.query_selector_all(".job-card")
+                logger.info(f"[{self.site_key}] Found {len(cards)} job cards.")
+
+                for card in cards:
+                    if self.max_jobs and len(jobs) >= self.max_jobs:
+                        break
                     try:
-                        href = link.get("href", "")
-                        text = link.get("text", "").strip()
-                        if not href or len(text) < 5: continue
+                        title_el = await card.query_selector(".job-title")
+                        if not title_el:
+                            continue
+                        title = await title_el.inner_text()
+                        title = title.strip()
                         
-                        href_lower = href.lower()
-                        if "careers.flyscoot.com" in href_lower and any(kw in href_lower for kw in ["/job/", "/job-details", "job_id", "vacancy"]):
-                            if text.lower() in ["read more", "apply", "apply now", "view details", "jobs board"]:
-                                continue
+                        share_icon = await card.query_selector('[id^="share-icon-"]')
+                        ref_id = ""
+                        if share_icon:
+                            share_id = await share_icon.get_attribute("id")
+                            ref_id = share_id.replace("share-icon-", "")
+                        
+                        if not ref_id:
+                            continue
+                            
+                        job_url = f"https://careers.flyscoot.com/job-detail/{ref_id}"
+                        
+                        # Get locations from tags
+                        tag_els = await card.query_selector_all(".job-tag")
+                        location = "Singapore"
+                        tags = []
+                        for t in tag_els:
+                            t_text = await t.inner_text()
+                            tags.append(t_text.strip())
+                            if "HQ" in t_text or "SINGAPORE" in t_text.upper():
+                                location = "Singapore"
                                 
-                            job_url = href
-                            existing = next((j for j in jobs if j["url"] == job_url), None)
-                            if existing:
-                                if len(text) > len(existing["title"]): existing["title"] = text
-                                continue
-                                
-                            job_id = f"flyscoot_{abs(hash(job_url)) % 10000000}"
-                            jobs.append({
-                                "job_id": job_id,
-                                "title": text,
-                                "company": self.company_name,
-                                "source": self.site_key,
-                                "url": job_url,
-                                "apply_url": job_url,
-                                "location": "Singapore",
-                            })
-                    except:
+                        # Date
+                        posted_date = None
+                        posted_el = await card.query_selector(".job-start-date")
+                        if posted_el:
+                            posted_text = await posted_el.inner_text()
+                            posted_date = self.parse_posted_date(posted_text)
+
+                        jobs.append({
+                            "job_id": f"flyscoot_{ref_id}",
+                            "title": title,
+                            "company": self.company_name,
+                            "source": self.site_key,
+                            "url": job_url,
+                            "apply_url": job_url,
+                            "location": location,
+                            "posted_date": posted_date,
+                        })
+                    except Exception as e:
+                        logger.error(f"[{self.site_key}] Error parsing card: {e}")
                         continue
             except Exception as e:
                 logger.error(f"[{self.site_key}] Global error: {e}")
@@ -82,7 +105,7 @@ class FlyScootScraper(BaseScraper):
                     page, context = await self.setup_stealth_page(browser)
                     await page.goto(job["url"], wait_until="domcontentloaded", timeout=30000)
                     desc = ""
-                    selectors = [".job-description", ".content", "main"]
+                    selectors = [".job-detail", ".job-description-container", ".job-description", ".content", "main"]
                     for sel in selectors:
                         el = await page.query_selector(sel)
                         if el:

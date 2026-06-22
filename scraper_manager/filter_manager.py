@@ -53,16 +53,22 @@ class JobFilterManager:
             r"\b(pilot|co-pilot|copilot|first officer|second officer|captain|commander)\b",
             # Cabin crew / inflight service
             r"\b(cabin crew|flight attendant|cabin attendant|steward|stewardess|purser|pnc|hostess|air host)\b",
-            # Basic ground handling (unskilled ramp/baggage — NOT controllers)
-            r"\b(baggage handler|baggage agent|ramp agent|ramp handler|ground handler|bagagiste|gepäckabfertiger)\b",
+            # Basic ground handling (unskilled ramp/baggage — NOT controllers). Ground Handler itself
+            # is a valid Ground Operations keyword, so it is intentionally NOT excluded here.
+            r"\b(baggage handler|baggage agent|ramp agent|ramp handler|bagagiste|gepäckabfertiger)\b",
             # Customer-facing airport roles (Terminal/Gate)
             r"\b(check-in agent|gate agent|ticket agent|passenger service agent|customer service agent|reservation agent)\b",
-            # Generic IT & Development
-            r"\b(software developer|frontend developer|backend developer|fullstack|devops|programmer|data scientist|ux researcher)\b",
+            # IT, Software, Cybersecurity & Networking (not part of ops/crew/ground/management/corporate/maintenance scope)
+            r"\b(software developer|frontend developer|backend developer|full[\s-]?stack|devops|programmer|data scientist|ux researcher|ui designer|web developer|software engineer|qa engineer|test engineer)\b",
+            r"\b(it security|cyber\s?security|information security|infosec|it analyst|it support|it specialist|it manager|it administrator|it director|help\s?desk|systems administrator|sysadmin|network engineer|network administrator|database administrator|\bdba\b)\b",
+            # Sales & Marketing
+            r"\b(sales executive|sales manager|sales representative|sales associate|sales director|sales agent|account executive|account manager|business development|telesales|inside sales|marketing executive|marketing manager|marketing specialist|marketing coordinator|marketing director|digital marketing|seo specialist|content marketing|social media manager)\b",
+            # Generic Finance / Accounting (non-aviation-specific)
+            r"\b(accountant|bookkeeper|payroll specialist|tax advisor|financial controller)\b",
             # Unrelated Industries (Healthcare / Retail / F&B / Education)
             r"\b(nurse|physician|doctor|healthcare|pharmacist|medical)\b",
             r"\b(teacher|professor|faculty|lecturer|educator|student|internship)\b",
-            r"\b(cashier|retail associate|store clerk|shop assistant|sales associate)\b",
+            r"\b(cashier|retail associate|store clerk|shop assistant)\b",
             r"\b(bartender|chef|waiter|waitress|catering)\b",
             r"\b(delivery driver|truck driver|courier|warehouse associate)\b",
             # Non-Aviation Dispatch & Transport
@@ -75,13 +81,14 @@ class JobFilterManager:
         self.category_weights = {
             "Core_Function_Terms_Only": 4.0,
             "Operative_Functional_Control_Keywords": 3.0,
+            "Crew_Control_Keywords": 3.0,
             "Supervisory_Level_Control_Keywords": 2.0,
             "Management_Executive_Control_Keywords": 1.5,
             "Maintenance_Engineering_Control": 2.5,
             "Operations_Performance_Analytics": 2.0,
-            "Flight_Deck_Crew": 2.5,
-            "Cabin_Crew_Inflight": 2.5,
             "Ground_Airport_Operations": 2.5,
+            "Entry_Level_Operations_Roles": 1.5,
+            "Corporate_Aviation_Support_Roles": 2.0,
         }
 
         # Performance metrics

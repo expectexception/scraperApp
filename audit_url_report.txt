@@ -1,0 +1,27 @@
+ENABLED scrapers checked: 233
+OK: 210   PROBLEM: 23
+
+=== PROBLEMS (need attention) ===
+DNSError         code=None egyptair  [jobs_url] https://hr.egyptair.com
+DNSError         code=None iag  [jobs_url] https://careers.iagportal.com/
+DNSError         code=None lufthansa_group  [jobs_url] https://career.be-lufthansa.com/
+DNSError         code=None tap  [jobs_url] https://careers.flytap.com/
+HTTP_ERR         code=500 aerlingus  [jobs_url] https://aerlingus.wd3.myworkdayjobs.com/en-US/AerLingus
+HTTP_ERR         code=400 airbus  [api_url] https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/jobs
+HTTP_ERR         code=404 alaska  [jobs_url] https://careers.alaskaair.com/jobs/search?in_iframe=1
+HTTP_ERR         code=500 alexjets  [jobs_url] https://alexjets.com/modern/career
+HTTP_ERR         code=403 aslairlinesbelgium  [jobs_url] https://aslairlines.be/asljobs/
+HTTP_ERR         code=404 carpatair  [jobs_url] https://www.carpatair.com/careers/
+HTTP_ERR         code=404 dubairaw  [jobs_url] https://careers.dubaiairports.ae/search-jobs
+HTTP_ERR         code=503 easternairways  [jobs_url] https://www.easternairways.com/careers
+HTTP_ERR         code=403 havenasg  [jobs_url] https://www.havenasg.com/careers#roles
+HTTP_ERR         code=403 hifly  [jobs_url] https://hifly.aero/careers/
+HTTP_ERR         code=403 magma  [jobs_url] https://magma.aero/careers/
+HTTP_ERR         code=404 marabu  [jobs_url] https://apply.workable.com/api/v3/accounts/marabu/jobs
+HTTP_ERR         code=403 rtx  [jobs_url] https://careers.rtx.com/global/en/search-results
+HTTP_ERR         code=404 skywest  [jobs_url] https://skywest-airlines.icims.com/jobs/search?in_iframe=1
+HTTP_ERR         code=403 smartwings  [jobs_url] https://www.smartwings.com/en/career/
+HTTP_ERR         code=403 starlinkaviation  [jobs_url] https://starlinkaviation.com/careers/job-openings/
+HTTP_ERR         code=403 sunairjets  [jobs_url] https://www.sunairjets.com/careers/
+HTTP_ERR         code=403 uchealth  [jobs_url] https://careers.uchealth.org/search/jobs
+NO_URL           code=None wmd  [base_url] None
