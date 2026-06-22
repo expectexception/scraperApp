@@ -297,6 +297,11 @@ class QatarAirwaysScraper(BaseScraper):
                 description = await self.extract_description_from_page(page)
 
             job["description"] = description
+            # Backfill location from the original posting when missing.
+            if not job.get("location") or job.get("location") == "Unknown":
+                _loc = await self.extract_location_from_page(page)
+                if _loc:
+                    job["location"] = _loc
 
             # Extract posted date fallback
             if not job.get("posted_date"):

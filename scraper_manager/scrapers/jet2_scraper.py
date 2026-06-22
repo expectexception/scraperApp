@@ -83,7 +83,7 @@ class Jet2Scraper(BaseScraper):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
 
-                    title = job_data["title"].split("\\n")[0].strip()
+                    title = job_data["title"].split("\n")[0].strip()
                     url = job_data["href"]
                     
                     if not self.should_process_job(title):
@@ -192,6 +192,11 @@ class Jet2Scraper(BaseScraper):
                         }''')
                         
                         job["description"] = desc.strip()[:3000]
+                        # Backfill location from the original posting when missing.
+                        if not job.get("location") or job.get("location") == "Unknown":
+                            _loc = await self.extract_location_from_page(page)
+                            if _loc:
+                                job["location"] = _loc
 
                     except Exception as e:
                         logger.warning(f"[{self.site_key}] Failed to fetch description for {job['title']}: {e}")

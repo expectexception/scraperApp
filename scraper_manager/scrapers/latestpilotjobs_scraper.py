@@ -110,9 +110,9 @@ class LatestPilotJobsScraper(BaseScraper):
                     }''')
                     
                     if meta_info.get("company"):
-                        job["company"] = meta_info["company"].split('\\n')[0].strip()
+                        job["company"] = meta_info["company"].split('\n')[0].strip()
                     if meta_info.get("location"):
-                        job["location"] = meta_info["location"].split('\\n')[0].strip()
+                        job["location"] = meta_info["location"].split('\n')[0].strip()
                         
                     # Extract exact apply URL
                     apply_link = await page.evaluate('''() => {
@@ -146,6 +146,11 @@ class LatestPilotJobsScraper(BaseScraper):
                     if not desc:
                         desc = await self.extract_description_from_page(page)
                     job["description"] = desc
+                    # Backfill location from the original posting when missing.
+                    if not job.get("location") or job.get("location") == "Unknown":
+                        _loc = await self.extract_location_from_page(page)
+                        if _loc:
+                            job["location"] = _loc
                     
                 except Exception as e:
                     logger.warning(f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}")

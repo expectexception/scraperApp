@@ -69,7 +69,7 @@ class DeaScraper(BaseScraper):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
 
-                    title = job_data["title"].split("\\n")[0].strip()
+                    title = job_data["title"].split("\n")[0].strip()
                     url = job_data["href"]
                     
                     # Sometimes the title contains extra info due to innerText concatenating divs
@@ -128,8 +128,18 @@ class DeaScraper(BaseScraper):
                         desc_el = await page.query_selector(".posting-description, .job-description, .content-block")
                         if desc_el:
                             job["description"] = await desc_el.inner_text()
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(page)
+                                if _loc:
+                                    job["location"] = _loc
                         else:
                             job["description"] = await self.extract_description_from_page(page)
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(page)
+                                if _loc:
+                                    job["location"] = _loc
 
                     except Exception as e:
                         logger.warning(f"[{self.site_key}] Failed to fetch description for {job['title']}: {e}")

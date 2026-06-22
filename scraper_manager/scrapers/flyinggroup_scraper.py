@@ -51,8 +51,8 @@ class FlyingGroupScraper(BaseScraper):
                         title = job_data["text"]
                         
                         # In wordpress standard article lists, the title often has the date prepended.
-                        if "\\n" in title:
-                            title = title.split("\\n")[-1].strip()
+                        if "\n" in title:
+                            title = title.split("\n")[-1].strip()
 
                         job_id = f"flyinggroup_{abs(hash(url)) % 10000000}"
                         jobs.append({
@@ -86,6 +86,11 @@ class FlyingGroupScraper(BaseScraper):
                     
                     desc = await self.extract_description_from_page(page)
                     job["description"] = desc
+                    # Backfill location from the original posting when missing.
+                    if not job.get("location") or job.get("location") == "Unknown":
+                        _loc = await self.extract_location_from_page(page)
+                        if _loc:
+                            job["location"] = _loc
 
                     # Attempt to refine location if mentioned
                     text_lower = desc.lower()

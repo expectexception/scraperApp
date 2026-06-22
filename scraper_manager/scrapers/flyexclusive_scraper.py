@@ -45,7 +45,7 @@ class FlyexclusiveScraper(BaseScraper):
                     if not href or "/jobs/" not in href.lower():
                         continue
                         
-                    text_parts = link.get("text", "").strip().split("\\n")
+                    text_parts = link.get("text", "").strip().split("\n")
                     if not text_parts or len(text_parts[0]) < 3:
                         continue
                         
@@ -105,6 +105,11 @@ class FlyexclusiveScraper(BaseScraper):
                         desc = await self.extract_description_from_page(page)
                         
                     job["description"] = desc
+                    # Backfill location from the original posting when missing.
+                    if not job.get("location") or job.get("location") == "Unknown":
+                        _loc = await self.extract_location_from_page(page)
+                        if _loc:
+                            job["location"] = _loc
                     await context.close()
                 except Exception as e:
                     logger.warning(f"[{self.site_key}] Failed to fetch description for {job['url']}: {e}")

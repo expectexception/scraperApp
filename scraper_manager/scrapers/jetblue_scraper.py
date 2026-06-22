@@ -264,6 +264,11 @@ class JetBlueScraper(BaseScraper):
                 description = await self.extract_description_from_page(page)
 
             job["description"] = description
+            # Backfill location from the original posting when missing.
+            if not job.get("location") or job.get("location") == "Unknown":
+                _loc = await self.extract_location_from_page(page)
+                if _loc:
+                    job["location"] = _loc
 
             # Extract posted date if available
             posted_date = await self.extract_posted_date_from_page(page)

@@ -185,9 +185,19 @@ class BritishAirwaysScraper(BaseScraper):
                         desc_el = detail_page.locator(".job-detail")
                         if await desc_el.count():
                             job["description"] = await desc_el.inner_html()
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(detail_page)
+                                if _loc:
+                                    job["location"] = _loc
                         else:
                             # Fallback
                             job["description"] = await detail_page.content()
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(detail_page)
+                                if _loc:
+                                    job["location"] = _loc
 
                         # Apply Link
                         # Analysis said a.ajd_btn__apply

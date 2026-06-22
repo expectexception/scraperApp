@@ -138,6 +138,11 @@ class StarAirScraper(BaseScraper):
                                 )  # Fallback to full content if specific area not found
 
                             job["description"] = description
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(detail_page)
+                                if _loc:
+                                    job["location"] = _loc
 
                             # Check for Apply button URL
                             apply_btn = detail_page.locator(

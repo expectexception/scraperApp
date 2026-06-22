@@ -97,14 +97,17 @@ class AslAviationScraper(BaseScraper):
                     
                     # Extract location if possible from the page
                     loc_text = await page.evaluate('''() => {
-                        const locEl = document.querySelector('.job_location, .location');
-                        return locEl ? locEl.innerText.trim() : "";
+                        const locEl = document.querySelector('#description__subtitle span[title="Location"], .job_location, .location');
+                        if (locEl) return locEl.innerText.trim();
+                        const spans = Array.from(document.querySelectorAll('span[title="Location"]'));
+                        if (spans.length > 0) return spans[0].innerText.trim();
+                        return "";
                     }''')
-                    if loc_text:
-                        job["location"] = loc_text
-                    else:
-                        job["location"] = "Unknown"
-                        
+                    if not loc_text:
+                        # Fall back to schema.org JSON-LD / meta / selectors.
+                        loc_text = await self.extract_location_from_page(page)
+                    job["location"] = loc_text or "Unknown"
+
                 except Exception as e:
                     logger.warning(f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}")
                     job["description"] = ""

@@ -222,6 +222,11 @@ class DubaiRawScraper(BaseScraper):
                 pass
 
             job["description"] = description
+            # Backfill location from the original posting when missing.
+            if not job.get("location") or job.get("location") == "Unknown":
+                _loc = await self.extract_location_from_page(page)
+                if _loc:
+                    job["location"] = _loc
 
             # Date fallback
             if not job.get("posted_date"):

@@ -459,6 +459,11 @@ class AAPAviationScraper(BaseScraper):
             # Combine all parts
             if description_parts:
                 job["description"] = "\n".join(description_parts)
+                # Backfill location from the original posting when missing.
+                if not job.get("location") or job.get("location") == "Unknown":
+                    _loc = await self.extract_location_from_page(page)
+                    if _loc:
+                        job["location"] = _loc
 
             # If still no description, try main content area
             if not job["description"] or len(job["description"]) < 100:
@@ -469,6 +474,11 @@ class AAPAviationScraper(BaseScraper):
                         text = await element.inner_text()
                         if len(text) > 200:
                             job["description"] = text.strip()
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(page)
+                                if _loc:
+                                    job["location"] = _loc
                             break
 
             # Fallback: use base scraper description helper
@@ -477,6 +487,11 @@ class AAPAviationScraper(BaseScraper):
                     fallback_desc = await self.extract_description_from_page(page)
                     if fallback_desc and len(fallback_desc) > len(job["description"]):
                         job["description"] = fallback_desc
+                        # Backfill location from the original posting when missing.
+                        if not job.get("location") or job.get("location") == "Unknown":
+                            _loc = await self.extract_location_from_page(page)
+                            if _loc:
+                                job["location"] = _loc
                 except Exception:
                     pass
 

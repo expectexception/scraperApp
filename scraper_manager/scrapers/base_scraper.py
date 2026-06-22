@@ -926,6 +926,105 @@ class BaseScraper:
             pass
         return None
 
+    async def extract_location_from_page(self, page):
+        """Fallback: pull a real location off a job detail page.
+
+        Order: schema.org JSON-LD JobPosting.jobLocation (standard on most
+        career sites) -> location meta tags -> common selectors. Returns a
+        "City, Region, Country" style string, or "" when nothing usable found.
+        Caller should use this whenever its own parse yields nothing/"Unknown".
+        """
+        import json as _json
+
+        def _addr_to_str(addr):
+            if isinstance(addr, str):
+                return addr.strip()
+            if not isinstance(addr, dict):
+                return ""
+            parts = []
+            for key in ("addressLocality", "addressRegion", "addressCountry"):
+                val = addr.get(key)
+                if isinstance(val, dict):
+                    val = val.get("name") or val.get("@id")
+                if val and isinstance(val, str) and val.strip():
+                    parts.append(val.strip())
+            # de-dup while preserving order (locality sometimes == region)
+            seen = []
+            for p in parts:
+                if p.lower() not in [s.lower() for s in seen]:
+                    seen.append(p)
+            return ", ".join(seen)
+
+        try:
+            # 1) JSON-LD JobPosting.jobLocation
+            scripts = await page.query_selector_all(
+                'script[type="application/ld+json"]'
+            )
+            for s in scripts:
+                try:
+                    data = _json.loads(await s.inner_text())
+                except Exception:
+                    continue
+                items = data if isinstance(data, list) else [data]
+                # also unwrap @graph containers
+                expanded = []
+                for it in items:
+                    if isinstance(it, dict) and isinstance(it.get("@graph"), list):
+                        expanded.extend(it["@graph"])
+                    else:
+                        expanded.append(it)
+                for item in expanded:
+                    if not isinstance(item, dict):
+                        continue
+                    types = item.get("@type")
+                    types = types if isinstance(types, list) else [types]
+                    if "JobPosting" not in [str(t) for t in types]:
+                        continue
+                    loc = item.get("jobLocation")
+                    loc_list = loc if isinstance(loc, list) else [loc]
+                    for lc in loc_list:
+                        if isinstance(lc, dict):
+                            addr = lc.get("address", lc)
+                            out = _addr_to_str(addr)
+                            if out:
+                                return out
+                        elif isinstance(lc, str) and lc.strip():
+                            return lc.strip()
+
+            # 2) Location meta tags
+            metas = await page.query_selector_all("meta")
+            for m in metas:
+                name = (await m.get_attribute("name") or "").lower()
+                prop = (await m.get_attribute("property") or "").lower()
+                content = (await m.get_attribute("content") or "").strip()
+                if not content:
+                    continue
+                if any(
+                    k in (name + prop)
+                    for k in ("job:location", "og:locality", "geo.placename", "business:contact_data:locality")
+                ):
+                    return content
+
+            # 3) Common selectors
+            selectors = [
+                '[itemprop="jobLocation"]',
+                '[data-automation="job-detail-location"]',
+                '.job-location', '.job_location', '.location',
+                'span[title="Location"]', '[class*="location"]',
+            ]
+            for sel in selectors:
+                try:
+                    el = await page.query_selector(sel)
+                    if el:
+                        txt = (await el.inner_text()).strip()
+                        if txt and len(txt) < 120:
+                            return txt
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return ""
+
     async def extract_description_from_page(self, page, min_length=100):
         """Fallback: return the largest candidate description on the page"""
         try:

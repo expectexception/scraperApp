@@ -195,6 +195,11 @@ class BoeingScraper(BaseScraper):
                         "div.ats-description"
                     ) or await page.query_selector("main")
                     job["description"] = await desc_el.inner_html() if desc_el else ""
+                    # Backfill location from the original posting when missing.
+                    if not job.get("location") or job.get("location") == "Unknown":
+                        _loc = await self.extract_location_from_page(page)
+                        if _loc:
+                            job["location"] = _loc
                 except Exception as e:
                     logger.warning(
                         f"[{self.site_key}] Failed to load description for {job['url']}: {e}"

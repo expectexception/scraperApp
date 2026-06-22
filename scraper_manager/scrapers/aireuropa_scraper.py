@@ -125,6 +125,11 @@ class AirEuropaScraper(BaseScraper):
                     )
                     if desc_elem:
                         job["description"] = await desc_elem.inner_text()
+                        # Backfill location from the original posting when missing.
+                        if not job.get("location") or job.get("location") == "Unknown":
+                            _loc = await self.extract_location_from_page(page)
+                            if _loc:
+                                job["location"] = _loc
                 except Exception as e:
                     logger.warning(
                         f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}"

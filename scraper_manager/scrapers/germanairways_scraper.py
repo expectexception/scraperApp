@@ -145,6 +145,11 @@ class GermanAirwaysScraper(BaseScraper):
                         else:
                             # Fallback to main content
                             job["description"] = await detail_page.content()
+                            # Backfill location from the original posting when missing.
+                            if not job.get("location") or job.get("location") == "Unknown":
+                                _loc = await self.extract_location_from_page(detail_page)
+                                if _loc:
+                                    job["location"] = _loc
 
                         # Apply Link - usually the same page has an Apply button that opens a form,
                         # but for scraper purposes the job URL is the apply start point.

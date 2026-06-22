@@ -145,6 +145,11 @@ class UCHealthScraper(BaseScraper):
                         text = desc_container.text
                         text = re.sub(r"\s+", " ", text).strip()
                         job["description"] = text
+                        # Backfill location from the original posting when missing.
+                        if not job.get("location") or job.get("location") == "Unknown":
+                            _loc = await self.extract_location_from_page(page)
+                            if _loc:
+                                job["location"] = _loc
                     else:
                         job["description"] = ""
                 except Exception as e:

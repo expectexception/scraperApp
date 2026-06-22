@@ -50,7 +50,7 @@ class SolitairScraper(BaseScraper):
                     seen.add(url)
                     
                     # title may include location and department with newlines, let's take the first line as title
-                    text_parts = link["text"].strip().split("\\n")
+                    text_parts = link["text"].strip().split("\n")
                     title = text_parts[0].strip()
                     
                     location = "Unknown"
@@ -102,6 +102,13 @@ class SolitairScraper(BaseScraper):
                         desc = await self.extract_description_from_page(page)
                         
                     job["description"] = desc.strip()
+
+                    # Backfill location from the detail page when the listing
+                    # parse couldn't determine it.
+                    if not job.get("location") or job["location"] == "Unknown":
+                        loc = await self.extract_location_from_page(page)
+                        if loc:
+                            job["location"] = loc
                 except Exception as e:
                     logger.warning(f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}")
                     job["description"] = ""

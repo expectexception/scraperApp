@@ -151,6 +151,11 @@ class JpmcScraper(BaseScraper):
                 description = re.sub(r"<[^>]+>", " ", desc_html)
                 description = re.sub(r"\s+", " ", description).strip()
                 job["description"] = description
+                # Backfill location from the original posting when missing.
+                if not job.get("location") or job.get("location") == "Unknown":
+                    _loc = await self.extract_location_from_page(page)
+                    if _loc:
+                        job["location"] = _loc
             else:
                 job["description"] = ""
 

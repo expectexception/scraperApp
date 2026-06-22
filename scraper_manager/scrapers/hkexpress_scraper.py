@@ -121,6 +121,11 @@ class HKExpressScraper(BaseScraper):
 
                     job["location"] = location.strip()
                     job["description"] = desc.strip()
+                    # Backfill location from the original posting when missing.
+                    if not job.get("location") or job.get("location") == "Unknown":
+                        _loc = await self.extract_location_from_page(page)
+                        if _loc:
+                            job["location"] = _loc
 
                     # Try to extract advertised date as posted_date
                     adv_text = await page.evaluate('''() => {
