@@ -152,9 +152,13 @@ class Command(BaseCommand):
                 scraper_end = timezone.now()
                 duration = (scraper_end - scraper_start).total_seconds()
 
+                # call_command() always returns None regardless of outcome -
+                # determine real success/failure from the captured output text instead.
+                ran_ok = "✓ Scraper completed successfully" in output
+
                 result = {
                     "scraper_name": scraper_name,
-                    "status": "success" if result_code == 0 else "failed",
+                    "status": "success" if ran_ok else "failed",
                     "jobs_found": jobs_found,
                     "jobs_new": jobs_new,
                     "jobs_updated": jobs_updated,
@@ -164,7 +168,7 @@ class Command(BaseCommand):
 
                 results.append(result)
 
-                if result_code == 0:
+                if ran_ok:
                     successful_runs += 1
                     total_jobs_found += jobs_found
                     total_new_jobs += jobs_new
@@ -173,7 +177,7 @@ class Command(BaseCommand):
                     )
                 else:
                     logger.error(
-                        f"❌ {scraper_name} failed with code {result_code} in {duration:.1f}s"
+                        f"❌ {scraper_name} failed in {duration:.1f}s"
                     )
 
             except Exception as e:

@@ -1,5 +1,7 @@
 import logging
 import re
+import itertools
+from urllib.parse import urlsplit, urlunsplit
 from playwright.async_api import async_playwright
 
 from .base_scraper import BaseScraper
@@ -11,71 +13,86 @@ logger = logging.getLogger(__name__)
 class RyanairScraper(BaseScraper):
     """
     Scraper for Ryanair.
-    URL: https://careers.ryanair.com/search/
+    URL: https://careers.ryanair.com/jobs/
     """
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="ryanair", db_manager=db_manager)
-        self.base_url = self.site_config.get("jobs_url", "https://careers.ryanair.com/search/")
+        # Strip any leftover narrow "search=" query param from config — it was
+        # previously hardcoded to "?search=Dispa", which limited the whole
+        # listing to dispatcher-titled postings only and hid everything else.
+        configured_url = self.site_config.get("jobs_url") or "https://careers.ryanair.com/jobs/"
+        split = urlsplit(configured_url)
+        self.base_url = urlunsplit((split.scheme, split.netloc, split.path or "/jobs/", "", ""))
         self.company_name = "Ryanair"
 
     async def fetch_jobs(self) -> list:
         logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
         jobs = []
+        job_urls = []
+        seen_urls = set()
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
             page, context = await self.setup_stealth_page(browser)
 
             try:
-                try:
-                    await page.goto(
-                        self.base_url, wait_until="networkidle", timeout=60000
-                    )
-                except Exception as e:
-                    logger.error(f"[{self.site_key}] Navigation failed: {e}")
-                    return []
+                for page_num in itertools.count(1):
+                    if self.max_pages and page_num > self.max_pages:
+                        break
+                    page_url = f"{self.base_url}?page={page_num}"
+                    try:
+                        await page.goto(
+                            page_url, wait_until="networkidle", timeout=60000
+                        )
+                    except Exception as e:
+                        logger.error(f"[{self.site_key}] Navigation failed on page {page_num}: {e}")
+                        break
 
-                # Handling cookie consent
-                try:
-                    cookie_btn = page.locator("text=Yes, text=Accept All").first
-                    if await cookie_btn.is_visible():
-                        await cookie_btn.click()
-                        await page.wait_for_timeout(1000)
-                except:
-                    pass
+                    if page_num == 1:
+                        # Handling cookie consent
+                        try:
+                            cookie_btn = page.locator("text=Yes, text=Accept All").first
+                            if await cookie_btn.is_visible():
+                                await cookie_btn.click()
+                                await page.wait_for_timeout(1000)
+                        except:
+                            pass
 
-                links = await page.evaluate("""() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => ({t: a.innerText.trim(), h: a.href}))
-                        .filter(a => a.t && a.t.length > 5 && (a.h.includes('/job/') || a.h.includes('successfactors.eu') || a.h.includes('workable.com') || a.h.includes('/jobs/')))
-                }""")
+                    links = await page.evaluate("""() => {
+                        return Array.from(document.querySelectorAll('a'))
+                            .map(a => ({t: a.innerText.trim(), h: a.href}))
+                            .filter(a => a.t && a.t.length > 5 && (a.h.includes('/job/') || a.h.includes('successfactors.eu') || a.h.includes('workable.com') || a.h.includes('/jobs/')))
+                    }""")
 
-                logger.info(f"[{self.site_key}] Found {len(links)} potential job links")
+                    new_count = 0
+                    for link in links:
+                        href = link["h"]
+                        title = link["t"]
+                        if href and href not in seen_urls and self.is_job_link(title, href):
+                            skip_words = [
+                                "home",
+                                "news",
+                                "faq",
+                                "cookie",
+                                "login",
+                                "impressum",
+                                "privacy",
+                                "about",
+                            ]
+                            if (
+                                any(kw == title.lower() for kw in skip_words)
+                                or title.lower() in skip_words
+                            ):
+                                continue
+                            seen_urls.add(href)
+                            job_urls.append((href, title))
+                            new_count += 1
 
-                seen_urls = set()
-                job_urls = []
-                for link in links:
-                    href = link["h"]
-                    title = link["t"]
-                    if href and href not in seen_urls and self.is_job_link(title, href):
-                        skip_words = [
-                            "home",
-                            "news",
-                            "faq",
-                            "cookie",
-                            "login",
-                            "impressum",
-                            "privacy",
-                            "about",
-                        ]
-                        if (
-                            any(kw == title.lower() for kw in skip_words)
-                            or title.lower() in skip_words
-                        ):
-                            continue
-                        seen_urls.add(href)
-                        job_urls.append((href, title))
+                    logger.info(f"[{self.site_key}] Page {page_num}: {new_count} new job links (total {len(job_urls)})")
+
+                    if new_count == 0:
+                        break
 
                 for i, (url, title) in enumerate(job_urls):
                     if self.max_jobs and len(jobs) >= self.max_jobs:

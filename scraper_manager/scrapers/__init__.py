@@ -91,6 +91,7 @@ from .abudhabiaviation_scraper import AbuDhabiAviationScraper
 from .falconaviation_scraper import FalconAviationScraper
 from .aap_aviation_scraper import AAPAviationScraper
 from .jetfly_scraper import JetflyScraper
+from .heronaviation_scraper import HeronaviationScraper
 from .spirit_scraper import SpiritScraper
 from .mesa_airlines_scraper import MesaAirlinesScraper
 from .delta_scraper import DeltaScraper
@@ -109,6 +110,7 @@ from .fedex_scraper import FedexScraper, FedexEuroDispatchScraper, FedexHkNocScr
 from .kalitta_air_scraper import KalittaAirScraper
 from .envoy_air_scraper import EnvoyAirScraper
 from .atlas_air_scraper import AtlasAirScraper
+from .hevenaerotech_scraper import HevenAerotechScraper
 from .atlantic_aviation_scraper import AtlanticAviationScraper
 from .cargolux_scraper import CargoluxScraper
 from .netjets_scraper import NetJetsScraper
@@ -348,6 +350,7 @@ SCRAPERS = {
     "abudhabiaviation": AbuDhabiAviationScraper,
     "falconaviation": FalconAviationScraper,
     "jetfly": JetflyScraper,
+    "heronaviation": HeronaviationScraper,
     "spirit": SpiritScraper,
     "mesa": MesaAirlinesScraper,
     "delta": DeltaScraper,
@@ -367,6 +370,7 @@ SCRAPERS = {
     "kalitta_air": KalittaAirScraper,
     "envoy_air": EnvoyAirScraper,
     "atlas_air": AtlasAirScraper,
+    "hevenaerotech": HevenAerotechScraper,
     "atlantic_aviation": AtlanticAviationScraper,
     "netjets": NetJetsScraper,
     "wheels_up": WheelsUpScraper,

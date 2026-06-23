@@ -43,7 +43,7 @@ class DCAviationScraper(BaseScraper):
                         if not href or len(text) < 5: continue
                         
                         href_lower = href.lower()
-                        if "recruitee.com/o/" in href_lower:
+                        if "recruitee.com" in href_lower and "/o/" in href_lower:
                             if text.lower() in ["read more", "apply", "apply now", "view details"]:
                                 continue
                                 

@@ -25,7 +25,9 @@ class HelinetScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
-                await page.goto(self.base_url, wait_until="networkidle", timeout=60000)
+                # networkidle never settles on this site (persistent background
+                # connections), causing a hard timeout - domcontentloaded is enough.
+                await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
                 await self.random_delay(2, 4)
 
                 links = await page.evaluate('''() => {
@@ -43,7 +45,9 @@ class HelinetScraper(BaseScraper):
                         if not href or len(text) < 5: continue
                         
                         href_lower = href.lower()
-                        if "helinet.com/careers/" in href_lower and href_lower != "https://helinet.com/careers/" and "#" not in href_lower:
+                        is_own_site_job = "helinet.com/careers/" in href_lower and href_lower != "https://helinet.com/careers/" and "#" not in href_lower
+                        is_bamboohr_job = "bamboohr.com/careers/" in href_lower and href_lower.rstrip("/").rsplit("/", 1)[-1].isdigit()
+                        if is_own_site_job or is_bamboohr_job:
                             if text.lower() in ["read more", "apply", "apply now", "view details", "see careers"]:
                                 continue
                                 

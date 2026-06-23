@@ -259,6 +259,75 @@ def infer_job_category(
     return "other"
 
 
+# Word-boundary patterns. Order doesn't matter within a list — every pattern
+# is tried, first hit wins the True for that flag. Patterns are kept broad on
+# purpose (catch every phrasing a real job board uses) but anchored with \b so
+# e.g. "senior" doesn't fire on "seniority" and "vp" doesn't fire on "service".
+SENIOR_PATTERNS = [
+    r"\bsenior\b",
+    r"\bsnr\b",
+    r"\bsr\.?\b",
+    r"\blead\b",
+    r"\bprincipal\b",
+    r"\bexpert\b",
+    r"\bchief\b",
+    r"\b(?:level|lvl)\s*(?:ii|iii|2|3)\b",
+    r"\b(?:ii|iii)\b\s*$",
+]
+
+MANAGER_PATTERNS = [
+    r"\bmanager\b",
+    r"\bmgr\b",
+    r"\bdirector\b",
+    r"\bhead of\b",
+    r"\bvice president\b",
+    r"\bvp\b",
+    r"\bgeneral manager\b",
+    r"\bgm\b",
+    r"\bsupervisor\b",
+    r"\bsupervising\b",
+    r"\bdeputy director\b",
+    r"\bdepartment head\b",
+    r"\bteam lead(?:er)?\b",
+    r"\bchief\b",
+    r"\bpresident\b",
+    r"\bexecutive\b",
+    r"\bc[a-z]o\b",  # CEO, COO, CFO, CTO, CXO style abbreviations
+    # Common non-English equivalents seen across European/LatAm career sites
+    # in this dataset (French, German, Spanish/Portuguese, Italian, Polish).
+    r"\bdirecteur(?:rice)?\b",
+    r"\bdiretor(?:a)?\b",
+    r"\bdirettore\b",
+    r"\bdirectora\b",
+    r"\bgerente\b",
+    r"\bsuperviseur(?:e)?\b",
+    r"\bsupervisore\b",
+    r"\bjefe(?: de)?\b",
+    r"\bkierownik\b",
+    r"leiter(?:in)?\b",  # suffix match: catches Schichtleiter, Stationsleiter, Abfertigungsleiter
+]
+
+
+def classify_seniority(title="", description=""):
+    """
+    Dynamic, regex-based seniority/management classifier.
+    Title-only by design — job descriptions routinely mention "senior",
+    "manager", "lead" etc. in unrelated context (reporting lines, team intros,
+    boilerplate), so using description text produces false positives on
+    junior roles. The title is the actual signal for job *level*.
+    Returns (is_senior, is_manager). Not mutually exclusive — a
+    "Senior Manager" title is both.
+    """
+    import re
+
+    title_text = (title or "").lower()
+
+    is_senior = any(re.search(p, title_text, re.IGNORECASE) for p in SENIOR_PATTERNS)
+    is_manager = any(re.search(p, title_text, re.IGNORECASE) for p in MANAGER_PATTERNS)
+
+    return is_senior, is_manager
+
+
 def matches_selected_categories(
     selected_categories,
     primary_category=None,

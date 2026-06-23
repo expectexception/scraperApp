@@ -40,22 +40,41 @@ class GlobeairScraper(BaseScraper):
                 await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 await page.wait_for_timeout(3000)
 
-                # Look for open positions container
-                job_elements = await page.query_selector_all('a[href*="job"], a[href*="position"]')
-                
+                # Look for open positions container.
+                # NOTE: GlobeAir's "View opportunity" links use a short "/j/<id>" URL
+                # pattern (not "job"/"position" in the href), and the actual job title
+                # lives in a sibling <strong> tag rather than the link text itself.
+                job_elements = await page.query_selector_all(
+                    'a[href*="job"], a[href*="position"], a[href*="/j/"]'
+                )
+
                 logger.info(f"[{self.site_key}] Found {len(job_elements)} potential job links.")
 
                 for el in job_elements:
                     href = await el.get_attribute("href")
-                    if not href or "faq" in href.lower() or "career" not in href.lower() and "job" not in href.lower():
+                    if not href or "faq" in href.lower():
                         continue
-                        
-                    title = await el.inner_text()
-                    title = title.strip()
-                    
+                    if (
+                        "/j/" not in href.lower()
+                        and "career" not in href.lower()
+                        and "job" not in href.lower()
+                    ):
+                        continue
+
+                    title = await el.evaluate(
+                        """el => {
+                            const strong = el.parentElement?.querySelector('strong');
+                            if (strong && strong.textContent.trim()) return strong.textContent.trim();
+                            const prev = el.parentElement?.previousElementSibling;
+                            if (prev && prev.textContent.trim()) return prev.textContent.trim();
+                            return el.textContent.trim();
+                        }"""
+                    )
+                    title = (title or "").strip()
+
                     if not title or len(title) < 3:
                         continue
-                        
+
                     job_url = urljoin(self.base_url, href)
                     
                     if not self.should_process_job(title):

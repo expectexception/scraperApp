@@ -22,7 +22,8 @@ class DubaiRawScraper(BaseScraper):
             "base_url", "https://careers.dubaiairports.ae"
         )
         self.jobs_url = self.site_config.get(
-            "jobs_url", "https://careers.dubaiairports.ae/search-jobs"
+            "jobs_url",
+            "https://careers.dubaiairports.ae/en/search-and-apply/?jobFunction=All&location=All",
         )
 
     async def run(self):

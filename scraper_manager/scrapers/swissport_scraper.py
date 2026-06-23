@@ -4,6 +4,7 @@ Extracts aviation job listings from careers.swissport.com (iCIMS/Angular Platfor
 """
 
 import asyncio
+import itertools
 import re
 from datetime import datetime
 from playwright.async_api import async_playwright
@@ -80,7 +81,9 @@ class SwissportScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
 
             try:
-                for p_num in range(1, self.max_pages + 1):
+                for p_num in itertools.count(1):
+                    if self.max_pages and p_num > self.max_pages:
+                        break
                     if "page=" in self.jobs_url:
                         current_url = re.sub(r"page=\d+", f"page={p_num}", self.jobs_url)
                     else:

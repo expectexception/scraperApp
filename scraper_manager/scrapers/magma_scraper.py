@@ -29,10 +29,20 @@ class MagmaScraper(BaseScraper):
                 await self.random_delay(2, 4)
 
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll("a")).map(a => ({
-                        href: a.href,
-                        text: a.innerText || a.textContent
-                    }));
+                    return Array.from(document.querySelectorAll("a")).map(a => {
+                        let title = a.innerText || a.textContent || "";
+                        // Generic anchor text like "View more" doesn't carry the
+                        // job title; the real title lives in a sibling/ancestor
+                        // ".career" listing block's heading (h2/h3/h4).
+                        const card = a.closest(".career");
+                        if (card) {
+                            const heading = card.querySelector("h1, h2, h3, h4, .col-title");
+                            if (heading && heading.innerText && heading.innerText.trim().length > 0) {
+                                title = heading.innerText.trim();
+                            }
+                        }
+                        return { href: a.href, text: title };
+                    });
                 }''')
                 
                 for link in links:

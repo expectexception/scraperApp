@@ -25,7 +25,9 @@ class TempleRecruitmentScraper(BaseScraper):
             page, context = await self.setup_stealth_page(browser)
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
-                await page.goto(self.base_url, wait_until="networkidle", timeout=60000)
+                # networkidle never settles on this site and hard-times-out at 60s;
+                # domcontentloaded is sufficient since job cards are server-rendered.
+                await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
                 await self.random_delay(3, 6)
 
                 links = await page.evaluate('''() => {

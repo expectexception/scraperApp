@@ -1,3 +1,4 @@
+import itertools
 import logging
 import re
 from playwright.async_api import async_playwright
@@ -48,7 +49,9 @@ class TuiAirwaysScraper(BaseScraper):
                 seen_urls = set()
                 job_urls = []
                 
-                for p_num in range(1, self.max_pages + 1):
+                for p_num in itertools.count(1):
+                    if self.max_pages and p_num > self.max_pages:
+                        break
                     links = await page.evaluate("""() => {
                         return Array.from(document.querySelectorAll('a'))
                             .map(a => ({t: a.innerText.trim(), h: a.href}))

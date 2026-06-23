@@ -53,6 +53,9 @@ class DHLScraper(BaseScraper):
             "siteType": "external",
             "ddoKey": "refineSearch",
             "refNum": "DHL",
+            "selected_fields": {
+                "category": ["Freight Transportations and Aviation"]
+            },
         }
 
         try:

@@ -16,7 +16,10 @@ class OlympicAirScraper(BaseScraper):
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="olympicair", db_manager=db_manager)
-        self.base_url = "https://jobs.aegeanair.com/"
+        # The bare homepage ("/") does not render any <a href="*/job/*"> links itself -
+        # it only shows a "View all Jobs" link pointing at the actual listing page below.
+        # Point the scraper directly at the listing page so job links are present on load.
+        self.base_url = "https://jobs.aegeanair.com/go/All-Jobs/8966755/"
         self.company_name = "Olympic Air (Aegean)"
 
     async def fetch_jobs(self) -> list:

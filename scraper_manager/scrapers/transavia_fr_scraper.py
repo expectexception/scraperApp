@@ -39,14 +39,18 @@ class TransaviaFrScraper(BaseScraper):
                     if self.max_jobs and len(jobs) >= self.max_jobs: break
                     try:
                         href = link.get("href", "")
-                        text = link.get("text", "").strip()
+                        raw_text = link.get("text", "").strip()
+                        # Job cards are one big <a> wrapping title + location + contract
+                        # type on separate lines; innerText concatenates all of it. The
+                        # actual title is just the first line.
+                        text = raw_text.split("\n")[0].strip()
                         if not href or len(text) < 5: continue
-                        
+
                         href_lower = href.lower()
                         if "recrutement.transavia.com/fr/annonce" in href_lower:
                             if text.lower() in ["read more", "apply", "apply now", "view details", "annonces"]:
                                 continue
-                                
+
                             job_url = href
                             existing = next((j for j in jobs if j["url"] == job_url), None)
                             if existing:

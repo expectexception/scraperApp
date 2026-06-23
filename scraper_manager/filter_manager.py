@@ -59,8 +59,10 @@ class JobFilterManager:
             # Customer-facing airport roles (Terminal/Gate)
             r"\b(check-in agent|gate agent|ticket agent|passenger service agent|customer service agent|reservation agent)\b",
             # IT, Software, Cybersecurity & Networking (not part of ops/crew/ground/management/corporate/maintenance scope)
-            r"\b(software developer|frontend developer|backend developer|full[\s-]?stack|devops|programmer|data scientist|ux researcher|ui designer|web developer|software engineer|qa engineer|test engineer)\b",
+            r"\b(software developer|frontend developer|backend developer|full[\s-]?stack|devops|programmer|data scientist|data engineer|data analyst|ux researcher|ui designer|ux designer|web developer|software engineer|software quality|quality engineer|qa engineer|qa analyst|test engineer|test analyst|automation engineer|test automation|sdet|machine learning engineer|\bml engineer\b|platform engineer|site reliability engineer|\bsre\b|cloud engineer|systems engineer|solutions architect|enterprise architect|product manager|product owner|scrum master)\b",
             r"\b(it security|cyber\s?security|information security|infosec|it analyst|it support|it specialist|it manager|it administrator|it director|help\s?desk|systems administrator|sysadmin|network engineer|network administrator|database administrator|\bdba\b)\b",
+            # Test-automation framework names in title = SDET/QA role, never aviation ops
+            r"\b(karate|rest assured|selenium|appium|cypress|junit|pytest|postman|swagger)\b",
             # Sales & Marketing
             r"\b(sales executive|sales manager|sales representative|sales associate|sales director|sales agent|account executive|account manager|business development|telesales|inside sales|marketing executive|marketing manager|marketing specialist|marketing coordinator|marketing director|digital marketing|seo specialist|content marketing|social media manager)\b",
             # Generic Finance / Accounting (non-aviation-specific)
@@ -69,12 +71,20 @@ class JobFilterManager:
             r"\b(nurse|physician|doctor|healthcare|pharmacist|medical)\b",
             r"\b(teacher|professor|faculty|lecturer|educator|student|internship)\b",
             r"\b(cashier|retail associate|store clerk|shop assistant)\b",
-            r"\b(bartender|chef|waiter|waitress|catering)\b",
+            r"\b(bartender|chef|waiter|waitress)\b",
+            # Bare "catering" stays out of this list on purpose — Ground_Airport_Operations
+            # has scoped "Catering Operations/Coordinator/Manager" phrases with their own
+            # NegativeKeywords (chef/cook/kitchen/etc.) so airline catering ops roles match
+            # while F&B catering staff still get rejected.
             r"\b(delivery driver|truck driver|courier|warehouse associate)\b",
             # Non-Aviation Dispatch & Transport
             r"\b(truck dispatcher|trucking dispatcher|freight dispatcher|logistics dispatcher|bus dispatcher|taxi dispatcher|rail dispatcher|train dispatcher|train driver|bus driver|taxi driver|courier dispatcher|emergency dispatcher|911 dispatcher|police dispatcher|tow dispatcher|fleet dispatcher|linehaul dispatcher|linehaul)\b",
             # HR, Recruitment & Corporate Support (e.g. HR Operations Analyst, Recruiter, HRBP)
             r"\b(hr|human resources|recruiter|recruitment|talent acquisition|headhunter|people partner|hrbp|rh|relations humaines|ressources humaines|talent partner|acquisition de talents)\b",
+            # Generic "Performance" roles that are NOT ops/flight/dispatch performance
+            # (sales/retail/HR/finance/IT/product performance, or vague co-op/trainee performance titles).
+            # Real ops hits keep matching via Operations_Performance_Analytics phrase keywords.
+            r"\b(sales performance|retail performance|dining performance|hr performance|product performance|delivery performance|economic performance|computing performance|high performance computing)\b",
         ]
 
         # Category weights for scoring (higher = more important)
@@ -107,17 +117,80 @@ class JobFilterManager:
 
         self.load_filters()
 
-    def load_filters(self):
-        """Load filter configuration from JSON file with optimized processing"""
+    def _resolve_filter_groups(self) -> List[Dict]:
+        """Resolve filter category groups, preferring the admin-managed Mongo config.
+
+        Falls back to filter_title.json when Mongo has no config yet, and seeds
+        Mongo from the file on that first run so the admin UI is populated.
+        Disabled categories (Enabled/enabled == False) are dropped here so they
+        no longer contribute keywords to scraping.
+        """
+        # 1. Admin-managed config in Mongo (source of truth once seeded)
+        mongo_config = None
+        try:
+            from .filter_store import load_filter_config_from_mongo
+
+            mongo_config = load_filter_config_from_mongo()
+        except Exception as exc:
+            logger.warning(f"Could not read filters from Mongo: {exc}")
+
+        if mongo_config and isinstance(mongo_config.get("filters"), list):
+            groups = [
+                {
+                    "FilterType": f.get("filter_type", ""),
+                    "DisplayName": f.get("display_name", ""),
+                    "Description": f.get("description", ""),
+                    "Keywords": list(f.get("keywords", [])),
+                    "NegativeKeywords": list(f.get("negative_keywords", [])),
+                }
+                for f in mongo_config["filters"]
+                if f.get("enabled", True)
+            ]
+            logger.info(
+                f"✓ Loaded scrape filters from Mongo ({len(groups)} enabled categories)"
+            )
+            return groups
+
+        # 2. Fall back to the JSON file
         if not self.filter_file.exists():
             logger.info(f"⚠️  Filter file not found: {self.filter_file}")
-            return
+            return []
 
+        with open(self.filter_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        file_filters = data.get("Filters", [])
+
+        # Seed Mongo from the file so admins can edit categories from the web UI.
         try:
-            with open(self.filter_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            from .filter_store import seed_filter_config_to_mongo
 
-            self.filters = data.get("Filters", [])
+            seed_filter_config_to_mongo(
+                {
+                    "filter_name": data.get("FilterName", ""),
+                    "description": data.get("Description", ""),
+                    "filters": [
+                        {
+                            "filter_type": g.get("FilterType", ""),
+                            "display_name": g.get("DisplayName", ""),
+                            "description": g.get("Description", ""),
+                            "enabled": g.get("Enabled", True),
+                            "keywords": list(g.get("Keywords", [])),
+                            "negative_keywords": list(g.get("NegativeKeywords", [])),
+                        }
+                        for g in file_filters
+                    ],
+                }
+            )
+        except Exception as exc:
+            logger.warning(f"Could not seed filters to Mongo: {exc}")
+
+        # Respect an optional Enabled flag in the file too (default on)
+        return [g for g in file_filters if g.get("Enabled", True)]
+
+    def load_filters(self):
+        """Load filter configuration (Mongo first, JSON file fallback)."""
+        try:
+            self.filters = self._resolve_filter_groups()
 
             # Precompile exclusion patterns once
             self.exclusion_compiled = [
@@ -288,6 +361,7 @@ class JobFilterManager:
                     "coordinator",
                     "analyst",
                     "planner",
+                    "engineer",
                 }
                 is_generic = keyword in generic_keywords
 

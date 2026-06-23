@@ -34,6 +34,7 @@ class CAEScraper(BaseScraper):
 
         limit = 20
         offset = 0
+        total = None
 
         while True:
             if self.max_jobs and len(jobs) >= self.max_jobs:
@@ -60,8 +61,14 @@ class CAEScraper(BaseScraper):
                     
                 data = resp.json()
 
+                if total is None:
+                    total = data.get("total", 0)
+
                 postings = data.get("jobPostings", [])
-                if not postings:
+                # Workday's API never returns an empty page past the real
+                # total — it just keeps repeating the last page forever — so
+                # "postings empty" is not a usable stop condition here.
+                if not postings or offset >= total:
                     break
 
                 for j in postings:

@@ -64,7 +64,7 @@ class OmniAirScraper(BaseScraper):
                         break
 
                     item = current_items[i]
-                    title_el = await item.query_selector(".current-opening-title")
+                    title_el = await item.query_selector("sdf-link")
                     if not title_el:
                         continue
 

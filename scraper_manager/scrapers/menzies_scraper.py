@@ -4,6 +4,7 @@ Extracts aviation job listings from careers.jmenzies.com (Oleeo Platform)
 """
 
 import asyncio
+import itertools
 import re
 from datetime import datetime
 from playwright.async_api import async_playwright
@@ -92,7 +93,9 @@ class MenziesScraper(BaseScraper):
                 except Exception:
                     pass
 
-                for p_num in range(1, self.max_pages + 1):
+                for p_num in itertools.count(1):
+                    if self.max_pages and p_num > self.max_pages:
+                        break
                     print(f"Processing page {p_num}...")
 
                     # Wait for results to stabilize

@@ -29,21 +29,37 @@ class JetexScraper(BaseScraper):
                 await self.random_delay(2, 4)
 
                 links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll("a")).map(a => ({
-                        href: a.href,
-                        text: a.innerText || a.textContent
-                    }));
+                    return Array.from(document.querySelectorAll("a")).map(a => {
+                        let title = (a.innerText || a.textContent || "").trim();
+                        // Job title isn't on the <a> itself (e.g. "APPLY") - look for it
+                        // in the surrounding card container instead.
+                        if (!title || ["apply", "apply now", "read more", "view details", "jobs"].includes(title.toLowerCase())) {
+                            let anc = a.parentElement;
+                            for (let i = 0; i < 6 && anc; i++) {
+                                const lines = (anc.innerText || "").split("\\n").map(s => s.trim()).filter(Boolean);
+                                const firstLine = lines[0] || "";
+                                if (firstLine && !firstLine.toLowerCase().startsWith("department") && firstLine.toLowerCase() !== "apply") {
+                                    title = firstLine;
+                                    break;
+                                }
+                                anc = anc.parentElement;
+                            }
+                        }
+                        return { href: a.href, text: title };
+                    });
                 }''')
-                
+
                 for link in links:
                     if self.max_jobs and len(jobs) >= self.max_jobs: break
                     try:
                         href = link.get("href", "")
                         text = link.get("text", "").strip()
                         if not href or len(text) < 5: continue
-                        
+
                         href_lower = href.lower()
-                        if "careers.jetex.com" in href_lower and any(kw in href_lower for kw in ["/job/", "/job-details", "vacancy", "career"]):
+                        is_jetex_job = "careers.jetex.com" in href_lower and any(kw in href_lower for kw in ["/job/", "/job-details", "vacancy"])
+                        is_darwinbox_job = "darwinbox.com" in href_lower and "jobdetails" in href_lower
+                        if is_jetex_job or is_darwinbox_job:
                             if text.lower() in ["read more", "apply", "apply now", "view details", "jobs"]:
                                 continue
                                 

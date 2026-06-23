@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from typing import List, Dict, Any
 from playwright.async_api import async_playwright
 
@@ -22,7 +23,7 @@ class JetstarScraper(BaseScraper):
         jobs = []
         async with async_playwright() as p:
             # Must run headful to avoid HTTP2 protocol error / Akamai blocks
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=self.headless)
             page, context = await self.setup_stealth_page(browser)
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")

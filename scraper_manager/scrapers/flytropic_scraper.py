@@ -28,41 +28,58 @@ class FlyTropicScraper(BaseScraper):
                 await page.goto(self.base_url, wait_until="networkidle", timeout=60000)
                 await self.random_delay(2, 4)
 
-                links = await page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll("a")).map(a => ({
-                        href: a.href,
-                        text: a.innerText || a.textContent
-                    }));
+                # This careers page has no per-job URLs: every role (Pilot,
+                # Logistics Assistant, Operations Coordinator, etc.) is listed
+                # inline as a "qode-accordion-holder" block with the title in
+                # ".qode-tab-title-inner" and the description in
+                # ".qode-accordion-content-inner". Application links (PDF /
+                # airlineapps.com) are shared across all roles, so we use the
+                # careers page itself as the job URL and dedupe by title.
+                postings = await page.evaluate('''() => {
+                    // The page has two ".qode-accordion-holder" sections
+                    // ("Job Summaries" and "Application Process"). Within
+                    // each, every role/step is a flat sibling pair: an
+                    // "h4.qode-title-holder" (title) immediately followed by
+                    // a ".qode-accordion-content" (description) -- there is
+                    // no per-job wrapper element. Use the first holder
+                    // (job summaries) only.
+                    const holders = document.querySelectorAll(".qode-accordion-holder");
+                    if (!holders.length) return [];
+                    const jobHolder = holders[0];
+                    const results = [];
+                    const headers = jobHolder.querySelectorAll("h4.qode-title-holder");
+                    headers.forEach(h => {
+                        const titleEl = h.querySelector(".qode-tab-title-inner");
+                        const contentEl = h.nextElementSibling;
+                        const descEl = contentEl ? contentEl.querySelector(".qode-accordion-content-inner") : null;
+                        results.push({
+                            title: titleEl ? titleEl.innerText.trim() : "",
+                            description: descEl ? descEl.innerText.trim() : ""
+                        });
+                    });
+                    return results;
                 }''')
-                
-                for link in links:
+
+                for posting in postings:
                     if self.max_jobs and len(jobs) >= self.max_jobs: break
                     try:
-                        href = link.get("href", "")
-                        text = link.get("text", "").strip()
-                        if not href or len(text) < 5: continue
-                        
-                        href_lower = href.lower()
-                        if "flytropic.com" in href_lower and any(kw in href_lower for kw in ["careers", "job", "vacancy"]):
-                            if text.lower() in ["read more", "apply", "apply now", "view details"]:
-                                continue
-                                
-                            job_url = href
-                            existing = next((j for j in jobs if j["url"] == job_url), None)
-                            if existing:
-                                if len(text) > len(existing["title"]): existing["title"] = text
-                                continue
-                                
-                            job_id = f"flytropic_{abs(hash(job_url)) % 10000000}"
-                            jobs.append({
-                                "job_id": job_id,
-                                "title": text,
-                                "company": self.company_name,
-                                "source": self.site_key,
-                                "url": job_url,
-                                "apply_url": job_url,
-                                "location": "USA",
-                            })
+                        text = (posting.get("title") or "").strip()
+                        if len(text) < 3: continue
+                        if text.lower() in ["interview process", "orientation", "equal employment opportunity", "application process"]:
+                            continue
+
+                        job_url = self.base_url
+                        job_id = f"flytropic_{abs(hash(text)) % 10000000}"
+                        jobs.append({
+                            "job_id": job_id,
+                            "title": text,
+                            "company": self.company_name,
+                            "source": self.site_key,
+                            "url": job_url,
+                            "apply_url": job_url,
+                            "location": "USA",
+                            "description": posting.get("description", ""),
+                        })
                     except:
                         continue
             except Exception as e:
@@ -74,10 +91,16 @@ class FlyTropicScraper(BaseScraper):
 
     async def fetch_job_descriptions(self, jobs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not jobs: return []
-        logger.info(f"[{self.site_key}] Fetching descriptions for {len(jobs)} matched jobs...")
+        # All roles share a single careers page (no per-job URL); the
+        # description for each was already captured from its accordion
+        # block in fetch_jobs, so skip re-navigating for those.
+        jobs_needing_fetch = [j for j in jobs if not j.get("description")]
+        if not jobs_needing_fetch:
+            return jobs
+        logger.info(f"[{self.site_key}] Fetching descriptions for {len(jobs_needing_fetch)} matched jobs...")
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
-            for job in jobs:
+            for job in jobs_needing_fetch:
                 try:
                     page, context = await self.setup_stealth_page(browser)
                     await page.goto(job["url"], wait_until="domcontentloaded", timeout=30000)

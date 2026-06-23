@@ -612,6 +612,47 @@ class LocationManager:
         "deutsch-wagram": "Austria",
         "klagenfurt": "Austria",
         "ferlach": "Austria",
+        "belgrade": "Serbia",
+        "dorval": "Canada",
+        "praha": "Czech Republic",
+        "zweibrücken": "Germany",
+        "zweibruecken": "Germany",
+        "senningerberg": "Luxembourg",
+        "christchurch": "New Zealand",
+        "lausanne": "Switzerland",
+        "konstanz": "Germany",
+    }
+
+    # Non-English country names/spellings seen on EU/LatAm career sites.
+    # Mapped to the canonical English name used as a value in CC_TO_NAME.
+    ALT_COUNTRY_NAMES = {
+        "deutschland": "Germany",
+        "österreich": "Austria",
+        "osterreich": "Austria",
+        "schweiz": "Switzerland",
+        "suisse": "Switzerland",
+        "svizzera": "Switzerland",
+        "frankreich": "France",
+        "italia": "Italy",
+        "españa": "Spain",
+        "espana": "Spain",
+        "česká republika": "Czech Republic",
+        "ceska republika": "Czech Republic",
+        "polska": "Poland",
+        "belgië": "Belgium",
+        "belgie": "Belgium",
+        "belgique": "Belgium",
+        "nederland": "Netherlands",
+        "luxemburg": "Luxembourg",
+        "brasil": "Brazil",
+        "méxico": "Mexico",
+        "mexico": "Mexico",
+        "danmark": "Denmark",
+        "norge": "Norway",
+        "sverige": "Sweden",
+        "suomi": "Finland",
+        "magyarország": "Hungary",
+        "magyarorszag": "Hungary",
     }
 
     # Map for specific postal codes reported by user
@@ -650,6 +691,7 @@ class LocationManager:
         "boeing": "Arlington, United States",
         "airbus": "Toulouse, France",
         "jost group": "Luxembourg",
+        "luxaviation": "Luxembourg",
     }
 
     US_STATES = {
@@ -777,6 +819,15 @@ class LocationManager:
             for country_name in sorted_countries:
                 if re.search(r'\b' + re.escape(country_name.lower()) + r'\b', text_lower):
                     detected_country = country_name
+                    break
+
+        # Non-English country names (Deutschland, Česká republika, etc.)
+        if not detected_country:
+            sorted_alt_names = sorted(cls.ALT_COUNTRY_NAMES.keys(), key=len, reverse=True)
+            text_lower = cleaned.lower()
+            for alt_name in sorted_alt_names:
+                if re.search(r'\b' + re.escape(alt_name) + r'\b', text_lower):
+                    detected_country = cls.ALT_COUNTRY_NAMES[alt_name]
                     break
 
         # Check if any part is a known city in CITY_TO_COUNTRY (prevents country/state collisions like IL -> Israel)

@@ -13,7 +13,9 @@ class AlaskaScraper(BaseScraper):
 
     def __init__(self, config, db_manager=None):
         super().__init__(config, site_key="alaska", db_manager=db_manager)
-        self.base_url = "https://careers.alaskaair.com/jobs/search?in_iframe=1"
+        # NOTE: old "/jobs/search?in_iframe=1" iCIMS iframe URL 404s as of 2026-06.
+        # Alaska's careers site migrated to a direct (non-iframe) listing page.
+        self.base_url = "https://careers.alaskaair.com/company/alaska-airlines/jobs/"
         self.company_name = "Alaska Airlines"
 
     async def fetch_jobs(self) -> list:
@@ -28,56 +30,34 @@ class AlaskaScraper(BaseScraper):
                 )
                 await page.wait_for_timeout(5000)
 
-                frame = page
-                iframe_el = await page.query_selector(
-                    "iframe#icims_bootstrap_frame, iframe"
-                )
-                if iframe_el:
-                    frame = page.frame_locator("iframe#icims_bootstrap_frame").first
-                    if not await frame.locator(".iCIMS_JobsTable").is_visible(
-                        timeout=5000
-                    ):
-                        frame = page.frame_locator("iframe").first
-
-                job_rows = await frame.locator(
-                    ".iCIMS_JobsTable .row, .iCIMS_JobListing"
-                ).all()
-                for row in job_rows:
+                job_links = await page.query_selector_all('a[href*="/job/"]')
+                for link in job_links:
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
                     try:
-                        title_el = row.locator(
-                            "div.title a.iCIMS_Anchor, a.iCIMS_JobListingLink"
-                        ).first
-                        if not await title_el.is_visible():
+                        title_el = await link.query_selector("div.job h2")
+                        if not title_el:
                             continue
-                        title = await title_el.inner_text()
-                        url = await title_el.get_attribute("href")
-                        if url and "?" in url:
-                            url = url.split("?")[0]
+                        title = (await title_el.inner_text()).strip()
+
+                        url = await link.get_attribute("href")
                         if url and not url.startswith("http"):
-                            url = (
-                                "https://"
-                                + "https://careers.alaskaair.com/jobs/search?in_iframe=1".split(
-                                    "/"
-                                )[2]
-                                + url
-                            )
+                            url = "https://careers.alaskaair.com" + url
 
                         location = "USA"
-                        loc_el = row.locator(
-                            ".header.left span:not(.sr-only), .location span:nth-child(2)"
-                        ).first
-                        if await loc_el.is_visible():
-                            location = await loc_el.inner_text()
+                        loc_el = await link.query_selector("div.job > div:nth-of-type(1)")
+                        if loc_el:
+                            loc_text = (await loc_el.inner_text()).strip()
+                            if loc_text:
+                                location = loc_text
 
                         job_id = "alaska_" + str(hash(url))
 
                         jobs.append(
                             {
                                 "company": self.company_name,
-                                "title": title.strip(),
-                                "location": location.strip(),
+                                "title": title,
+                                "location": location,
                                 "url": url,
                                 "apply_url": url,
                                 "source_url": self.base_url,
@@ -85,7 +65,7 @@ class AlaskaScraper(BaseScraper):
                                 "description": "",
                             }
                         )
-                    except:
+                    except Exception:
                         pass
             except Exception as e:
                 logger.error(f"[{self.site_key}] Error: {e}")

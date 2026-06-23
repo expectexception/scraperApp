@@ -39,10 +39,10 @@ class JetflyScraper(BaseScraper):
                     
                     url = f"{self.base_url}/{job_id}"
                     
-                    loc_dict = item.get("location", {})
-                    city = loc_dict.get("city", "") if loc_dict else ""
-                    state = loc_dict.get("state", "") if loc_dict else ""
-                    location = f"{city}, {state}".strip(", ") if city or state else "Unknown"
+                    loc_dict = item.get("location", {}) or {}
+                    city = loc_dict.get("city") or ""
+                    state = loc_dict.get("state") or ""
+                    location = ", ".join(p for p in (city, state) if p) or "Unknown"
                     
                     jobs.append({
                         "job_id": f"jetfly_{job_id}",

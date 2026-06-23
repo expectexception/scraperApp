@@ -87,6 +87,7 @@ class UPSScraper(BaseScraper):
                         "apply_url": link,
                         "is_active": True,
                         "description": j.get("descriptionTeaser", ""),
+                        "posted_date": j.get("postedDate") or j.get("dateCreated"),
                         "job_seq_no": j.get(
                             "jobSeqNo"
                         ),  # Need this for the details API

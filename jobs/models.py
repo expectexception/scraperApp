@@ -21,6 +21,10 @@ class Job(models.Model):
     senior_override = models.BooleanField(null=True, blank=True, db_index=True)
     is_senior_position = models.BooleanField(default=False, db_index=True)
 
+    manager_flag = models.BooleanField(default=False, db_index=True)
+    manager_override = models.BooleanField(null=True, blank=True, db_index=True)
+    is_manager_position = models.BooleanField(default=False, db_index=True)
+
     posted_date = models.DateField(null=True, blank=True, db_index=True)
     expiration_date = models.DateField(null=True, blank=True, db_index=True)
     retrieved_date = models.DateTimeField(default=timezone.now)

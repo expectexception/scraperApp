@@ -13,7 +13,7 @@ from .models import ScrapedURL, ScraperJob
 from jobs.models import Job, CompanyMapping
 from curl_cffi import requests as curl_requests
 from .company_manager import CompanyManager
-from .category_taxonomy import infer_job_category
+from .category_taxonomy import infer_job_category, classify_seniority
 from .location_manager import LocationManager
 import hashlib
 
@@ -493,7 +493,9 @@ class DjangoDBManager:
                             else:
                                 posted_date = None
                     else:
-                        posted_date = parser.parse(posted_date).date()
+                        # dayfirst=True: most non-US career sites write DD/MM/YYYY.
+                        # Unambiguous formats (ISO, "Jun 12 2026", etc.) parse the same either way.
+                        posted_date = parser.parse(posted_date, dayfirst=True).date()
                 except Exception as e:
                     logger.debug(f"Could not parse posted_date '{posted_date}': {e}")
                     posted_date = None
@@ -511,6 +513,7 @@ class DjangoDBManager:
                 matched_filter_types=job_data.get("matched_filter_types"),
                 existing_category=job_data.get("job_category"),
             )
+            is_senior_auto, is_manager_auto = classify_seniority(title, description)
 
             # 1. Normalize company name using CompanyManager
             mapped_company = company
@@ -545,14 +548,15 @@ class DjangoDBManager:
                 "salary_min": job_data.get("salary_min"),
                 "salary_max": job_data.get("salary_max"),
                 "salary_currency": job_data.get("salary_currency", "USD"),
+                "senior_flag": is_senior_auto,
+                "manager_flag": is_manager_auto,
             }
 
+            # Only set posted_date when the source actually gave us one. Defaulting to
+            # "today" when unknown silently mislabels old postings as freshly posted —
+            # leave it null instead so the UI can show "date unknown" truthfully.
             if posted_date is not None:
                 defaults["posted_date"] = posted_date
-            else:
-                from datetime import datetime as _dt
-
-                defaults["posted_date"] = _dt.now().date()
 
             # 3. Handle Deduplication - Check by URL first (exact match)
             # Then check by dedup_hash (cross-source match)
@@ -579,6 +583,13 @@ class DjangoDBManager:
                 if job.url == url:
                     for k, v in defaults.items():
                         setattr(job, k, v)
+                    # Manual admin overrides win over re-scraped auto-classification.
+                    job.is_senior_position = (
+                        job.senior_override if job.senior_override is not None else is_senior_auto
+                    )
+                    job.is_manager_position = (
+                        job.manager_override if job.manager_override is not None else is_manager_auto
+                    )
                     if current_status != "closed":
                         job.status = "active"
                     job.last_checked = timezone.now()
@@ -594,6 +605,8 @@ class DjangoDBManager:
             else:
                 # Create a new Job record and set status to active
                 defaults["status"] = "active"
+                defaults["is_senior_position"] = is_senior_auto
+                defaults["is_manager_position"] = is_manager_auto
                 job = Job.objects.create(url=url, **defaults)
                 job_created = True
 

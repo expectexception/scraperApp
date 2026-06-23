@@ -160,6 +160,7 @@ SCRAPER_SETTINGS = {
         "flynas": "medium",
         "gulfair": "medium",
         "jetfly": "medium",
+        "heronaviation": "medium",
         "avconjet": "medium",
         "travelcoup": "medium",
         "kuwaitairways": "medium",
@@ -324,13 +325,11 @@ SCRAPERS = {
     "menzies": {
         "enabled": True,
         "headless": True,
-        "max_pages": 3,
         "max_jobs": 50,
     },
     "menzies_ultipro": {
         "enabled": True,
         "headless": True,
-        "max_pages": 3,
         "max_jobs": 50,
     },
     "gojet": {
@@ -344,7 +343,6 @@ SCRAPERS = {
     "flyexclusive": {
         "enabled": True,
         "headless": True,
-        "max_pages": 3,
         "max_jobs": 50,
     },
     "air_canada": {
@@ -362,7 +360,6 @@ SCRAPERS = {
     "amazon_air": {
         "enabled": True,
         "headless": True,
-        "max_pages": 3,
     },
     "absjets": {
     },
@@ -561,6 +558,8 @@ SCRAPERS = {
     "wmd": {
     },
     "jetfly": {
+    },
+    "heronaviation": {
     },
     "avconjet": {
     },
@@ -1525,6 +1524,15 @@ SITES = {
         "class": "JetflyScraper",
         "module": "scraper_manager.scrapers.jetfly_scraper",
     },
+    "heronaviation": {
+        "name": "Heron Aviation",
+        "enabled": True,
+        "base_url": "https://www.heronaviation.com/de/jobs-karriere/",
+        "jobs_url": "https://www.heronaviation.com/de/jobs-karriere/",
+        "description": "Heron Aviation careers page (WordPress accordion)",
+        "class": "HeronaviationScraper",
+        "module": "scraper_manager.scrapers.heronaviation_scraper",
+    },
     "avconjet": {
         "name": "Avcon Jet",
         "enabled": True,
@@ -1784,8 +1792,8 @@ SITES = {
     "norwegian": {
         "name": "Norwegian Air Shuttle",
         "enabled": True,
-        "base_url": "https://careers.norwegian.com",
-        "jobs_url": "https://careers.norwegian.com/search/",
+        "base_url": "https://careers.norwegian.com/go/Administration/777902/",
+        "jobs_url": "https://careers.norwegian.com/go/Administration/777902/",
         "description": "Norwegian Air Shuttle careers (SuccessFactors)",
     },
     "olympicair": {
@@ -1799,7 +1807,7 @@ SITES = {
         "name": "Ryanair",
         "enabled": True,
         "base_url": "https://careers.ryanair.com",
-        "jobs_url": "https://careers.ryanair.com/jobs/?search=Dispa&page=1",
+        "jobs_url": "https://careers.ryanair.com/jobs/",
         "description": "Ryanair careers",
     },
     "sas": {
@@ -2093,7 +2101,9 @@ SITES = {
         "name": "Dubai Royal Air Wing",
         "enabled": True,
         "base_url": "https://careers.dubaiairports.ae",
-        "jobs_url": "https://careers.dubaiairports.ae/search-jobs",
+        # NOTE: "/search-jobs" is dead (404 as of 2026-06). Live careers site uses
+        # "/en/search-and-apply/" with query params (verified via live browser test).
+        "jobs_url": "https://careers.dubaiairports.ae/en/search-and-apply/?jobFunction=All&location=All",
         "description": "Dubai Royal Air Wing (Recruitment via Dubai Airports)",
     },
     "abudhabiaviation": {
@@ -2207,7 +2217,8 @@ SITES = {
         "name": "Alaska Airlines",
         "enabled": True,
         "base_url": "https://careers.alaskaair.com",
-        "jobs_url": "https://careers.alaskaair.com/jobs/search?in_iframe=1",
+        # NOTE: old iCIMS iframe URL 404s as of 2026-06; site migrated to a direct listing page.
+        "jobs_url": "https://careers.alaskaair.com/company/alaska-airlines/jobs/",
         "description": "Alaska Airlines careers (iCIMS)",
     },
     "skywest": {
@@ -2249,7 +2260,7 @@ SITES = {
     },
     "cae": {
         "name": "CAE",
-        "enabled": False,
+        "enabled": True,
         "base_url": "https://cae.wd3.myworkdayjobs.com/en-US/career/",
         "jobs_url": "https://cae.wd3.myworkdayjobs.com/wday/cxs/cae/career/jobs",
         "description": "CAE careers (Workday API)",
@@ -2371,7 +2382,7 @@ SITES = {
     },
     "flix": {
         "name": "Flix",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://flix.careers",
         "jobs_url": "https://flix.careers/de/standorte/berlin/#berlinjobs",
         "description": "Flix Careers",

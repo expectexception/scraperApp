@@ -43,7 +43,9 @@ class AllegiantAirScraper(BaseScraper):
                         if not href or len(text) < 5: continue
                         
                         href_lower = href.lower()
-                        if "allegiantair.jobs/job/" in href_lower:
+                        is_own_site_job = "allegiantair.jobs/job/" in href_lower
+                        is_lever_job = "jobs.lever.co/allegiantair/" in href_lower
+                        if is_own_site_job or is_lever_job:
                             if text.lower() in ["read more", "apply", "apply now", "view details", "jobs"]:
                                 continue
                                 

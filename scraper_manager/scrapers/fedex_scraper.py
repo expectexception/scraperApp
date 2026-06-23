@@ -15,6 +15,12 @@ class FedexScraper(BaseScraper):
     URL: https://careers.fedex.com/jobs
     """
 
+    # Phenom People widget selectors. Different tenants run different widget
+    # versions, so subclasses (e.g. Quest Global) may override these.
+    job_item_selector = ".results-list__item"
+    job_link_selector = "a.results-list__item-title--link"
+    job_location_selector = ".results-list__item-location"
+
     def __init__(self, config, db_manager=None, site_key="fedex"):
         super().__init__(config, site_key=site_key, db_manager=db_manager)
         self.site_config = config.get("sites", {}).get(site_key, {})
@@ -100,11 +106,11 @@ class FedexScraper(BaseScraper):
                     # Ensure results are loaded
                     try:
                         await page.wait_for_selector(
-                            ".results-list__item", timeout=15000
+                            self.job_item_selector, timeout=15000
                         )
                     except:
                         logger.warning(
-                            f"[{self.site_key}] Timeout waiting for .results-list__item on page {page_count}"
+                            f"[{self.site_key}] Timeout waiting for {self.job_item_selector} on page {page_count}"
                         )
                         break
 
@@ -113,7 +119,7 @@ class FedexScraper(BaseScraper):
                     await page.wait_for_timeout(2000)
 
                     # Extract jobs from the list
-                    job_items = await page.query_selector_all(".results-list__item")
+                    job_items = await page.query_selector_all(self.job_item_selector)
                     if not job_items:
                         logger.warning(
                             f"[{self.site_key}] No job items found on page {page_count}"
@@ -129,29 +135,34 @@ class FedexScraper(BaseScraper):
                         try:
                             # Link and Title
                             link_el = await item.query_selector(
-                                "a.results-list__item-title--link"
+                                self.job_link_selector
                             )
                             if not link_el:
                                 continue
 
-                            title = await link_el.inner_text()
+                            title = await link_el.get_attribute(
+                                "data-ph-at-job-title-text"
+                            ) or await link_el.inner_text()
                             url = await link_el.get_attribute("href")
                             if url and not url.startswith("http"):
-                                url = "https://careers.fedex.com" + url
+                                from urllib.parse import urlparse
+
+                                origin = urlparse(self.base_url)
+                                url = f"{origin.scheme}://{origin.netloc}" + url
 
                             # Location
-                            location = await item.evaluate("""el => {
-                                let locEl = el.querySelector('.results-list__item-location');
+                            location = await item.evaluate(f"""el => {{
+                                let locEl = el.querySelector('{self.job_location_selector}');
                                 if (locEl) return locEl.innerText.trim();
-                                
+
                                 // Regex fallback within the item text
                                 let text = el.innerText;
                                 let match = text.match(/Location\\s*:?\\s*([^\\n]+)/i);
-                                if (match && match[1].trim().length > 2) {
+                                if (match && match[1].trim().length > 2) {{
                                     return match[1].trim();
-                                }
+                                }}
                                 return "Global";
-                            }""")
+                            }}""")
                             page_jobs_data.append(
                                 {
                                     "title": title.strip(),

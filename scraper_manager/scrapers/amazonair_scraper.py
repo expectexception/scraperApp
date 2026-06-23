@@ -1,3 +1,4 @@
+import itertools
 import logging
 import re
 from datetime import datetime
@@ -35,8 +36,10 @@ class AmazonAirScraper(BaseScraper):
                 
                 await self.random_delay(3, 5)
                 
-                # We can optionally click load more a few times if we want
-                for _ in range(self.max_pages or 3):
+                # Keep clicking "load more" until the button is gone (no artificial cap)
+                for click_count in itertools.count(1):
+                    if self.max_pages and click_count > self.max_pages:
+                        break
                     try:
                         load_more = await page.query_selector("button.load-more-btn")
                         if load_more and await load_more.is_visible():

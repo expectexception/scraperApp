@@ -43,7 +43,9 @@ class NationalAirlinesScraper(BaseScraper):
                         if not href or len(text) < 5: continue
                         
                         href_lower = href.lower()
-                        if "nationalairlines.com" in href_lower and any(kw in href_lower for kw in ["/career/", "job", "vacancy"]):
+                        is_own_site_job = "nationalairlines.com" in href_lower and any(kw in href_lower for kw in ["/career/", "job", "vacancy"])
+                        is_paylocity_job = "recruiting.paylocity.com" in href_lower and "/jobs/details/" in href_lower
+                        if is_own_site_job or is_paylocity_job:
                             if text.lower() in ["read more", "apply", "apply now", "view details", "careers"]:
                                 continue
                                 

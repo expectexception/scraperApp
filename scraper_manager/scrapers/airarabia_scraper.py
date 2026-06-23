@@ -14,10 +14,12 @@ class AirArabiaScraper(BaseScraper):
     URL: https://www.airarabiagroupcareers.com/gb/en/search-results
     """
 
-    def __init__(self, config: Dict, db_manager=None):
-        super().__init__(config, site_key="airarabia", db_manager=db_manager)
+    def __init__(self, config: Dict, db_manager=None, is_auh: bool = False):
+        site_key = "airarabia_auh" if is_auh else "airarabia"
+        super().__init__(config, site_key=site_key, db_manager=db_manager)
         self.base_url = "https://www.airarabiagroupcareers.com/gb/en/search-results"
         self.company_name = "Air Arabia"
+        self.is_auh = is_auh
 
     async def fetch_jobs(self) -> List[Dict]:
         jobs = []
@@ -72,9 +74,17 @@ class AirArabiaScraper(BaseScraper):
             logger.info(f"[{self.site_key}] API returned {len(raw_jobs)} jobs")
 
             for j in raw_jobs:
-                link = f"https://www.airarabiagroupcareers.com/gb/en/job/{j.get('jobId')}"
-                
                 location = j.get("cityStateCountry") or j.get("location") or "Unknown"
+
+                if self.is_auh:
+                    location_blob = " ".join(
+                        [location, j.get("city", "") or ""]
+                        + (j.get("multi_location") or [])
+                    ).lower()
+                    if "abu dhabi" not in location_blob:
+                        continue
+
+                link = f"https://www.airarabiagroupcareers.com/gb/en/job/{j.get('jobId')}"
 
                 jobs.append(
                     {

@@ -10,5 +10,6 @@ class AirArabiaAuhScraper(AirArabiaScraper):
     """Scraper for Air Arabia Abu Dhabi Careers"""
 
     def __init__(self, config, db_manager=None):
-        # Initialize the parent class with the is_auh flag
+        # Initialize the parent class with the is_auh flag, filtering jobs to Abu Dhabi only
         super().__init__(config, db_manager=db_manager, is_auh=True)
+

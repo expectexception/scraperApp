@@ -4,6 +4,7 @@ Extracts job listings from emploitic.com (Algeria)
 """
 
 import asyncio
+import itertools
 import re
 from datetime import datetime
 from playwright.async_api import async_playwright
@@ -93,7 +94,9 @@ class EmploiticScraper(BaseScraper):
 
             try:
                 # Pagination loop
-                for p_num in range(1, self.max_pages + 1):
+                for p_num in itertools.count(1):
+                    if self.max_pages and p_num > self.max_pages:
+                        break
                     search_url = f"{self.jobs_url}?search={keyword}&page={p_num}"
                     self.logger.info(f"Loading page {p_num}: {search_url}")
 

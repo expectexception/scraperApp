@@ -20,10 +20,9 @@ class SpiritScraper(BaseScraper):
         """Fetch and parse jobs directly from the JSON API."""
         jobs = []
         page = 1
-        max_pages = self.max_pages or 10  # Default to 10 pages if not specified
 
         try:
-            while page <= max_pages:
+            while not self.max_pages or page <= self.max_pages:
                 params = {
                     "page": page,
                     "sortBy": "relevance",

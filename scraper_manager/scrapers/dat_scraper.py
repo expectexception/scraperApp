@@ -49,7 +49,9 @@ class DATScraper(BaseScraper):
                 job_urls = []
                 for link in links:
                     href = link["h"]
-                    title = link["t"]
+                    # Card <a> wraps title + description blurb on separate lines;
+                    # innerText concatenates all of it. Title is just the first line.
+                    title = link["t"].split("\n")[0].strip()
                     if href and href not in seen_urls and self.is_job_link(title, href):
                         seen_urls.add(href)
                         job_urls.append((href, title))

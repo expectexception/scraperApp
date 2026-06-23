@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 import logging
 import re
 from typing import List, Dict
@@ -36,7 +37,9 @@ class BombardierScraper(BaseScraper):
                 job_data_list = []
                 
                 # Bombardier uses pagination
-                for p_num in range(1, self.max_pages + 1):
+                for p_num in itertools.count(1):
+                    if self.max_pages and p_num > self.max_pages:
+                        break
                     page = await context.new_page()
                     
                     # Update pageNumber in URL

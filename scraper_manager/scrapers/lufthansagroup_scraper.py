@@ -34,26 +34,38 @@ class LufthansagroupScraper(BaseScraper):
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
                 await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
-                await page.wait_for_timeout(10000)
+                try:
+                    await page.wait_for_selector('a.jobad-link-wrapper', timeout=20000)
+                except Exception:
+                    logger.warning(f"[{self.site_key}] job listing selector did not appear within timeout, proceeding anyway.")
+                await page.wait_for_timeout(2000)
 
-                # Find job rows (adjust selector based on actual render if needed)
-                # rexx systems usually use .job-offer, .jobad-title, or similar
-                job_elements = await page.query_selector_all('div.job-offer, .job-item, tr.job-row, a[href*="jobad"]')
-                
+                # The rexx-systems portal renders each posting as
+                # <a class="jobad-link-wrapper" href="...ac=jobad&id=..."><td data-jobad-title="..."> ... </td></a>
+                # The visible inner_text() of the wrapper is empty (content is laid out via CSS),
+                # so the title must be read from the data-jobad-title attribute instead.
+                job_elements = await page.query_selector_all('a.jobad-link-wrapper')
+
+                # The portal occasionally still renders the result list a beat after the
+                # selector wait above resolves (slow XHR under load). Retry briefly rather
+                # than silently reporting 0 jobs.
+                retries = 0
+                while not job_elements and retries < 3:
+                    retries += 1
+                    logger.warning(f"[{self.site_key}] No job elements yet, retrying ({retries}/3)...")
+                    await page.wait_for_timeout(3000)
+                    job_elements = await page.query_selector_all('a.jobad-link-wrapper')
+
                 logger.info(f"[{self.site_key}] Found {len(job_elements)} job elements.")
 
                 for el in job_elements:
-                    title_el = await el.query_selector('a')
-                    if not title_el:
-                        title_el = el if await el.evaluate("el => el.tagName === 'A'") else None
+                    href = await el.get_attribute("href")
+                    title = await el.evaluate(
+                        "el => { const t = el.querySelector('[data-jobad-title]'); "
+                        "return t ? t.getAttribute('data-jobad-title') : null; }"
+                    )
+                    title = (title or "").strip()
 
-                    if not title_el:
-                        continue
-
-                    title = await title_el.inner_text()
-                    title = title.strip()
-                    href = await title_el.get_attribute("href")
-                    
                     if not href or not title:
                         continue
 

@@ -34,25 +34,65 @@ class MaximusAirScraper(BaseScraper):
                         text: a.innerText || a.textContent
                     }));
                 }''')
-                
+
+                # The top-level /careers page is just a department nav (Antonov &
+                # Ilyushin, Engineering, Finance, IT, Operations, Safety/Security/
+                # Quality, Sales & Marketing) - actual job postings only appear on
+                # these per-department subpages, so they must be visited too.
+                department_urls = set()
                 for link in links:
+                    href = link.get("href", "")
+                    if href and "maximus-air.com/careers/" in href.lower():
+                        department_urls.add(href)
+
+                visited_urls = {self.base_url}
+                pages_to_scan = [self.base_url] + [u for u in department_urls if u not in visited_urls]
+
+                seen_links = list(links)
+                for dept_url in department_urls:
+                    if dept_url in visited_urls:
+                        continue
+                    visited_urls.add(dept_url)
+                    try:
+                        await page.goto(dept_url, wait_until="networkidle", timeout=30000)
+                        await self.random_delay(1, 2)
+                        dept_links = await page.evaluate('''() => {
+                            return Array.from(document.querySelectorAll("a")).map(a => ({
+                                href: a.href,
+                                text: a.innerText || a.textContent
+                            }));
+                        }''')
+                        seen_links.extend(dept_links)
+                    except Exception as e:
+                        logger.warning(f"[{self.site_key}] Failed to load department page {dept_url}: {e}")
+
+                for link in seen_links:
                     if self.max_jobs and len(jobs) >= self.max_jobs: break
                     try:
                         href = link.get("href", "")
                         text = link.get("text", "").strip()
                         if not href or len(text) < 5: continue
-                        
+
                         href_lower = href.lower()
-                        if "maximus-air.com" in href_lower and any(kw in href_lower for kw in ["/career/", "/job", "vacancy"]):
-                            if text.lower() in ["read more", "apply", "apply now", "view details", "careers"]:
+                        is_job_link = (
+                            "maximus-air.com/careers/" in href_lower
+                            and "#" not in href_lower
+                            and href_lower not in (u.lower() for u in department_urls)
+                            and href_lower.rstrip("/") != self.base_url.lower().rstrip("/")
+                        )
+                        if is_job_link:
+                            if text.lower() in ["read more", "apply", "apply now", "view details", "careers",
+                                                  "antonov & ilyushin", "engineering", "finance",
+                                                  "information technology", "operations",
+                                                  "safety, security & quality", "sales & marketing"]:
                                 continue
-                                
+
                             job_url = href
                             existing = next((j for j in jobs if j["url"] == job_url), None)
                             if existing:
                                 if len(text) > len(existing["title"]): existing["title"] = text
                                 continue
-                                
+
                             job_id = f"maximusair_{abs(hash(job_url)) % 10000000}"
                             jobs.append({
                                 "job_id": job_id,
@@ -61,7 +101,7 @@ class MaximusAirScraper(BaseScraper):
                                 "source": self.site_key,
                                 "url": job_url,
                                 "apply_url": job_url,
-                                "location": "United Arab Emirates", 
+                                "location": "United Arab Emirates",
                             })
                     except:
                         continue

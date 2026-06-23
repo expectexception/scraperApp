@@ -28,7 +28,12 @@ class AmerijetScraper(BaseScraper):
 
             try:
                 logger.info(f"[{self.site_key}] Navigating to {self.base_url}...")
-                await page.goto(self.base_url, wait_until="networkidle", timeout=60000)
+                # NOTE: this ADP Workforce Now page keeps background polling/analytics
+                # connections open indefinitely, so wait_until="networkidle" always hits
+                # the full 60s timeout and the page never gets a chance to render. Use
+                # domcontentloaded + an explicit selector wait instead (verified live:
+                # the job rows ARE present a few seconds after domcontentloaded).
+                await page.goto(self.base_url, wait_until="domcontentloaded", timeout=60000)
 
                 # Wait for ADP content to load
                 await page.wait_for_selector(".current-openings-details", timeout=30000)
@@ -168,7 +173,7 @@ class AmerijetScraper(BaseScraper):
                                     # Fallback: re-navigate if back button not found
                                     await page.goto(
                                         self.base_url,
-                                        wait_until="networkidle",
+                                        wait_until="domcontentloaded",
                                         timeout=60000,
                                     )
                                     await page.wait_for_selector(
@@ -183,7 +188,7 @@ class AmerijetScraper(BaseScraper):
                         )
                         # If error, try to go back or reload
                         await page.goto(
-                            self.base_url, wait_until="networkidle", timeout=60000
+                            self.base_url, wait_until="domcontentloaded", timeout=60000
                         )
                         await page.wait_for_selector(
                             ".current-openings-details", timeout=15000

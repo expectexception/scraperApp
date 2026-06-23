@@ -655,6 +655,14 @@ class BaseScraper:
         if re.match(r"^\d{4}-\d{2}-\d{2}$", text):
             return text
 
+        # ISO datetime with time/offset, e.g. "2026-06-17T08:25:00.000-04:00".
+        # Must check before the ambiguous DD-MM-YY regex below, which would
+        # otherwise match a substring of the year+month+day digits and
+        # misparse it as a completely different date.
+        match = re.match(r"^(\d{4}-\d{2}-\d{2})[t\s]", text)
+        if match:
+            return match.group(1)
+
         # Handle 'Today'
         if "today" in text or "just now" in text:
             return now.date().isoformat()
@@ -664,7 +672,9 @@ class BaseScraper:
             return (now - timedelta(days=1)).date().isoformat()
 
         # Hours ago
-        match = re.search(r"(\d+)\s*(?:hour|hr|h)s?(?:\s+ago)?", text)
+        # \b after the unit stops bare single-letter units (h/d/w/m/y) from
+        # matching mid-word inside absolute dates, e.g. "01 d" out of "01 Dec 2024".
+        match = re.search(r"(\d+)\s*(?:hour|hr|h)s?\b(?:\s+ago)?", text)
         if match:
             try:
                 hours = int(match.group(1))
@@ -673,11 +683,11 @@ class BaseScraper:
                 pass
 
         # Minutes ago (treat as today)
-        if re.search(r"(\d+)\s*(?:minute|min|m)s?(?:\s+ago)?", text):
+        if re.search(r"(\d+)\s*(?:minute|min|m)s?\b(?:\s+ago)?", text):
             return now.date().isoformat()
 
         # Days ago
-        match = re.search(r"(\d+)\s*(?:day|d)s?(?:\s+ago)?", text)
+        match = re.search(r"(\d+)\s*(?:day|d)s?\b(?:\s+ago)?", text)
         if match:
             try:
                 days = int(match.group(1))
@@ -686,7 +696,7 @@ class BaseScraper:
                 pass
 
         # Weeks ago
-        match = re.search(r"(\d+)\s*(?:week|wk|w)s?(?:\s+ago)?", text)
+        match = re.search(r"(\d+)\s*(?:week|wk|w)s?\b(?:\s+ago)?", text)
         if match:
             try:
                 weeks = int(match.group(1))
@@ -695,7 +705,7 @@ class BaseScraper:
                 pass
 
         # Months ago (approximate as 30 days)
-        match = re.search(r"(\d+)\s*(?:month|mon|mo)s?(?:\s+ago)?", text)
+        match = re.search(r"(\d+)\s*(?:month|mon|mo)s?\b(?:\s+ago)?", text)
         if match:
             try:
                 months = int(match.group(1))
@@ -704,7 +714,7 @@ class BaseScraper:
                 pass
 
         # Years ago (approximate as 365 days)
-        match = re.search(r"(\d+)\s*(?:year|yr|y)s?(?:\s+ago)?", text)
+        match = re.search(r"(\d+)\s*(?:year|yr|y)s?\b(?:\s+ago)?", text)
         if match:
             try:
                 years = int(match.group(1))
@@ -719,9 +729,11 @@ class BaseScraper:
         # Try common date formats (be permissive: strip commas and normalize separators)
         date_patterns = [
             # numeric dates: DD/MM/YYYY or DD-MM-YYYY
-            (r"(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})", ["%d-%m-%Y", "%d-%m-%y"]),
+            # Lookbehind/lookahead stop this from matching a substring of a
+            # longer number (e.g. grabbing "26-06-17" out of "2026-06-17...").
+            (r"(?<!\d)(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})(?!\d)", ["%d-%m-%Y", "%d-%m-%y"]),
             # numeric ISO: YYYY-MM-DD or YYYY/MM/DD
-            (r"(\d{4})[/-](\d{1,2})[/-](\d{1,2})", ["%Y-%m-%d"]),
+            (r"(?<!\d)(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?!\d)", ["%Y-%m-%d"]),
             # DD Mon YYYY (e.g., 01 Dec 2024) OR with ordinal (e.g., 1st Dec 2024)
             (
                 r"(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{4})",
