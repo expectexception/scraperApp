@@ -726,6 +726,7 @@
         "Marketing",
         "Sales",
         "Customer Service"
+        "Bank"
       ]
     },
     {
@@ -807,7 +808,8 @@
         "HR",
         "Marketing",
         "Sales",
-        "Customer Service"
+        "Customer Service",
+        "Bank"
       ]
     },
     {
@@ -855,7 +857,18 @@
         "IT Analyst",
         "HR Analyst",
         "Customer Data Analyst",
-        "Cybersecurity"
+        "Cybersecurity",
+        "Bank",
+        "Logistics",
+        "Logistics Analyst",
+        "Finance Analyst",
+        "HR Analyst",
+        "IT Analyst",
+        "Network Analyst",
+        "Network Engineer",
+        "Network Administrator"
+        "Network Architect"
+        
       ]
     },
     {
@@ -929,7 +942,17 @@
         "HR",
         "Marketing",
         "Sales",
-        "Customer Service"
+        "Customer Service",
+        "bank",
+        "logistics",
+        "Finance Analyst",
+        "HR Analyst",
+        "IT Analyst",
+        "Network Analyst",
+        "Network Engineer",
+        "Network Administrator",
+        "Network Architect",
+        "Network Manager"
       ]
     },
     {
@@ -1018,7 +1041,18 @@
         "HR",
         "Marketing",
         "Sales",
-        "Customer Service"
+        "Customer Service",
+        "bank",
+        "logistics",
+        "Finance Analyst",
+        "HR Analyst",
+        "IT Analyst",
+        "Network Analyst",
+        "Network Engineer",
+        "Network Administrator",
+        "Network Architect",
+        "Network Manager",
+        "Network Architect"
       ]
     }
   ]

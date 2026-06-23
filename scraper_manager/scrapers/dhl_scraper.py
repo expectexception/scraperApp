@@ -180,5 +180,45 @@ class DHLScraper(BaseScraper):
 
         # Fetch details
         final_jobs = await self.fetch_job_descriptions(new_jobs)
-        await self.save_results(final_jobs)
-        return final_jobs
+        
+        # Keep only aviation specific jobs
+        import re
+        aviation_jobs = []
+        for job in final_jobs:
+            title_lower = job["title"].lower()
+            desc_lower = job.get("description", "").lower()
+            
+            # 1. Check title first (highly specific)
+            title_keywords = [
+                r"\baircraft\b", r"\baviation\b", r"\bflight\b", r"\bflight operations?\b", r"\bairline\b",
+                r"\bload control\b", r"\bload planner\b", r"\bload planning\b", r"\bnetwork control\b",
+                r"\bdispatcher?\b", r"\bdispatch\b", r"\bramp\b", r"\bairside\b", r"\bocc\b", r"\baocc\b",
+                r"\biocc\b", r"\bcamo\b", r"\bcrew planner\b", r"\bcrew scheduler\b", r"\baircrew\b",
+                r"\bpilot\b", r"\bcaptain\b", r"\bfirst officer\b", r"\bcopilot\b", r"\bavionics\b",
+                r"\bground handling\b", r"\bground ops\b", r"\bground operations\b"
+            ]
+            
+            # 2. Check description with strict word boundaries
+            desc_keywords = [
+                r"\baircraft\b", r"\bflight\b", r"\bflight operations?\b", r"\bload control\b", r"\bload planner\b",
+                r"\bload planning\b", r"\bnetwork control\b", r"\bdispatcher?\b", r"\bdispatch\b",
+                r"\bocc\b", r"\baocc\b", r"\biocc\b", r"\bcrew planner\b", r"\bcrew scheduler\b",
+                r"\bpilot\b", r"\bavionics\b", r"\bground handling\b"
+            ]
+            
+            is_aviation = False
+            # Check negative keywords first
+            if any(w in title_lower for w in ["recycling", "waste", "driver", "warehouse", "forklift", "quality control"]):
+                is_aviation = False
+            elif any(re.search(pat, title_lower) for pat in title_keywords):
+                is_aviation = True
+            elif any(re.search(pat, desc_lower) for pat in desc_keywords):
+                is_aviation = True
+                    
+            if is_aviation:
+                aviation_jobs.append(job)
+            else:
+                logger.info(f"[{self.site_key}] Rejecting non-aviation job: '{job['title']}'")
+                
+        await self.save_results(aviation_jobs)
+        return aviation_jobs

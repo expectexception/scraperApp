@@ -512,6 +512,8 @@ class DjangoDBManager:
                 matched_categories=job_data.get("matched_categories"),
                 matched_filter_types=job_data.get("matched_filter_types"),
                 existing_category=job_data.get("job_category"),
+                source=source,
+                company=company,
             )
             is_senior_auto, is_manager_auto = classify_seniority(title, description)
 

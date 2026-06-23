@@ -7,6 +7,7 @@ CANONICAL_JOB_CATEGORIES = {
     "management": "Management",
     "corporate": "Corporate",
     "maintenance": "Maintenance & Engineering",
+    "airports_only": "Airports Only",
     "other": "Other",
 }
 
@@ -55,10 +56,10 @@ LEGACY_CATEGORY_ALIASES = {
     },
     "management": {
         "management",
-        "corporate_business",
     },
     "corporate": {
         "corporate",
+        "corporate_business",
         "corporate_support",
         "safety_security_quality",
         "Finance",
@@ -98,6 +99,7 @@ FILTER_CATEGORY_MAP = {
     "Ground_Airport_Operations": "ground_operations",
     "Entry_Level_Operations_Roles": "operations_control",
     "Corporate_Aviation_Support_Roles": "corporate",
+    "Airports_Only": "airports_only",
 }
 
 _ALIASES_CASEFOLDED = {
@@ -142,6 +144,8 @@ def infer_job_category(
     matched_categories=None,
     matched_filter_types=None,
     existing_category=None,
+    source="",
+    company="",
 ):
     """
     Intelligent category inference based on title and description.
@@ -149,7 +153,151 @@ def infer_job_category(
     """
     import re
 
-    # 1. Check explicit matches from previous stages
+    source_lower = (source or "").lower()
+    company_lower = (company or "").lower()
+    
+    # Airports Only override: Only Adani and Malta airport jobs should be classified under airports_only
+    is_adani_or_malta_airport = (
+        "adani_airports" in source_lower 
+        or "maltairport" in source_lower 
+        or "adani airports" in company_lower 
+        or "malta airport" in company_lower
+    )
+    
+    if is_adani_or_malta_airport:
+        return "airports_only"
+
+    # Swissport override: all Swissport jobs map to ground_operations
+    if "swissport" in source_lower or "swissport" in company_lower:
+        return "ground_operations"
+
+    title_lower = (title or "").lower()
+
+    # High-priority keyword overrides based on title
+    # Crew Control
+    if "crew" in title_lower and any(kw in title_lower for kw in ["control", "schedul", "plan", "roster", "allocat", "coord", "dispatch"]):
+        return "crew_control"
+
+    # Maintenance & Engineering
+    if any(re.search(p, title_lower) for p in [
+        r"\bmaintenance\b",
+        r"\btechnician\b",
+        r"\bmechanic\b",
+        r"\bpart[- ]145\b",
+        r"\bstores operative\b",
+        r"\bstorekeeper\b",
+        r"\bstoreperson\b",
+        r"\btooling\b",
+        r"\bworkshop\b",
+        r"\bhangar\b",
+        r"\bavionics\b",
+        r"\bpowerplant\b",
+        r"\bsheet[- ]metal\b",
+        r"\bstructures\b",
+        r"\bpropulsion\b",
+        r"\b(b1|b2|lame)(\b|\.\d)",
+        r"\b(camo|mcc|moc|amos|aog)\b",
+        r"\btechnical records\b",
+        r"\btech records\b",
+        r"\b(aircraft|licensed|avionics|propulsion|powerplant|camo|mcc|moc|hangar|line|base|maintenance|b1|b2|lame|structures|structural|propulsion)\s+engineer\b"
+    ]):
+        return "maintenance"
+
+    # Ground Operations
+    if any(re.search(p, title_lower) for p in [
+        r"\bramp\b",
+        r"\bground\s+(ops|operations|operator|handler|handling|staff|agent|service|support)\b",
+        r"\bairport\s+(agent|ops|operations|officer|helper|representative)\b",
+        r"\bpassenger\s+(service|handling|agent|representative)\b",
+        r"\bgate\s+agent\b",
+        r"\bstation\s+agent\b",
+        r"\bbaggage\b",
+        r"\bluggage\b",
+        r"\bcleaner\b",
+        r"\bcabin\s+cleaner\b",
+        r"\bload\s+(control|planner|planning|coordinator|master)\b",
+        r"\bweight\s+and\s+balance\b",
+        r"\barff\s+duty\s+manager\b",
+        r"\bline\s+service\b",
+        r"\bams\b",
+        r"\bls\b",
+        r"\bcargo\b",
+    ]):
+        return "ground_operations"
+
+    # Operations Control
+    if any(re.search(p, title_lower) for p in [
+        r"\boperations\s+control(ler)?(s)?\b",
+        r"\bocc\b",
+        r"\biocc\b",
+        r"\bnoc\b",
+        r"\bsoc\b",
+        r"\bdispatcher(s)?\b",
+        r"\bdispatch(es)?\b",
+        r"\bflight\s+dispatch(er)?\b",
+        r"\bflight\s+planning\b",
+        r"\bflight\s+operations\b",
+        r"\barff\b",
+        r"\bduty\s+manager\b",
+    ]):
+        return "operations_control"
+
+    # High-priority keyword overrides based on title
+    # 1. Management overrides (compliance and monitor, AMOS, MCC, MOC, AOG, ground ops, avionics)
+    if (
+        "compliance and monitor" in title_lower
+        or "compliance monitor" in title_lower
+        or "compliance & monitor" in title_lower
+        or "compliance and monitoring" in title_lower
+        or "compliance monitoring" in title_lower
+        or "camaliance and monitor" in title_lower
+        or "amos" in title_lower
+        or re.search(r"\bmcc\b", title_lower)
+        or re.search(r"\baog\b", title_lower)
+        or "ground operation" in title_lower
+        or "ground operantion" in title_lower
+        or "ground operations" in title_lower
+        or "ground ops" in title_lower
+        or "avionics" in title_lower
+        or "camo" in title_lower
+        or "technical records" in title_lower
+        or "tech records" in title_lower
+    ):
+        return "management"
+
+    # 2. Corporate overrides (charter, safety, security, client, compliance)
+    if (
+        "charter" in title_lower
+        or "safety" in title_lower
+        or "safity" in title_lower
+        or "security clint" in title_lower
+        or "security client" in title_lower
+        or "security" in title_lower
+        or "client" in title_lower
+        or "clint" in title_lower
+        or "compliance" in title_lower
+        or "compliamce" in title_lower
+    ):
+        return "corporate"
+
+    # 3. Ground operations overrides (ARFF duty manager, cleaner, station agent, cargo, AMS, line service, LS)
+    if (
+        "arff duty manager" in title_lower
+        or "cleaner" in title_lower
+        or "station agent" in title_lower
+        or "station agnet" in title_lower
+        or "cargo" in title_lower
+        or "line service" in title_lower
+        or re.search(r"\bams\b", title_lower)
+        or re.search(r"\bls\b", title_lower)
+    ):
+        return "ground_operations"
+
+    # 4. Operations control overrides
+    if "arff" in title_lower or "duty manager" in title_lower:
+        return "operations_control"
+
+    # 5. Check explicit matches from previous stages
     for value in [
         existing_category,
         primary_category,
@@ -158,11 +306,15 @@ def infer_job_category(
     ]:
         canonical = normalize_job_category(value)
         if canonical:
+            if canonical == "airports_only":
+                if is_adani_or_malta_airport:
+                    return "airports_only"
+                continue
             return canonical
 
     text = f"{title} {description}".lower()
 
-    # 2. Define weighted regex patterns for fallback inference
+    # 6. Define weighted regex patterns for fallback inference
     # Using word boundaries \b for accuracy
     inference_patterns = {
         "operations_control": [
@@ -188,6 +340,8 @@ def infer_job_category(
             r"\bpilot\b",
             r"\bcaptain\b",
             r"\bfirst officer\b",
+            r"\barff\b",
+            r"\bduty manager\b",
         ],
         "crew_control": [
             r"\bcrew control\b",
@@ -216,6 +370,13 @@ def infer_job_category(
             r"\bgate agent\b",
             r"\bcheck-?in\b",
             r"\bstation agent\b",
+            r"\bstation agnet\b",
+            r"\bcargo\b",
+            r"\bams\b",
+            r"\bline service\b",
+            r"\bls\b",
+            r"\barff duty manager\b",
+            r"\bcleaner\b",
         ],
         "management": [
             r"\bdirector\b",
@@ -223,12 +384,31 @@ def infer_job_category(
             r"\bvice president\b",
             r"\b vp \b",
             r"\bgeneral manager\b",
+            r"\bamos\b",
+            r"\bmcc\b",
+            r"\baog\b",
+            r"\bground operations?\b",
+            r"\bground ops\b",
+            r"\bavionics\b",
+            r"\bcompliance and monitor\b",
+            r"\bcompliance monitor\b",
+            r"\bcompliance & monitor\b",
+            r"\bcompliance and monitoring\b",
+            r"\bcompliance monitoring\b",
+            r"\bcamaliance and monitor\b",
         ],
         "corporate": [
+            r"\bcharter\b",
             r"\bsafety\b",
+            r"\bsafity\b",
             r"\bsecurity\b",
-            r"\bquality assurance\b",
+            r"\bclient\b",
+            r"\bclint\b",
+            r"\bsecurity clint\b",
+            r"\bsecurity client\b",
             r"\bcompliance\b",
+            r"\bcompliamce\b",
+            r"\bquality assurance\b",
             r"\bsms\b",
             r"\baudit",
             r"\bregulatory\b",
@@ -244,10 +424,9 @@ def infer_job_category(
             r"\btechnician\b",
             r"\bmechanic\b",
             r"\bmro\b",
-            r"\bavionics\b",
             r"\bmaintenance control",
-            r"\bmcc\b",
             r"\bb[12]\b.*engineer",  # Matches B1 Engineer, B2 Aircraft Engineer, etc.
+            r"\bmoc\b",
         ],
     }
 

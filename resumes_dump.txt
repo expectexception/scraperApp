@@ -1,0 +1,45 @@
+--- Resume 0 ---
+user_id: 6a09bced15fe34d7dbf41a1c
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 1 ---
+user_id: 6a09bced15fe34d7dbf41a1c
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 2 ---
+user_id: 6a09bced15fe34d7dbf41a1c
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 3 ---
+user_id: 6a09bced15fe34d7dbf41a1c
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 4 ---
+user_id: 6a2293fe13458fd8c3d2b179
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'max_scores', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 5 ---
+user_id: 6a2293fe13458fd8c3d2b179
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 6 ---
+user_id: 6a2b1c6d8dbc023f597bf557
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'max_scores', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 7 ---
+user_id: 6a32985ed3ad7987bd892bb1
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'max_scores', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']
+--- Resume 8 ---
+user_id: 6a33970900b8fe9c3a24fdc5
+skills: None
+meta.skills: None
+meta.aviation_scores keys: ['total_score', 'experience_score', 'education_score', 'training_score', 'loyalty_score', 'experience', 'education', 'training', 'role_scores', 'eligible_roles', 'max_scores', 'passes_role_gate', 'gate_message', 'interpretation_band', 'is_management_track', 'loyalty', 'breakdown']

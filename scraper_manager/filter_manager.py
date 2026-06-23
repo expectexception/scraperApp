@@ -99,6 +99,7 @@ class JobFilterManager:
             "Ground_Airport_Operations": 2.5,
             "Entry_Level_Operations_Roles": 1.5,
             "Corporate_Aviation_Support_Roles": 2.0,
+            "Airports_Only": 2.5,
         }
 
         # Performance metrics

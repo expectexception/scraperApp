@@ -935,7 +935,7 @@ SITES = {
     },
     "emploitic": {
         "name": "Emploitic",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://emploitic.com",
         "jobs_url": "https://emploitic.com/offres-d-emploi",
         "description": "Emploitic job portal (Algeria)",
@@ -1729,7 +1729,7 @@ SITES = {
     },
     "rtx": {
         "name": "RTX",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://careers.rtx.com",
         "jobs_url": "https://careers.rtx.com/global/en/search-results",
         "description": "RTX / Collins / Pratt & Whitney careers (Phenom People)",
@@ -2361,14 +2361,14 @@ SITES = {
     },
     "jost": {
         "name": "Jost Group",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://jostgroup.com",
         "jobs_url": "https://jostgroup.com/en/jobs",
         "description": "Jost Group Careers",
     },
     "faktor": {
         "name": "Faktor",
-        "enabled": True,
+        "enabled": False,
         "base_url": "https://www.wearefaktor.com",
         "jobs_url": "https://www.wearefaktor.com/jobs",
         "description": "Faktor Recruitment",
