@@ -89,7 +89,7 @@ class ATSGScraper(BaseScraper):
                     # Get location
                     location = "Unknown"
                     loc_el = await el.query_selector(
-                        '[data-automation="job-location"], .opportunity-location'
+                        '[data-automation="physical-location-item"], [data-automation="job-location"], .opportunity-location, .location-bottom'
                     )
                     if loc_el:
                         location = (await loc_el.inner_text()).strip()

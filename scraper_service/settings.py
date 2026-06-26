@@ -71,6 +71,11 @@ if DATABASE_ENGINE not in {"mongodb", "mongo", "django_mongodb_backend"}:
 mongodb_uri = os.environ.get("MONGODB_URI") or os.environ.get("MONGO_URI") or os.environ.get("DB_HOST")
 mongodb_name = os.environ.get("MONGODB_NAME") or os.environ.get("DB_NAME") or "aeroops_db"
 
+# Check if running tests to switch to local test DB
+import sys
+if "test" in sys.argv or os.environ.get("TESTING") == "1":
+    mongodb_name = os.environ.get("MONGODB_TEST_NAME") or f"test_{mongodb_name}"
+
 if not mongodb_uri:
     raise ValueError("MONGODB_URI is required when DATABASE_ENGINE=mongodb.")
 
@@ -79,6 +84,9 @@ DATABASES = {
         "ENGINE": "django_mongodb_backend",
         "HOST": mongodb_uri,
         "NAME": mongodb_name,
+        "TEST": {
+            "NAME": os.environ.get("MONGODB_TEST_NAME") or f"test_{mongodb_name}",
+        },
     }
 }
 

@@ -6,6 +6,7 @@ from jobs.models import Job
 from scraper_manager.db_manager import DjangoDBManager
 from asgiref.sync import async_to_sync
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class Command(BaseCommand):
 
         dbm = DjangoDBManager()
 
-        qs = Job.objects.filter(status__in=["new", "active"], is_verified=False, posted_by__isnull=True)
+        qs = Job.objects.defer("raw_json").filter(status__in=["new", "active"])
         if age_days > 0:
             cutoff = timezone.now() - timezone.timedelta(days=age_days)
             qs = qs.filter(
@@ -56,11 +57,34 @@ class Command(BaseCommand):
 
         updated = 0
         errors = 0
-        for job in jobs:
+
+        async def verify_jobs_concurrently(jobs_list):
+            sem = asyncio.Semaphore(15)  # Limit concurrency to 15
+
+            async def verify_one(job):
+                async with sem:
+                    try:
+                        is_active, reason = await dbm.check_job_active(
+                            job.url, job_obj=job
+                        )
+                        return job, is_active, reason
+                    except Exception as e:
+                        return job, True, f"exception:{str(e)}"
+
+            tasks = [verify_one(j) for j in jobs_list]
+            return await asyncio.gather(*tasks)
+
+        # Run concurrent checks
+        results = async_to_sync(verify_jobs_concurrently)(jobs)
+
+        # Process results sequentially to avoid SQLite locking issues
+        for job, is_active, reason in results:
+            if "exception:" in reason:
+                errors += 1
+                self.stderr.write(f"Error checking {job.url}: {reason}")
+                continue
+
             try:
-                is_active, reason = async_to_sync(dbm.check_job_active)(
-                    job.url, job_obj=job
-                )
                 job.last_checked = timezone.now()
                 if not is_active:
                     if not dry:
@@ -76,10 +100,11 @@ class Command(BaseCommand):
                     self.stdout.write(f"Job still active: {job.url} [{job.id}]")
             except Exception:
                 errors += 1
-                logger.exception("Error verifying job %s", job.url)
+                logger.exception("Error saving job status %s", job.url)
 
         self.stdout.write(
             self.style.SUCCESS(
                 f"Processing complete: processed={total}, updated={updated}, errors={errors}"
             )
         )
+

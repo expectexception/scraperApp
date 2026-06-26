@@ -400,6 +400,10 @@ class DjangoDBManager:
             logger.warning(f"Job missing URL, skipping: {title}")
             return False, "Missing required field: url"
 
+        if "sales manager" in title.lower():
+            logger.info(f"Skipping Sales Manager job: {title}")
+            return False, "Skipping Sales Manager job"
+
         try:
             # Update or create ScrapedURL (for tracking/deduplication)
             scraped_url, url_created = ScrapedURL.objects.update_or_create(
@@ -444,6 +448,10 @@ class DjangoDBManager:
         try:
             # Extract and normalize fields
             title = job_data.get("title", "No Title").strip()
+            if "sales manager" in title.lower():
+                logger.info(f"Skipping Sales Manager job: {title}")
+                return None, False
+
             company = (job_data.get("company") or job_data.get("recruiter") or "Unknown").strip()
             url = job_data.get("url", "").strip()
             location = self._clean_location(job_data.get("location", "").strip(), company=company)
@@ -560,23 +568,20 @@ class DjangoDBManager:
             if posted_date is not None:
                 defaults["posted_date"] = posted_date
 
-            # 3. Handle Deduplication - Check by URL first (exact match)
-            # Then check by dedup_hash (cross-source match)
             job = Job.objects.filter(url=url).first()
             if not job:
                 # Potential cross-source duplicate?
-                # We check for active jobs with the same hash
-                job = (
-                    Job.objects.filter(status="active")
-                    .filter(
-                        title__iexact=title,
-                        company__iexact=mapped_company,
-                        location__iexact=location,
-                    )
-                    .first()
+                # We check for active jobs with the same hash. To bypass Djongo regex bugs on __iexact with '|' characters,
+                # we query by company/location/status and match the title in Python.
+                candidates = Job.objects.filter(
+                    status="active",
+                    company__iexact=mapped_company,
+                    location__iexact=location
                 )
-                # Or use the hash if we had a field for it, for now we use an exact field match query
-                # as a proxy for the hash logic until we add a field.
+                for cand in candidates:
+                    if cand.title.strip().lower() == title.lower():
+                        job = cand
+                        break
 
             if job:
                 # Keep existing status if closed; otherwise update fields
@@ -774,13 +779,22 @@ class DjangoDBManager:
         Optimized to check date fields in raw_json before network requests.
         Returns (is_active, reason)
         """
+        if not url or not url.strip():
+            return True, "no_url"
+
         import asyncio
         import urllib.parse
 
         try:
             # 1. Smart Expiry Check: Check raw_json for explicit expiry dates first
-            if job_obj and job_obj.raw_json:
-                raw = job_obj.raw_json
+            raw = None
+            try:
+                if job_obj and job_obj.raw_json:
+                    raw = job_obj.raw_json
+            except Exception:
+                pass
+
+            if raw:
                 # List of common keys for expiry dates
                 expiry_keys = [
                     "valid_through",

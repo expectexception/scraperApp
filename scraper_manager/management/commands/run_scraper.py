@@ -18,6 +18,12 @@ from scraper_manager.category_taxonomy import normalize_job_categories
 from scraper_manager.db_manager import DjangoDBManager
 from scraper_manager.scrapers import get_scraper, list_scrapers
 from scraper_manager.webhook_notify import dispatch_event
+from scraper_manager.management.commands.run_custom_scrapers import (
+    SKIP_KEYWORDS,
+    title_is_unwanted,
+    pacific_is_relevant,
+    PACIFIC_KEEP_KEYWORDS,
+)
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -575,3 +581,54 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(f"  Skipped (no impl): {', '.join(skipped)}\n")
             )
+
+        # Run DB audit after all scrapers finish
+        await self._run_audit()
+
+    async def _run_audit(self):
+        """Shared DB audit — flags unrelated/uncategorised jobs."""
+        from jobs.models import Job
+        from scraper_manager.category_taxonomy import infer_job_category
+
+        self.stdout.write("\n" + "=" * 60)
+        self.stdout.write("🔍 DB AUDIT — Checking for unrelated jobs")
+        self.stdout.write("=" * 60)
+
+        all_jobs = await sync_to_async(
+            lambda: list(Job.objects.filter(status__in=["new", "active"]).values(
+                "title", "company", "source", "job_category", "url"
+            ))
+        )()
+
+        flagged = []
+        for j in all_jobs:
+            title = j.get("title") or ""
+            source = j.get("source") or ""
+            category = j.get("job_category") or ""
+            reason = None
+
+            if title_is_unwanted(title):
+                reason = "title contains banned keyword"
+            elif source == "pacificaviation" and not pacific_is_relevant(title):
+                reason = "Pacific Aviation job not in ops whitelist"
+            elif category == "other":
+                reason = "category=other (unclassified)"
+            elif not category:
+                if infer_job_category(title=title, source=source) == "other":
+                    reason = "inferred category=other"
+
+            if reason:
+                flagged.append({"title": title, "company": j.get("company", ""), "source": source, "reason": reason})
+
+        if not flagged:
+            self.stdout.write(self.style.SUCCESS("✅ No unrelated jobs found in DB!"))
+        else:
+            self.stdout.write(self.style.WARNING(f"\n⚠️  Found {len(flagged)} possibly unrelated jobs:"))
+            self.stdout.write(f"{'Title':<55} {'Company':<25} {'Source':<20} Reason")
+            self.stdout.write("-" * 130)
+            for f in flagged:
+                self.stdout.write(
+                    f"{f['title'][:54]:<55} {f['company'][:24]:<25} {f['source'][:19]:<20} {f['reason']}"
+                )
+            self.stdout.write("\n💡 Run: python manage.py run_custom_scrapers --audit-only  to re-check")
+        self.stdout.write("=" * 60)

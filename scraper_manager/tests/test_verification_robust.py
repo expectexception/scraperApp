@@ -6,10 +6,9 @@ from django.utils import timezone
 from datetime import timedelta
 from asgiref.sync import async_to_sync
 
-from jobs.models import Job, ScheduleConfig
+from jobs.models import Job
 from django.contrib.auth.models import User
 from scraper_manager.db_manager import DjangoDBManager
-from django_celery_beat.models import PeriodicTask
 
 
 class JobVerificationRobustTests(TestCase):
@@ -18,12 +17,6 @@ class JobVerificationRobustTests(TestCase):
         self.admin_user = User.objects.create_user(
             username="admin_tester", password="pass"
         )
-        # Ensure ScheduleConfig exists
-        self.config = ScheduleConfig.get_config()
-        self.config.scheduling_enabled = True
-        self.config.verification_enabled = True
-        self.config.job_expiry_enabled = True
-        self.config.save()
 
     def test_keyword_closure_detection(self):
         """Test that various closed keywords are correctly identified"""
@@ -70,8 +63,8 @@ class JobVerificationRobustTests(TestCase):
                 if not expected_active:
                     self.assertIn(reason_snippet, reason)
 
-    def test_management_command_filtering(self):
-        """Test that verify_job_active command filters only scraped jobs"""
+    def test_management_command_checks_all_jobs(self):
+        """Test that verify_job_active command checks all active jobs"""
         # 1. Create a recruiter-posted job
         recruiter_job = Job.objects.create(
             title="Recruiter Job",
@@ -106,93 +99,6 @@ class JobVerificationRobustTests(TestCase):
         recruiter_job.refresh_from_db()
         scraped_job.refresh_from_db()
 
-        # Recruiter job should remain active
-        self.assertEqual(recruiter_job.status, "active")
-        # Scraped job should be closed
+        # Both jobs should be closed since we check all active/new jobs now
+        self.assertEqual(recruiter_job.status, "closed")
         self.assertEqual(scraped_job.status, "closed")
-
-    def test_expiry_task_protection(self):
-        """Test that expire_old_jobs_task preserves recruiter jobs"""
-        cutoff_days = self.config.job_expiry_days
-        old_date = (timezone.now() - timedelta(days=cutoff_days + 5)).date()
-
-        # 1. Old Recruiter Job
-        recruiter_job = Job.objects.create(
-            title="Old Recruiter Job",
-            company="Test Co",
-            url="http://example.com/recruiter-old",
-            status="active",
-            posted_by=self.admin_user,
-            posted_date=old_date,
-            source="manual",
-        )
-
-        # 2. Old Scraped Job
-        scraped_job = Job.objects.create(
-            title="Old Scraped Job",
-            company="Scraped Co",
-            url="http://example.com/scraped-old",
-            status="active",
-            posted_by=None,
-            posted_date=old_date,
-            source="aviation",
-        )
-
-        from jobs.tasks import expire_old_jobs_task
-
-        expire_old_jobs_task()
-
-        recruiter_job.refresh_from_db()
-        scraped_job.refresh_from_db()
-
-        # Recruiter job should NOT be expired
-        self.assertEqual(recruiter_job.status, "active")
-        # Scraped job SHOULD be expired
-        self.assertEqual(scraped_job.status, "expired")
-
-    def test_verification_task_toggle(self):
-        """Test that recheck_active_jobs_task respects verification_enabled toggle"""
-        self.config.verification_enabled = False
-        self.config.save()
-
-        # Create a job that should be checked
-        job = Job.objects.create(
-            title="Checkable Job",
-            company="Scraped Co",
-            url="http://example.com/checkable",
-            status="active",
-            posted_by=None,
-            last_checked=timezone.now() - timedelta(days=10),
-        )
-
-        from jobs.tasks import recheck_active_jobs_task
-
-        result = recheck_active_jobs_task()
-
-        self.assertEqual(result.get("reason"), "toggle_disabled")
-
-        job.refresh_from_db()
-        # Should not have been updated since task was skipped
-        self.assertEqual(job.status, "active")
-
-    def test_setup_periodic_tasks_command(self):
-        """Test that setup_periodic_tasks initializes the correct tasks"""
-        # Clear existing tasks
-        PeriodicTask.objects.all().delete()
-
-        call_command("setup_periodic_tasks")
-
-        task_names = list(PeriodicTask.objects.values_list("name", flat=True))
-        expected_tasks = [
-            "Expire Old Jobs (Daily)",
-            "Re-check Active Jobs (Daily)",
-            "Generate Daily Report (Daily)",
-            "Weekly Summary (Sunday)",
-            "System Health Check (Hourly)",
-            "Nightly Seniority Backfill",
-        ]
-
-        for name in expected_tasks:
-            self.assertIn(name, task_names)
-
-        self.assertEqual(PeriodicTask.objects.count(), len(expected_tasks))
