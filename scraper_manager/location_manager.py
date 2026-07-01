@@ -846,8 +846,8 @@ class LocationManager:
                     continue
                 part_upper = part_clean.upper()
                 
-                # Check 2-letter or 3-letter codes
-                if part_upper in cls.CC_TO_NAME:
+                # Check 2-letter or 3-letter codes (exclude US state collisions)
+                if part_upper in cls.CC_TO_NAME and part_upper not in cls.US_STATES:
                     detected_country = cls.CC_TO_NAME[part_upper]
                     break
                 elif re.search(r'\b(?:USA|U\.S\.|U\.S\.A\.)\b', part_upper):
@@ -888,11 +888,12 @@ class LocationManager:
                     detected_country = "United States"
                     break
 
-        # If we still don't have a country, check if any part is 2-letters in CC_TO_NAME
+        # If we still don't have a country, check if any part is 2-letters in CC_TO_NAME (exclude US state collisions)
         if not detected_country:
             for p in parts:
-                if len(p) == 2 and p.upper() in cls.CC_TO_NAME:
-                    detected_country = cls.CC_TO_NAME[p.upper()]
+                p_upper = p.upper()
+                if len(p) == 2 and p_upper in cls.CC_TO_NAME and p_upper not in cls.US_STATES:
+                    detected_country = cls.CC_TO_NAME[p_upper]
                     break
 
         # If we still have no country, return the cleaned text
@@ -960,9 +961,12 @@ class LocationManager:
             return None
 
         loc_lower = normalized_location.lower()
-        # Look for country names in the string
+        # Longest match wins — prevents "Guinea" stealing "Papua New Guinea", etc.
+        best_cc = None
+        best_len = 0
         for cc, name in cls.CC_TO_NAME.items():
-            if name.lower() in loc_lower:
-                return cc
-
-        return None
+            name_lower = name.lower()
+            if name_lower in loc_lower and len(name_lower) > best_len:
+                best_cc = cc
+                best_len = len(name_lower)
+        return best_cc

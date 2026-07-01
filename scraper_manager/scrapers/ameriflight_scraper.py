@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 from .base_scraper import BaseScraper
+from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,8 @@ class AmeriflightScraper(BaseScraper):
                             "source_url": self.base_url,
                             "apply_url": url,
                             "is_active": True,
-                            "job_seq_no": job_id,
+                            "job_id": f"ameriflight_{job_id}",
+                            "description": "",
                         }
                     )
 
@@ -153,5 +155,6 @@ class AmeriflightScraper(BaseScraper):
             return []
 
         jobs = await self.fetch_job_descriptions(jobs)
+        jobs = [get_job_dict(**job) for job in jobs]
         await self.save_results(jobs)
         return jobs

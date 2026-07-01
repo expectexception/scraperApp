@@ -15,7 +15,7 @@ class AdpFbb94cb3Scraper(BaseScraper):
         self.base_url = "https://workforcenow.adp.com"
         self.api_url = "https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid=fbb94cb3-cbb5-4d4b-8225-770829b92d51&ccId=19000101_000001&lang=en_US"
         self.detail_api_base = "https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions"
-        self.company_name = "Aviation Charter Broker (ADP)"
+        self.company_name = "Surf Air Mobility"
 
     async def fetch_jobs(self) -> list:
         jobs = []

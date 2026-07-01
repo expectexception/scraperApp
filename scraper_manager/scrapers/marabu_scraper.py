@@ -1,8 +1,11 @@
 import asyncio
 import logging
 import requests
+import re
+from bs4 import BeautifulSoup
 
 from .base_scraper import BaseScraper
+from .job_schema import get_job_dict
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +29,7 @@ class MarabuScraper(BaseScraper):
         )
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
@@ -79,7 +82,9 @@ class MarabuScraper(BaseScraper):
                         "source_url": self.base_url,
                         "apply_url": url,
                         "is_active": True,
-                        "job_seq_no": shortcode,
+                        "job_id": f"marabu_{shortcode}",
+                        "shortcode": shortcode,
+                        "description": "",
                     }
                 )
         except Exception as e:
@@ -96,29 +101,34 @@ class MarabuScraper(BaseScraper):
         )
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "application/json",
         }
 
         for job in jobs:
-            shortcode = job.pop("job_seq_no", None)
+            shortcode = job.pop("shortcode", None)
             if not shortcode:
                 continue
 
             try:
-                # Workable has a specific endpoint for job details
-                detail_url = f"https://apply.workable.com/api/v1/jobs/{shortcode}"
+                # Workable API details endpoint
+                detail_url = f"https://apply.workable.com/api/v2/accounts/marabu/jobs/{shortcode}"
                 resp = requests.get(detail_url, headers=headers, timeout=20)
                 if resp.status_code == 200:
                     data = resp.json()
-                    desc = data.get("description", "")
-                    import re
-
-                    # Remove HTML tags using a simple regex since it's an API response
-                    clean_desc = re.sub(r"<[^>]+>", " ", desc)
-                    clean_desc = re.sub(r"\s+", " ", clean_desc).strip()
-                    if clean_desc:
-                        job["description"] = clean_desc
+                    
+                    # Combine description, requirements and benefits
+                    parts = []
+                    for section in ["description", "requirements", "benefits"]:
+                        val = data.get(section, "")
+                        if val:
+                            # Strip HTML tags
+                            clean_val = re.sub(r"<[^>]+>", " ", val)
+                            clean_val = re.sub(r"\s+", " ", clean_val).strip()
+                            if clean_val:
+                                parts.append(f"{section.capitalize()}:\n{clean_val}")
+                                
+                    job["description"] = "\n\n".join(parts)
             except Exception as e:
                 logger.warning(
                     f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}"
@@ -145,5 +155,6 @@ class MarabuScraper(BaseScraper):
             return []
 
         jobs = await self.fetch_job_descriptions(jobs)
+        jobs = [get_job_dict(**job) for job in jobs]
         await self.save_results(jobs)
         return jobs

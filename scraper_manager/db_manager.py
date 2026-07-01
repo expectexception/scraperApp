@@ -52,11 +52,10 @@ class DjangoDBManager:
         if not location:
             return None
 
-        # Normalize first if it's not already
-        if "," not in location and len(location) > 2:
-            location = LocationManager.normalize_location(location, company=company)
-
-        return LocationManager.extract_country_code(location)
+        # Always normalize — skipping on comma presence caused US state abbrs
+        # (e.g. "GA") to be matched against country names (Gabon → GA).
+        normalized = LocationManager.normalize_location(location, company=company)
+        return LocationManager.extract_country_code(normalized)
 
     def _infer_operation_type(
         self, title: str, company: str, description: str = ""
@@ -819,21 +818,36 @@ class DjangoDBManager:
                             continue
 
             # 2. Lightweight requests check with timeout
+            url = url.strip()
+
+            # ATS domains that consistently block HTTP scrapers — assume active
+            _SKIP_DOMAINS = (
+                "recruiting.paylocity.com",
+                "paylocity.com",
+                "ultipro.com",
+                "recruiting.adp.com",
+            )
+            if any(d in url for d in _SKIP_DOMAINS):
+                return True, "skipped_ats_domain"
+
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             }
 
             try:
-                # Wrap in asyncio timeout for safety
+                loop = asyncio.get_event_loop()
                 r = await asyncio.wait_for(
-                    sync_to_async(curl_requests.get)(
-                        url,
-                        headers=headers,
-                        timeout=15,  # Increased from 10 for slow sites
-                        allow_redirects=True,
-                        impersonate="chrome110",
+                    loop.run_in_executor(
+                        None,
+                        lambda: curl_requests.get(
+                            url,
+                            headers=headers,
+                            timeout=10,
+                            allow_redirects=True,
+                            impersonate="chrome110",
+                        ),
                     ),
-                    timeout=20,  # Overall timeout
+                    timeout=12,
                 )
             except asyncio.TimeoutError:
                 logger.warning(f"Timeout checking {url}")

@@ -261,6 +261,10 @@
         "trucking",
         "freight",
         "rail",
+        "railway",
+        "railroad",
+        "metro",
+        "tram",
         "train",
         "bus",
         "taxi",
@@ -335,7 +339,28 @@
         "Operatore di magazzino",
         "Mulettista",
         "Cybersecurity",
-        "IT Security"
+        "IT Security",
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Logistics Supervisor",
+        "Logistics Analyst",
+        "Logistics Officer",
+        "Supply Chain",
+        "Supply Chain Manager",
+        "Warehouse",
+        "Warehouse Manager",
+        "Warehouse Supervisor",
+        "Warehouse Coordinator",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager",
+        "Materials Coordinator"
       ]
     },
     {
@@ -555,7 +580,22 @@
         "HR",
         "Marketing",
         "Sales",
-        "Customer Service"
+        "Customer Service",
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Logistics Supervisor",
+        "Supply Chain",
+        "Warehouse",
+        "Warehouse Manager",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     },
     {
@@ -632,7 +672,19 @@
         "Marketing",
         "Sales",
         "Customer Service",
-        "IT Security"
+        "IT Security",
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Supply Chain",
+        "Warehouse",
+        "Procurement",
+        "Purchasing"
       ]
     },
     {
@@ -726,7 +778,20 @@
         "Marketing",
         "Sales",
         "Customer Service",
-        "Bank"
+        "Bank",
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Supply Chain",
+        "Warehouse",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     },
     {
@@ -815,7 +880,20 @@
         "Marketing",
         "Sales",
         "Customer Service",
-        "Bank"
+        "Bank",
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Supply Chain",
+        "Warehouse",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     },
     {
@@ -873,7 +951,19 @@
         "Network Analyst",
         "Network Engineer",
         "Network Administrator",
-        "Network Architect"
+        "Network Architect",
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Supply Chain",
+        "Warehouse",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     },
     {
@@ -958,8 +1048,19 @@
         "Network Administrator",
         "Network Architect",
         "Network Manager",
-        "Materials",
-        "Hotel"
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Logistics Supervisor",
+        "Supply Chain",
+        "Warehouse Manager",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     },
     {
@@ -1059,7 +1160,19 @@
         "Network Administrator",
         "Network Architect",
         "Network Manager",
-        "Network Architect"
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Logistics Supervisor",
+        "Supply Chain",
+        "Warehouse Manager",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     },
     {
@@ -1123,7 +1236,19 @@
         "Network Administrator",
         "Network Architect",
         "Network Manager",
-        "Network Architect"
+        "Inventory",
+        "Inventory Control",
+        "Inventory Manager",
+        "Inventory Supervisor",
+        "Inventory Operations",
+        "Logistics Manager",
+        "Logistics Coordinator",
+        "Logistics Supervisor",
+        "Supply Chain",
+        "Warehouse Manager",
+        "Procurement",
+        "Purchasing",
+        "Materials Manager"
       ]
     }
   ]

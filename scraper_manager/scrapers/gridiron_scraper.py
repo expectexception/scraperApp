@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -28,7 +29,7 @@ class GridironScraper(BaseScraper):
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
             context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/120.0.0.0 Safari/537.36",
                 viewport={"width": 1920, "height": 1080},
             )
             page = await context.new_page()
@@ -45,7 +46,7 @@ class GridironScraper(BaseScraper):
                     if self.max_jobs and len(jobs) >= self.max_jobs:
                         break
 
-                    title_elem = await item.query_selector("ukg-link[data-automation='job-title']")
+                    title_elem = await item.query_selector("ukg-link[data-automation='job-title'], a[data-automation='job-title']")
                     if not title_elem:
                         continue
 
@@ -59,12 +60,12 @@ class GridironScraper(BaseScraper):
                         continue
 
                     # Extract location using Playwright
-                    loc_elem = await item.query_selector("[data-automation='job-location']")
+                    loc_elem = await item.query_selector("[data-automation='job-location'], .location, [class*='location']")
                     location = await loc_elem.inner_text() if loc_elem else "Unknown"
                     location = location.strip()
 
                     # Extract job_id from url
-                    job_id = url.split("/")[-1] if "/" in url else "unknown"
+                    job_id = "gridiron_" + (url.split("opportunityId=")[-1] if "opportunityId=" in url else url.split("/")[-1])
 
                     jobs.append(
                         get_job_dict(
@@ -83,6 +84,7 @@ class GridironScraper(BaseScraper):
             except Exception as e:
                 logger.error(f"[{self.site_key}] Error fetching jobs: {e}")
             finally:
+                await context.close()
                 await browser.close()
 
         return jobs
@@ -98,7 +100,7 @@ class GridironScraper(BaseScraper):
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
             context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
             page = await context.new_page()
 
@@ -106,29 +108,59 @@ class GridironScraper(BaseScraper):
                 url = job["url"]
                 try:
                     await page.goto(url, wait_until="networkidle", timeout=30000)
+                    await asyncio.sleep(2)
                     html = await page.content()
                     soup = BeautifulSoup(html, "html.parser")
 
-                    # UKG job descriptions are usually in a container like .opportunity-description
-                    content = soup.find(
-                        "div", class_="opportunity-description"
-                    ) or soup.find("div", class_="opportunity-content")
-                    if content:
-                        text = content.text
-                        import re
+                    # Extract Description from the sibling of the 'Description' header div
+                    desc_header = None
+                    for div in soup.find_all(["div", "span", "h3", "h4"]):
+                        text = div.get_text().strip()
+                        if text == "Description":
+                            desc_header = div
+                            break
+                    
+                    if desc_header:
+                        desc_div = desc_header.find_next_sibling("div") or desc_header.parent.find_next_sibling("div")
+                        if desc_div:
+                            job["description"] = desc_div.get_text(separator="\n").strip()
 
-                        text = re.sub(r"\s+", " ", text).strip()
-                        job["description"] = text
-                        # Backfill location from the original posting when missing.
-                        if not job.get("location") or job.get("location") == "Unknown":
-                            _loc = await self.extract_location_from_page(page)
-                            if _loc:
-                                job["location"] = _loc
+                    if not job.get("description"):
+                        # Fallback
+                        content = soup.find("div", class_="opportunity-description") or soup.find("div", class_="opportunity-content")
+                        if content:
+                            job["description"] = re.sub(r"\s+", " ", content.text).strip()
+
+                    # Extract Location from Details Page
+                    loc_header = None
+                    for div in soup.find_all(["div", "span", "h3", "h4"]):
+                        text = div.get_text().strip()
+                        if "Locations" in text:
+                            loc_header = div
+                            break
+                    
+                    if loc_header:
+                        # The address is typically in a sibling or nested div under the parent card
+                        parent = loc_header.parent
+                        # Look for address text
+                        address_divs = parent.find_all("div", class_=None)
+                        addresses = []
+                        for ad in address_divs:
+                            ad_text = ad.get_text().strip()
+                            if ad_text and not any(k in ad_text for k in ["Locations", "location", "Showing"]):
+                                # Clean up multiple whitespaces
+                                ad_text = re.sub(r"\s+", " ", ad_text)
+                                addresses.append(ad_text)
+                        
+                        if addresses:
+                            job["location"] = addresses[0]
+
                 except Exception as e:
                     logger.warning(
                         f"[{self.site_key}] Failed to fetch details for {job['title']}: {e}"
                     )
 
+            await context.close()
             await browser.close()
 
         return jobs

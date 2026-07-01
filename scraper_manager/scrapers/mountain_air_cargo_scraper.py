@@ -17,6 +17,7 @@ class MountainAirCargoScraper(BaseScraper):
     def __init__(self, config: Dict, db_manager=None):
         super().__init__(config, site_key="mountain_air_cargo", db_manager=db_manager)
         self.base_url = "https://mountainaircargo.hrmdirect.com/employment/job-openings.php?search=true&&cust_sort1=170262"
+        self.company_name = "Mountain Air Cargo"
 
     async def fetch_jobs(self) -> List[Dict]:
         """Fetch and parse jobs directly from the static HTML."""
@@ -45,10 +46,6 @@ class MountainAirCargoScraper(BaseScraper):
 
             soup = BeautifulSoup(html_content, "html.parser")
 
-            # Find the job listing table - hrmdirect often uses a table with class 'job-openings'
-            # or just a list of links in the 'content' area.
-            # Based on read_url_content, it's a list/table of links.
-
             job_links = []
             for a in soup.find_all("a", href=True):
                 if "job-opening.php" in a["href"]:
@@ -66,7 +63,6 @@ class MountainAirCargoScraper(BaseScraper):
             )
 
             for title, job_url in job_links:
-                # Need to check limits
                 if self.max_jobs and len(jobs) >= self.max_jobs:
                     logger.info(
                         f"[{self.site_key}] Reached max jobs limit ({self.max_jobs})"
@@ -81,7 +77,7 @@ class MountainAirCargoScraper(BaseScraper):
                 if await self.is_url_already_scraped(job_url):
                     continue
 
-                # Fetch details for description and potentially location
+                # Fetch details for description and location
                 logger.info(f"[{self.site_key}] Fetching details for: {title}...")
 
                 def fetch_detail():
@@ -102,27 +98,33 @@ class MountainAirCargoScraper(BaseScraper):
 
                 detail_soup = BeautifulSoup(detail_resp.text, "html.parser")
 
-                # Extract location - usually in a specific div or meta tag
-                location = "Unknown"
-                loc_tag = detail_soup.find(
-                    "div", class_="job_location"
-                ) or detail_soup.find("span", class_="location")
-                if loc_tag:
-                    location = loc_tag.text.strip()
+                # Extract location from table.viewFields
+                location = "USA"
+                fields_table = detail_soup.find("table", class_="viewFields")
+                if fields_table:
+                    for row in fields_table.find_all("tr"):
+                        cells = row.find_all(["td", "th"])
+                        if len(cells) >= 2:
+                            label = cells[0].get_text().strip()
+                            val = cells[1].get_text().strip()
+                            if "Location" in label:
+                                location = val
+                                break
 
-                # Description
-                desc_tag = detail_soup.find(
-                    "div", id="job_description"
-                ) or detail_soup.find("div", class_="job_description")
-                description = str(desc_tag) if desc_tag else "Description not found."
+                # Extract Description from div.jobDesc
+                desc_tag = detail_soup.find("div", class_="jobDesc")
+                if desc_tag:
+                    description = desc_tag.get_text(separator="\n", strip=True)
+                else:
+                    description = "Description not found."
 
                 job = get_job_dict(
-                    job_id=f"{self.site_key}_{hash(job_url)}",
+                    job_id=f"{self.site_key}_{job_url.split('req=')[-1].split('&')[0]}" if "req=" in job_url else f"{self.site_key}_{hash(job_url)}",
                     title=title,
                     company=self.company_name,
                     location=location,
                     url=job_url,
-                    source_url=self.base_url if hasattr(self, 'base_url') else job_url,
+                    source_url=self.base_url,
                     description=description,
                     apply_url=job_url,
                     source=self.site_key
@@ -147,7 +149,6 @@ class MountainAirCargoScraper(BaseScraper):
         # Apply strict title filtering against our advanced manager
         matched_jobs, rejected_jobs, stats = self.apply_title_filter(jobs)
 
-        # save_results in BaseScraper handles DB persisting
         await self.save_results(matched_jobs)
 
         return matched_jobs

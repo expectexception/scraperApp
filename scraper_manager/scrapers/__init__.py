@@ -255,6 +255,14 @@ from .jet2_scraper import Jet2Scraper
 from .k5_aviation_scraper import K5AviationScraper
 from .avconjet_scraper import AvconJetScraper
 from .travelcoup_scraper import TravelcoupScraper
+from .aaregional_scraper import AaRegionalScraper
+from .transairhawaii_scraper import TransairHawaiiScraper
+from .chevron_scraper import ChevronScraper
+from .virgingalactic_scraper import VirginGalacticScraper
+from .gmr_scraper import GmrScraper
+from .magnificaair_scraper import MagnificaAirScraper
+from .qantas_scraper import QantasScraper
+from .flyairshare_scraper import FlyAirshareScraper
 
 # Available scrapers
 SCRAPERS = {
@@ -509,6 +517,14 @@ SCRAPERS = {
     "adani_airports": AdaniScraper,
     "avconjet": AvconJetScraper,
     "travelcoup": TravelcoupScraper,
+    "aaregional": AaRegionalScraper,
+    "transairhawaii": TransairHawaiiScraper,
+    "chevron": ChevronScraper,
+    "virgingalactic": VirginGalacticScraper,
+    "gmr": GmrScraper,
+    "magnificaair": MagnificaAirScraper,
+    "qantas": QantasScraper,
+    "flyairshare": FlyAirshareScraper,
 }
 
 

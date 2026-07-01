@@ -28,12 +28,19 @@ class Command(BaseCommand):
         parser.add_argument(
             "--dry-run", action="store_true", help="Do not persist changes"
         )
+        parser.add_argument(
+            "--concurrency",
+            type=int,
+            default=10,
+            help="Max concurrent requests (default 10)",
+        )
 
     def handle(self, *args, **options):
         source = options.get("source")
         limit = options.get("limit", 0)
         age_days = options.get("age_days", 0)
         dry = options.get("dry_run", False)
+        concurrency = options.get("concurrency", 10)
 
         dbm = DjangoDBManager()
 
@@ -57,9 +64,10 @@ class Command(BaseCommand):
 
         updated = 0
         errors = 0
+        done_count = 0
 
         async def verify_jobs_concurrently(jobs_list):
-            sem = asyncio.Semaphore(15)  # Limit concurrency to 15
+            sem = asyncio.Semaphore(concurrency)
 
             async def verify_one(job):
                 async with sem:
@@ -72,13 +80,20 @@ class Command(BaseCommand):
                         return job, True, f"exception:{str(e)}"
 
             tasks = [verify_one(j) for j in jobs_list]
-            return await asyncio.gather(*tasks)
+            results = []
+            for coro in asyncio.as_completed(tasks):
+                result = await coro
+                results.append(result)
+            return results
 
         # Run concurrent checks
         results = async_to_sync(verify_jobs_concurrently)(jobs)
 
         # Process results sequentially to avoid SQLite locking issues
         for job, is_active, reason in results:
+            done_count += 1
+            if done_count % 50 == 0 or done_count == total:
+                self.stdout.write(f"Progress: {done_count}/{total} (closed={updated}, errors={errors})")
             if "exception:" in reason:
                 errors += 1
                 self.stderr.write(f"Error checking {job.url}: {reason}")

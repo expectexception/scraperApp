@@ -49,6 +49,12 @@ class JobFilterManager:
         # Exclusion patterns — jobs matching ANY of these are hard-blocked regardless of score.
         # Pattern: pilot/captain/cabin crew/baggage handler/customer service/unrelated industries.
         self.exclusion_patterns = [
+            # Hard-block logistics / supply chain / materials
+            r"\blogistics\b",
+            r"\bsupply chain\b",
+            r"\b(materials operations|materials supervisor|materials manager|materials coordinator|materials planner|materials specialist)\b",
+            # Hard-block cleaners & janitorial
+            r"\b(cleaner|cleaning|janitor|housekeeper|custodian|dishwasher)\b",
             # Pilots & flight deck (unless specifically looking for flight ops)
             r"\b(pilot|co-pilot|copilot|first officer|second officer|captain|commander)\b",
             # Cabin crew / inflight service
@@ -59,8 +65,11 @@ class JobFilterManager:
             # Customer-facing airport roles (Terminal/Gate)
             r"\b(check-in agent|gate agent|ticket agent|passenger service agent|customer service agent|reservation agent)\b",
             # IT, Software, Cybersecurity & Networking (not part of ops/crew/ground/management/corporate/maintenance scope)
-            r"\b(software developer|frontend developer|backend developer|full[\s-]?stack|devops|programmer|data scientist|data engineer|data analyst|ux researcher|ui designer|ux designer|web developer|software engineer|software quality|quality engineer|qa engineer|qa analyst|test engineer|test analyst|automation engineer|test automation|sdet|machine learning engineer|\bml engineer\b|platform engineer|site reliability engineer|\bsre\b|cloud engineer|systems engineer|solutions architect|enterprise architect|product manager|product owner|scrum master)\b",
+            r"\b(software|developer|frontend|backend|full[\s-]?stack|devops|programmer|data scientist|data engineer|data analyst|ux researcher|ui designer|ux designer|web developer|software engineer|software quality|quality engineer|qa engineer|qa analyst|test engineer|test analyst|automation engineer|test automation|sdet|machine learning engineer|\bml engineer\b|platform engineer|site reliability|\bsre\b|cloud engineer|systems engineer|solutions architect|enterprise architect|product manager|product owner|scrum master)\b",
             r"\b(it security|cyber\s?security|information security|infosec|it analyst|it support|it specialist|it manager|it administrator|it director|help\s?desk|systems administrator|sysadmin|network engineer|network administrator|database administrator|\bdba\b)\b",
+            # IT roles where "Director/Head/VP of IT" appears in non-standard order or IT-domain titles slip through
+            r"\b(application development|software development|application delivery|it infrastructure|it governance|it transformation|it strategy)\b",
+            r"\bdirector[\s,\-–]+it\b",
             # Test-automation framework names in title = SDET/QA role, never aviation ops
             r"\b(karate|rest assured|selenium|appium|cypress|junit|pytest|postman|swagger)\b",
             # Sales & Marketing
@@ -79,6 +88,11 @@ class JobFilterManager:
             r"\b(delivery driver|truck driver|courier|warehouse associate)\b",
             # Non-Aviation Dispatch & Transport
             r"\b(truck dispatcher|trucking dispatcher|freight dispatcher|logistics dispatcher|bus dispatcher|taxi dispatcher|rail dispatcher|train dispatcher|train driver|bus driver|taxi driver|courier dispatcher|emergency dispatcher|911 dispatcher|police dispatcher|tow dispatcher|fleet dispatcher|linehaul dispatcher|linehaul)\b",
+            # Rail / Railway / Ground Transport (not aviation)
+            r"\brailway\b",
+            r"\b(rail operations|railway operations|railroad operations|metro operations|tram operations)\b",
+            # ATC Control Tower — never an OCC/dispatch role
+            r"\bcontrol tower\b",
             # HR, Recruitment & Corporate Support (e.g. HR Operations Analyst, Recruiter, HRBP)
             r"\b(hr|human resources|recruiter|recruitment|talent acquisition|headhunter|people partner|hrbp|rh|relations humaines|ressources humaines|talent partner|acquisition de talents)\b",
             # Generic "Performance" roles that are NOT ops/flight/dispatch performance
@@ -289,19 +303,25 @@ class JobFilterManager:
     @lru_cache(maxsize=10000)
     def _matches_filter_impl(self, title_lower: str, company_lower: str = "") -> Tuple[bool, Tuple, float, Dict]:
         """Internal implementation of filter matching - optimized for speed"""
-        # Exclude generic dispatchers at logistics/trucking/freight/carrier/transport companies
+        # Exclude ops titles at logistics/transport companies that have no aviation context
+        aviation_keywords = {"flight", "aircraft", "airline", "aviation", "crew", "occ", "iocc", "airside", "airport"}
         if company_lower:
-            logistics_keywords = {"ceva", "fedex", "dhl", "ups", "logistics", "trucking", "transport", "freight", "carrier"}
+            logistics_keywords = {"ceva", "fedex", "dhl", "ups", "logistics", "trucking", "transport", "freight", "carrier", "railway", "railroad", "transit", "metro"}
             has_logistics_comp = any(lk in company_lower for lk in logistics_keywords)
             if has_logistics_comp:
-                title_clean = title_lower.replace("-", " ").replace("/", " ")
-                words = set(title_clean.split())
-                has_dispatch = "dispatcher" in words or "dispatch" in words
-                if has_dispatch:
-                    aviation_keywords = {"flight", "aircraft", "airline", "aviation", "crew", "occ", "iocc", "cargo", "airside", "airport", "ground"}
-                    has_aviation_word = any(aw in title_lower for aw in aviation_keywords)
-                    if not has_aviation_word:
-                        return False, tuple(), 0.0, {"reason": "excluded_logistics_dispatch"}
+                has_aviation_word = any(aw in title_lower for aw in aviation_keywords)
+                if not has_aviation_word:
+                    return False, tuple(), 0.0, {"reason": "excluded_logistics_company"}
+        # Also block when "transport" appears in the title itself with no aviation qualifier
+        if "transport" in title_lower and not any(aw in title_lower for aw in aviation_keywords):
+            # Only block if transport is standalone non-aviation context (not "air transport", "cargo transport")
+            if not any(av in title_lower for av in {"air transport", "cargo transport", "freight transport", "air cargo"}):
+                # Check if "transport" appears as a company/org name indicator (e.g. "One Transport - ...")
+                import re as _re
+                if _re.search(r"\btransport\b", title_lower) and "transport" not in {"air transport"}:
+                    # Block only if it's the subject, not a modifier — look for transport as standalone word near start or after dash
+                    if _re.search(r"(^|\-\s*)\w+\s+transport\b|\btransport\s*[\-–]", title_lower):
+                        return False, tuple(), 0.0, {"reason": "excluded_transport_company_in_title"}
 
         # Fast exclusion pattern check (early return)
         for pattern in self.exclusion_compiled:

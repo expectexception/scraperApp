@@ -248,11 +248,8 @@ class BatchProcessor:
         if not location:
             return None
 
-        # Normalize first if it's not already
-        if "," not in location and len(location) > 2:
-            location = LocationManager.normalize_location(location)
-
-        return LocationManager.extract_country_code(location)
+        normalized = LocationManager.normalize_location(location)
+        return LocationManager.extract_country_code(normalized)
 
     def _infer_operation_type(self, title: str, company: str, description: str) -> str:
         """Infer operation type from job details"""
