@@ -778,9 +778,47 @@ SCRAPERS = {
 SITES = {
     "two_excel": {
         "name": "2Excel",
+        "enabled": True,
         "base_url": "https://2excel.talosats-careers.com",
         "jobs_url": "https://2excel.talosats-careers.com/view-all-vacancies?what=&where=&iso=gb&radius=30&custom=-1-_-1-#vacancies-section-filters",
         "description": "2Excel Careers",
+    },
+    "airtanker": {
+        "name": "Airtanker",
+        "enabled": True,
+        "base_url": "https://airtanker.pinpointhq.com",
+        "jobs_url": "https://airtanker.pinpointhq.com/postings.json",
+        "description": "Airtanker Careers",
+    },
+    "hcts": {
+        "name": "HCTS",
+        "enabled": True,
+        "base_url": "https://hcts.fa.em2.oraclecloud.com",
+        "jobs_url": "https://hcts.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs",
+        "site_number": "CX_1",
+        "company_name": "HCTS",
+        "description": "HCTS Careers",
+    },
+    "beond": {
+        "name": "Beond",
+        "enabled": True,
+        "base_url": "https://apply.workable.com/beond/",
+        "jobs_url": "https://apply.workable.com/beond/",
+        "description": "Beond Careers (Workable)",
+    },
+    "flysafair": {
+        "name": "FlySafair",
+        "enabled": True,
+        "base_url": "https://flysafairjobs.mcidirecthire.com",
+        "jobs_url": "https://flysafairjobs.mcidirecthire.com/Vacancy",
+        "description": "FlySafair Careers",
+    },
+    "vivaaerobus": {
+        "name": "Viva Aerobus",
+        "enabled": True,
+        "base_url": "https://jobs.vivaaerobus.com",
+        "jobs_url": "https://jobs.vivaaerobus.com/jobs.json",
+        "description": "Viva Aerobus Careers",
     },
     "ascent": {
         "name": "Ascent Flight Training",
@@ -924,6 +962,10 @@ SITES = {
         "enabled": True,
         "base_url": "https://careers.qatarairways.com",
         "jobs_url": "https://careers.qatarairways.com/global/SearchJobs?7330=57893&listFilterMode=1",
+        "jobs_urls": [
+            "https://careers.qatarairways.com/global/SearchJobs/?7330=57893&7330_format=1202&listFilterMode=1",
+            "https://careers.qatarairways.com/global/SearchJobs/?7758=37378&7758_format=1533&listFilterMode=1"
+        ],
         "description": "Qatar Airways careers",
     },
     "dnatabrasil": {
@@ -2064,7 +2106,7 @@ SITES = {
         "name": "Flydubai",
         "enabled": True,
         "base_url": "https://careers.flydubai.com",
-        "jobs_url": "https://careers.flydubai.com/jobs?page=1&categories=Behind%20the%20Scenes",
+        "jobs_url": "https://careers.flydubai.com/jobs",
         "description": "Flydubai careers portal",
     },
     "ameriflight": {

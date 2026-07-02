@@ -6,6 +6,7 @@ import requests
 
 from .base_scraper import BaseScraper
 from .job_schema import get_job_dict
+from scraper_manager.location_manager import LocationManager
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,27 @@ class JetflyScraper(BaseScraper):
                     loc_dict = item.get("location", {}) or {}
                     city = loc_dict.get("city") or ""
                     state = loc_dict.get("state") or ""
-                    location = ", ".join(p for p in (city, state) if p) or "Unknown"
+                    loc_parts = [p for p in (city, state) if p]
+
+                    # BambooHR's location object has no country, and city names
+                    # alone are ambiguous (e.g. "Christchurch" = New Zealand's
+                    # city to LocationManager, but here it's the UK town near
+                    # our Bournemouth maintenance center). The department label
+                    # (e.g. "UK - Maintenance Center") carries the real country,
+                    # so fold its leading token in when it's a recognized country.
+                    department = item.get("departmentLabel") or ""
+                    dept_prefix = department.split(" - ")[0].strip() if department else ""
+                    if dept_prefix and dept_prefix.upper() not in {p.upper() for p in loc_parts}:
+                        prefix_upper = dept_prefix.upper()
+                        is_country_token = (
+                            prefix_upper in LocationManager.CC_TO_NAME
+                            or dept_prefix.lower() in (c.lower() for c in LocationManager.CC_TO_NAME.values())
+                            or prefix_upper == "UK"
+                        )
+                        if is_country_token:
+                            loc_parts.append(dept_prefix)
+
+                    location = ", ".join(loc_parts) or "Unknown"
                     
                     jobs.append({
                         "job_id": f"jetfly_{job_id}",

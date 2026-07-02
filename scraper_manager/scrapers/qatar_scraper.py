@@ -24,6 +24,9 @@ class QatarAirwaysScraper(BaseScraper):
         self.jobs_url = self.site_config.get(
             "jobs_url", "https://careers.qatarairways.com/global/SearchJobs/"
         )
+        self.jobs_urls = self.site_config.get("jobs_urls") or [self.jobs_url]
+        if isinstance(self.jobs_urls, str):
+            self.jobs_urls = [self.jobs_urls]
         self.records_per_page = 6  # Fixed by server currently
 
     async def run(self):
@@ -31,7 +34,7 @@ class QatarAirwaysScraper(BaseScraper):
         self.print_header()
 
         print(f"Fetching jobs from {self.site_config.get('name', 'Qatar Airways')}...")
-        print(f"URL: {self.jobs_url}\n")
+        print(f"URLs: {self.jobs_urls}\n")
 
         jobs_raw = await self.fetch_jobs_from_listing()
         jobs = [get_job_dict(**job) for job in jobs_raw]
@@ -78,104 +81,113 @@ class QatarAirwaysScraper(BaseScraper):
     async def fetch_jobs_from_listing(self):
         """Fetch jobs from Qatar Airways listing page with pagination"""
         jobs = []
+        from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
             page, context = await self.setup_stealth_page(browser)
 
             try:
-                # Pagination using jobOffset
-                # We'll crawl until max_jobs or no more result cards
-                for offset in range(0, 300, self.records_per_page):
-                    separator = "&" if "?" in self.jobs_url else "?"
-                    current_url = f"{self.jobs_url}{separator}jobRecordsPerPage={self.records_per_page}&jobOffset={offset}"
-                    print(f"Loading Qatar Airways careers page (offset={offset})...")
+                for target_url in self.jobs_urls:
+                    # Clean offset and page size query params to avoid duplicate/conflicting param names
+                    u = urlparse(target_url)
+                    q = dict(parse_qsl(u.query))
+                    q.pop('jobOffset', None)
+                    q.pop('jobRecordsPerPage', None)
+                    cleaned_base_url = urlunparse(u._replace(query=urlencode(q)))
 
-                    await page.goto(current_url, wait_until="load", timeout=45000)
-                    await self.random_delay(3, 5)
-                    await self.simulate_human_behavior(page)
+                    # Pagination using jobOffset
+                    # We'll crawl until max_jobs or no more result cards
+                    for offset in range(0, 300, self.records_per_page):
+                        separator = "&" if "?" in cleaned_base_url else "?"
+                        current_url = f"{cleaned_base_url}{separator}jobRecordsPerPage={self.records_per_page}&jobOffset={offset}"
+                        print(f"Loading Qatar Airways careers page ({current_url})...")
 
-                    # Wait for job cards/links
-                    # Based on exploration, jobs are in blocks with a.link
-                    try:
-                        await page.wait_for_selector("a.link", timeout=20000)
-                    except Exception:
-                        print(f"ℹ️  No more results found at offset={offset}")
-                        break
+                        await page.goto(current_url, wait_until="load", timeout=45000)
+                        await self.random_delay(3, 5)
+                        await self.simulate_human_behavior(page)
 
-                    # Find all links that look like job links (contain /JobDetail/)
-                    links = await page.query_selector_all(
-                        'a.link, a[href*="/JobDetail/"]'
-                    )
-
-                    if not links:
-                        print(f"ℹ️  No job links found at offset={offset}")
-                        break
-
-                    print(f"✓ Found {len(links)} potential job links on this page")
-
-                    for link in links:
+                        # Wait for job cards/links
+                        # Based on exploration, jobs are in blocks with a.link
                         try:
-                            href = await link.get_attribute("href")
-                            if not href or "/JobDetail/" not in href:
-                                continue
-
-                            title = (await link.inner_text()).strip()
-                            if not title:
-                                # Try to get title from aria-label or title attribute
-                                title = await link.get_attribute(
-                                    "aria-label"
-                                ) or await link.get_attribute("title")
-
-                            if not title:
-                                continue
-
-                            job_url = (
-                                f"{self.base_url}{href}"
-                                if href.startswith("/")
-                                else href
-                            )
-
-                            # Extract Req ID from URL
-                            req_id = None
-                            match = re.search(r"/JobDetail/(\d+)", href)
-                            if match:
-                                req_id = match.group(1)
-
-                            if not req_id:
-                                # Fallback ID from URL hash or something
-                                import hashlib
-
-                                req_id = hashlib.md5(job_url.encode()).hexdigest()[:8]
-
-                            job_data = {
-                                "job_id": f"qatar_{req_id}",
-                                "title": title,
-                                "company": "Qatar Airways",
-                                "source": self.site_key,
-                                "url": job_url,
-                                "apply_url": job_url,
-                                "location": "Unknown",
-                                "timestamp": datetime.now().isoformat(),
-                                "description": "",
-                            }
-                            jobs.append(job_data)
-
-                            if self.max_jobs and len(jobs) >= self.max_jobs:
-                                break
+                            await page.wait_for_selector("a.link", timeout=20000)
                         except Exception:
-                            continue
+                            print(f"ℹ️  No more results found at offset={offset}")
+                            break
 
-                    if self.max_jobs and len(jobs) >= self.max_jobs:
-                        break
+                        # Find all links that look like job links (contain /JobDetail/)
+                        links = await page.query_selector_all(
+                            'a.link, a[href*="/JobDetail/"]'
+                        )
 
-                    # Check if we got fewer than 6 results (last page)
-                    # Use unique URLs to count
-                    current_page_count = len(
-                        set(j["url"] for j in jobs[-self.records_per_page :])
-                    )
-                    if current_page_count < self.records_per_page:
-                        break
+                        if not links:
+                            print(f"ℹ️  No job links found at offset={offset}")
+                            break
+
+                        print(f"✓ Found {len(links)} potential job links on this page")
+
+                        for link in links:
+                            try:
+                                href = await link.get_attribute("href")
+                                if not href or "/JobDetail/" not in href:
+                                    continue
+
+                                title = (await link.inner_text()).strip()
+                                if not title:
+                                    # Try to get title from aria-label or title attribute
+                                    title = await link.get_attribute(
+                                        "aria-label"
+                                    ) or await link.get_attribute("title")
+
+                                if not title:
+                                    continue
+
+                                job_url = (
+                                    f"{self.base_url}{href}"
+                                    if href.startswith("/")
+                                    else href
+                                )
+
+                                # Extract Req ID from URL
+                                req_id = None
+                                match = re.search(r"/JobDetail/(\d+)", href)
+                                if match:
+                                    req_id = match.group(1)
+
+                                if not req_id:
+                                    # Fallback ID from URL hash or something
+                                    import hashlib
+
+                                    req_id = hashlib.md5(job_url.encode()).hexdigest()[:8]
+
+                                job_data = {
+                                    "job_id": f"qatar_{req_id}",
+                                    "title": title,
+                                    "company": "Qatar Airways",
+                                    "source": self.site_key,
+                                    "url": job_url,
+                                    "apply_url": job_url,
+                                    "location": "Unknown",
+                                    "timestamp": datetime.now().isoformat(),
+                                    "description": "",
+                                }
+                                jobs.append(job_data)
+
+                                if self.max_jobs and len(jobs) >= self.max_jobs:
+                                    break
+                            except Exception:
+                                continue
+
+                        if self.max_jobs and len(jobs) >= self.max_jobs:
+                            break
+
+                        # Check if we got fewer than 6 results (last page)
+                        # Use unique URLs to count
+                        current_page_count = len(
+                            set(j["url"] for j in jobs[-self.records_per_page :])
+                        )
+                        if current_page_count < self.records_per_page:
+                            break
 
             except Exception as e:
                 print(f"❌ Error fetching jobs: {e}")

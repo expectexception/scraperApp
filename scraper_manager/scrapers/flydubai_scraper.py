@@ -9,6 +9,7 @@ from playwright.async_api import async_playwright
 from .base_scraper import BaseScraper
 import re
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -92,147 +93,197 @@ class FlydubaiScraper(BaseScraper):
                 await self.random_delay(4, 7)
                 await self.simulate_human_behavior(page)
 
-                # Wait for the Angular job list to render
-                try:
-                    await page.wait_for_selector("a.job-title-link", timeout=30000)
-                except Exception:
-                    logger.warning("Timed out waiting for job-title-link selector")
-
-                # Verified selector from live inspection: only real job title links
-                job_links = await page.query_selector_all("a.job-title-link")
-                logger.info(
-                    f"Found {len(job_links)} jobs using verified selector: a.job-title-link"
-                )
-
-                if not job_links:
-                    logger.warning("No job links found with verified selector")
-
-                if not job_links:
-                    logger.warning(
-                        "No job links found with known selectors, falling back to all generic links"
-                    )
-                    # Generic fallback
-                    anchors = await page.query_selector_all("a")
-                    for a in anchors:
-                        href = await a.get_attribute("href")
-                        if href and any(
-                            k in href.lower()
-                            for k in ["/job", "/career", "vacancy", "opening"]
-                        ):
-                            txt = await a.inner_text()
-                            if txt and len(txt.strip()) > 3:
-                                job_links.append(a)
-
-                # Extract job data from links
                 added_urls = set()
-                for link in job_links:
+                page_num = 1
+
+                while True:
+                    # Wait for the Angular job list to render
+                    try:
+                        await page.wait_for_selector("a.job-title-link", timeout=30000)
+                    except Exception:
+                        logger.warning(f"Timed out waiting for job-title-link selector on page {page_num}")
+                        if page_num == 1:
+                            break
+                        else:
+                            break
+
+                    # Verified selector from live inspection: only real job title links
+                    job_links = await page.query_selector_all("a.job-title-link")
+                    logger.info(
+                        f"Page {page_num}: Found {len(job_links)} jobs using verified selector: a.job-title-link"
+                    )
+
+                    if not job_links and page_num == 1:
+                        logger.warning("No job links found with verified selector, falling back to generic links")
+                        # Generic fallback
+                        anchors = await page.query_selector_all("a")
+                        for a in anchors:
+                            href = await a.get_attribute("href")
+                            if href and any(
+                                k in href.lower()
+                                for k in ["/job", "/career", "vacancy", "opening"]
+                            ):
+                                txt = await a.inner_text()
+                                if txt and len(txt.strip()) > 3:
+                                    job_links.append(a)
+
+                    # Extract job data from links on the current page
+                    page_job_count = 0
+                    first_job_title = ""
+                    for link in job_links:
+                        if self.max_jobs and len(jobs) >= self.max_jobs:
+                            break
+
+                        try:
+                            href = await link.get_attribute("href")
+                            if not href:
+                                continue
+
+                            # Build full URL (Flydubai uses relative paths like /jobs/1234)
+                            if href.startswith("/"):
+                                job_url = f"{self.resolved_base}{href}"
+                            elif href.startswith("http"):
+                                job_url = href
+                            else:
+                                job_url = f"{self.resolved_base}/{href}"
+
+                            if job_url in added_urls:
+                                continue
+
+                            # Extract title from link text (may be in a child <span>)
+                            title = (await link.inner_text()).strip()
+                            if not title:
+                                span = await link.query_selector("span")
+                                if span:
+                                    title = (await span.inner_text()).strip()
+                            if not title or len(title) < 4:
+                                continue
+
+                            # Skip navigation/UI text that might slip through
+                            skip_words = {
+                                "apply now",
+                                "log in",
+                                "login",
+                                "careers",
+                                "home",
+                                "search",
+                                "sign up",
+                                "register",
+                                "all open positions",
+                            }
+                            if title.lower() in skip_words:
+                                continue
+
+                            # Record first job title for change detection
+                            if not first_job_title:
+                                first_job_title = title
+
+                            # Extract job ID
+                            job_id = None
+                            match = re.search(r"[-/](\d+)(?:/|$)", href)
+                            if match:
+                                job_id = match.group(1)
+                            if not job_id:
+                                job_id = f"flydubai_{len(jobs) + 1}_{datetime.now().strftime('%Y%m%d')}"
+                            else:
+                                job_id = f"flydubai_{job_id}"
+
+                            job_data = {
+                                "job_id": job_id,
+                                "title": title,
+                                "company": "Flydubai",
+                                "source": "flydubai",
+                                "url": job_url,
+                                "apply_url": job_url,
+                                "location": "Dubai, UAE",  # Default location
+                                "job_type": "",
+                                "department": "",
+                                "posted_date": "",
+                                "closing_date": "",
+                                "timestamp": datetime.now().isoformat(),
+                                "description": "",
+                                "requirements": "",
+                                "qualifications": "",
+                            }
+
+                            # Attempt to get location / department if present in list
+                            parent_handle = await link.evaluate_handle(
+                                'el => el.closest("tr") || el.closest("li") || el.closest(".job-card")'
+                            )
+                            parent = parent_handle.as_element()
+                            if parent:
+                                loc_elem = await parent.query_selector(
+                                    '.location, [class*="location"]'
+                                )
+                                if loc_elem:
+                                    loc_text = await loc_elem.inner_text()
+                                    job_data["location"] = loc_text.strip()
+
+                                date_elem = await parent.query_selector(
+                                    '.date, [class*="date"]'
+                                )
+                                if date_elem:
+                                    date_text = await date_elem.inner_text()
+                                    parsed = self.parse_posted_date(date_text)
+                                    job_data["posted_date"] = (
+                                        parsed if parsed else date_text.strip()
+                                    )
+
+                                dept_elem = await parent.query_selector(
+                                    '.department, [class*="department"]'
+                                )
+                                if dept_elem:
+                                    dept_text = await dept_elem.inner_text()
+                                    job_data["department"] = dept_text.strip()
+
+                            jobs.append(job_data)
+                            added_urls.add(job_url)
+                            page_job_count += 1
+
+                        except Exception as e:
+                            logger.error(f"Error parsing link: {e}")
+                            continue
+
+                    logger.info(f"Page {page_num}: Added {page_job_count} jobs. Total jobs collected: {len(jobs)}")
+
                     if self.max_jobs and len(jobs) >= self.max_jobs:
+                        logger.info(f"Reached max_jobs limit of {self.max_jobs}")
                         break
 
-                    try:
-                        href = await link.get_attribute("href")
-                        if not href:
-                            continue
+                    if self.max_pages and page_num >= self.max_pages:
+                        logger.info(f"Reached max_pages limit of {self.max_pages}")
+                        break
 
-                        # Build full URL (Flydubai uses relative paths like /jobs/1234)
-                        if href.startswith("/"):
-                            job_url = f"{self.resolved_base}{href}"
-                        elif href.startswith("http"):
-                            job_url = href
-                        else:
-                            job_url = f"{self.resolved_base}/{href}"
+                    # Check next button
+                    next_btn = await page.query_selector("button.mat-paginator-navigation-next, button[aria-label='Next page']")
+                    if not next_btn:
+                        logger.info("No next page button found")
+                        break
+                    
+                    if await next_btn.is_disabled():
+                        logger.info("Next page button is disabled, reached last page")
+                        break
 
-                        if job_url in added_urls:
-                            continue
-
-                        # Extract title from link text (may be in a child <span>)
-                        title = (await link.inner_text()).strip()
-                        if not title:
-                            span = await link.query_selector("span")
-                            if span:
-                                title = (await span.inner_text()).strip()
-                        if not title or len(title) < 4:
-                            continue
-
-                        # Skip navigation/UI text that might slip through
-                        skip_words = {
-                            "apply now",
-                            "log in",
-                            "login",
-                            "careers",
-                            "home",
-                            "search",
-                            "sign up",
-                            "register",
-                            "all open positions",
-                        }
-                        if title.lower() in skip_words:
-                            continue
-
-                        # Extract job ID
-                        job_id = None
-                        match = re.search(r"[-/](\d+)(?:/|$)", href)
-                        if match:
-                            job_id = match.group(1)
-                        if not job_id:
-                            job_id = f"flydubai_{len(jobs) + 1}_{datetime.now().strftime('%Y%m%d')}"
-                        else:
-                            job_id = f"flydubai_{job_id}"
-
-                        job_data = {
-                            "job_id": job_id,
-                            "title": title,
-                            "company": "Flydubai",
-                            "source": "flydubai",
-                            "url": job_url,
-                            "apply_url": job_url,
-                            "location": "Dubai, UAE",  # Default location
-                            "job_type": "",
-                            "department": "",
-                            "posted_date": "",
-                            "closing_date": "",
-                            "timestamp": datetime.now().isoformat(),
-                            "description": "",
-                            "requirements": "",
-                            "qualifications": "",
-                        }
-
-                        # Attempt to get location / department if present in list
-                        parent_handle = await link.evaluate_handle(
-                            'el => el.closest("tr") || el.closest("li") || el.closest(".job-card")'
-                        )
-                        parent = parent_handle.as_element()
-                        if parent:
-                            loc_elem = await parent.query_selector(
-                                '.location, [class*="location"]'
+                    # Click next page and wait for the page change
+                    logger.info(f"Clicking next page button to go to page {page_num + 1}...")
+                    await next_btn.click()
+                    
+                    # Wait for first job title to change to ensure page content has updated
+                    if first_job_title:
+                        try:
+                            # Wait up to 10s for the first job title to change in the DOM
+                            await page.wait_for_function(
+                                f"() => {{ const el = document.querySelector('a.job-title-link'); return el && el.innerText.trim() !== {json.dumps(first_job_title)}; }}",
+                                timeout=10000
                             )
-                            if loc_elem:
-                                loc_text = await loc_elem.inner_text()
-                                job_data["location"] = loc_text.strip()
+                        except Exception:
+                            logger.warning("Timed out waiting for page content to change after click; continuing anyway")
+                            await self.random_delay(3, 5)
+                    else:
+                        await self.random_delay(3, 5)
 
-                            date_elem = await parent.query_selector(
-                                '.date, [class*="date"]'
-                            )
-                            if date_elem:
-                                date_text = await date_elem.inner_text()
-                                parsed = self.parse_posted_date(date_text)
-                                job_data["posted_date"] = (
-                                    parsed if parsed else date_text.strip()
-                                )
-
-                            dept_elem = await parent.query_selector(
-                                '.department, [class*="department"]'
-                            )
-                            if dept_elem:
-                                dept_text = await dept_elem.inner_text()
-                                job_data["department"] = dept_text.strip()
-
-                        jobs.append(job_data)
-                        added_urls.add(job_url)
-
-                    except Exception as e:
-                        logger.error(f"Error parsing link: {e}")
-                        continue
+                    await self.simulate_human_behavior(page)
+                    page_num += 1
 
             except asyncio.TimeoutError:
                 logger.error("Timeout loading page")

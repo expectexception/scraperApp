@@ -1,4 +1,9 @@
 from .two_excel_scraper import TwoExcelScraper
+from .airtanker_scraper import AirtankerScraper
+from .hcts_scraper import HctsScraper
+from .beond_scraper import BeondScraper
+from .flysafair_scraper import FlySafairScraper
+from .vivaaerobus_scraper import VivaAerobusScraper
 from .ascent_scraper import AscentScraper
 from .aviasg_scraper import AviasgScraper
 from .dlr_scraper import DlrScraper
@@ -275,6 +280,11 @@ SCRAPERS = {
     "aviasg": AviasgScraper,
     "ascent": AscentScraper,
     "two_excel": TwoExcelScraper,
+    "airtanker": AirtankerScraper,
+    "hcts": HctsScraper,
+    "beond": BeondScraper,
+    "flysafair": FlySafairScraper,
+    "vivaaerobus": VivaAerobusScraper,
     "absjets": AbsjetsScraper,
     "aegean": AegeanScraper,
     "airfrance": AirFranceScraper,

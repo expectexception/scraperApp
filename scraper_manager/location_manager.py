@@ -810,7 +810,36 @@ class LocationManager:
             for city_key, country_val in cls.CITY_TO_COUNTRY.items():
                 if re.search(r'\b' + re.escape(city_key) + r'\b', text_lower):
                     city_name = city_key.title()
+                    # A city name here can collide with an unrelated place of the
+                    # same name elsewhere (e.g. "Christchurch" = New Zealand's city,
+                    # but also a town in Dorset, UK). If the caller has an explicit
+                    # hint_country that disagrees, trust the hint over the guess.
+                    if hint_country and hint_country.lower() != country_val.lower():
+                        return f"{city_name}, {hint_country}"
                     return f"{city_name}, {country_val}"
+
+        # If there are multiple delimited parts, prefer an exact country code/abbreviation
+        # in one of those parts over a fuzzy substring match against the whole string.
+        # This stops city names that collide with country names (e.g. "Jamaica" the
+        # Queens, NY neighborhood vs. "Jamaica" the country) from winning when an
+        # explicit "US"/state part is present, e.g. "Jamaica, NY, US, 11430".
+        if not detected_country and len(parts) > 1:
+            for part in reversed(parts):
+                part_clean = part.strip()
+                if not part_clean:
+                    continue
+                part_upper = part_clean.upper()
+
+                # Check 2-letter or 3-letter codes (exclude US state collisions)
+                if part_upper in cls.CC_TO_NAME and part_upper not in cls.US_STATES:
+                    detected_country = cls.CC_TO_NAME[part_upper]
+                    break
+                elif re.search(r'\b(?:USA|U\.S\.|U\.S\.A\.)\b', part_upper):
+                    detected_country = "United States"
+                    break
+                elif re.search(r'\b(?:UK|U\.K\.)\b', part_upper):
+                    detected_country = "United Kingdom"
+                    break
 
         # Detect country (full country names as substrings first, sorted by length desc)
         if not detected_country:
@@ -838,14 +867,14 @@ class LocationManager:
                     detected_country = cls.CITY_TO_COUNTRY[part_lower]
                     break
 
-        # If still not found, check parts for exact codes or abbreviations (in reverse order to find country first)
+        # If still not found (single-part strings), check parts for exact codes or abbreviations
         if not detected_country:
             for part in reversed(parts):
                 part_clean = part.strip()
                 if not part_clean:
                     continue
                 part_upper = part_clean.upper()
-                
+
                 # Check 2-letter or 3-letter codes (exclude US state collisions)
                 if part_upper in cls.CC_TO_NAME and part_upper not in cls.US_STATES:
                     detected_country = cls.CC_TO_NAME[part_upper]
