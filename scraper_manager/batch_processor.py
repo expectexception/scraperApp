@@ -215,10 +215,20 @@ class BatchProcessor:
 
         title = job_data.get("title", "No Title").strip()
         company = job_data.get("company", "Unknown").strip()
-        location = job_data.get("location", "").strip()
+        raw_location = job_data.get("location", "").strip()
+        location = raw_location
         description = job_data.get("description", "").strip()[
             :10000
         ]  # Limit description
+
+        # See db_manager._save_to_jobs_model: a bare country/region (no city, no
+        # comma) is the fingerprint of a scraper's hardcoded HQ-country fallback.
+        # Cross-check it against title/description text and trust an explicit
+        # mismatch there.
+        if raw_location and "," not in raw_location:
+            text_hint = LocationManager.detect_country_from_text(f"{title} {description[:1000]}")
+            if text_hint and text_hint.lower() != raw_location.lower() and text_hint.lower() not in raw_location.lower():
+                location = text_hint
 
         # Parse posted_date
         posted_date = None

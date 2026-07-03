@@ -453,8 +453,20 @@ class DjangoDBManager:
 
             company = (job_data.get("company") or job_data.get("recruiter") or "Unknown").strip()
             url = job_data.get("url", "").strip()
-            location = self._clean_location(job_data.get("location", "").strip(), company=company)
+            raw_location = job_data.get("location", "").strip()
+            location = self._clean_location(raw_location, company=company)
             description = job_data.get("description", "").strip()
+
+            # Some per-site scrapers hardcode a fallback location (usually the
+            # employer's HQ country) when their location selector fails to find
+            # anything on the page — even though the posting itself is for a
+            # different country. A bare country/region (no city, no comma) is
+            # the fingerprint of that fallback; cross-check it against the
+            # title/description text and trust an explicit mismatch there.
+            if raw_location and "," not in raw_location:
+                text_hint = LocationManager.detect_country_from_text(f"{title} {description[:1000]}")
+                if text_hint and text_hint.lower() != location.lower() and text_hint.lower() not in location.lower():
+                    location = text_hint
 
             if not url:
                 logger.error(f"Job URL is required for: {title}")
@@ -830,6 +842,18 @@ class DjangoDBManager:
             if any(d in url for d in _SKIP_DOMAINS):
                 return True, "skipped_ats_domain"
 
+            # ATS domains that render job status client-side via JS (the static
+            # HTML never contains "closed"/"not available" text — it's injected
+            # after an API call). A plain HTTP GET can never detect closure here,
+            # so force the Playwright render path for these regardless of the
+            # caller's use_playwright flag.
+            _JS_RENDERED_DOMAINS = (
+                "ultipro.com",
+                "ultipro.ca",
+            )
+            if any(d in url for d in _JS_RENDERED_DOMAINS):
+                use_playwright = True
+
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             }
@@ -1105,6 +1129,14 @@ class DjangoDBManager:
                 "currently not hiring",
                 "we are not hiring for this role anymore",
                 "future opportunities only",
+                # --- CSOD (Cornerstone OnDemand) generic removed-job template ---
+                "this opportunity is currently not available",
+                "opportunity is currently not available",
+                "this position is currently not available",
+                "position is currently not available",
+                "this job is currently not available",
+                "job is currently not available",
+                "currently not available",
             ]
 
             # Limit search to first 100KB for efficiency

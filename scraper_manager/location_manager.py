@@ -547,6 +547,21 @@ class LocationManager:
         "singapore": "Singapore",
         "kuala lumpur": "Malaysia",
         "jakarta": "Indonesia",
+        "tangerang": "Indonesia",
+        "surabaya": "Indonesia",
+        "bandung": "Indonesia",
+        "bekasi": "Indonesia",
+        "medan": "Indonesia",
+        "depok": "Indonesia",
+        "semarang": "Indonesia",
+        "palembang": "Indonesia",
+        "makassar": "Indonesia",
+        "denpasar": "Indonesia",
+        "bali": "Indonesia",
+        "bogor": "Indonesia",
+        "balikpapan": "Indonesia",
+        "batam": "Indonesia",
+        "bandar lampung": "Indonesia",
         "bangkok": "Thailand",
         "manila": "Philippines",
         "ho chi minh": "Vietnam",
@@ -840,6 +855,9 @@ class LocationManager:
                 elif re.search(r'\b(?:UK|U\.K\.)\b', part_upper):
                     detected_country = "United Kingdom"
                     break
+                elif re.search(r'\bCAN\b', part_upper):
+                    detected_country = "Canada"
+                    break
 
         # Detect country (full country names as substrings first, sorted by length desc)
         if not detected_country:
@@ -884,6 +902,9 @@ class LocationManager:
                     break
                 elif re.search(r'\b(?:UK|U\.K\.)\b', part_upper):
                     detected_country = "United Kingdom"
+                    break
+                elif re.search(r'\bCAN\b', part_upper):
+                    detected_country = "Canada"
                     break
 
         # Check hint_country
@@ -999,3 +1020,39 @@ class LocationManager:
                 best_cc = cc
                 best_len = len(name_lower)
         return best_cc
+
+    @classmethod
+    def detect_country_from_text(cls, text: str) -> Optional[str]:
+        """
+        Scan free text (job title/description) for an explicit country mention.
+        Used to catch per-site scrapers whose location selector failed and fell
+        back to a hardcoded default (e.g. the employer's HQ country) that doesn't
+        match the actual posting's location.
+        """
+        if not text or not isinstance(text, str):
+            return None
+        text_lower = text.lower()
+
+        # Full US state names are unambiguous in free text (unlike 2-letter codes,
+        # which collide with ISO country codes like ID=Indonesia, DE=Germany).
+        for state in cls.US_STATES:
+            if len(state) > 2 and re.search(r'\b' + re.escape(state) + r'\b', text_lower):
+                return "United States"
+        if re.search(r'\b(?:usa|u\.s\.a\.|u\.s\.)\b', text_lower):
+            return "United States"
+
+        sorted_countries = sorted(cls.CC_TO_NAME.values(), key=len, reverse=True)
+        for country_name in sorted_countries:
+            if re.search(r'\b' + re.escape(country_name.lower()) + r'\b', text_lower):
+                return country_name
+
+        sorted_alt_names = sorted(cls.ALT_COUNTRY_NAMES.keys(), key=len, reverse=True)
+        for alt_name in sorted_alt_names:
+            if re.search(r'\b' + re.escape(alt_name) + r'\b', text_lower):
+                return cls.ALT_COUNTRY_NAMES[alt_name]
+
+        for city_key, country_val in cls.CITY_TO_COUNTRY.items():
+            if re.search(r'\b' + re.escape(city_key) + r'\b', text_lower):
+                return country_val
+
+        return None
