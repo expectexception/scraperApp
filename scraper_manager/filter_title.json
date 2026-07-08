@@ -1251,5 +1251,12 @@
         "Materials Manager"
       ]
     }
-  ]
+  ],
+  "categories": {
+    "Dispatcher / Flight Follower / Operations Controller": {
+      "keywords": [
+        "Trip Planner"
+      ]
+    }
+  }
 }

@@ -246,12 +246,15 @@ from .latestpilotjobs_scraper import LatestPilotJobsScraper
 from .aviationcareers_scraper import AviationCareersScraper
 from .flyinggroup_scraper import FlyingGroupScraper
 from .luxaviation_scraper import LuxaviationScraper
+from .comlux_scraper import ComluxScraper
+from .baker_aviation_scraper import BakerAviationScraper
 from .twenty_one_air_scraper import TwentyOneAirScraper
 from .sterling_scraper import SterlingScraper
 from .uchealth_scraper import UCHealthScraper
 from .usajet_scraper import USAJetScraper
 from .igoxair_scraper import IGoxAirScraper
 from .phoenix_air_group_scraper import PhoenixAirGroupScraper
+from .globalx_scraper import GlobalXScraper
 from .cutter_scraper import CutterScraper
 from .jetstar_scraper import JetstarScraper
 from .hkexpress_scraper import HKExpressScraper
@@ -261,6 +264,7 @@ from .k5_aviation_scraper import K5AviationScraper
 from .avconjet_scraper import AvconJetScraper
 from .travelcoup_scraper import TravelcoupScraper
 from .aaregional_scraper import AaRegionalScraper
+from .airways_scraper import AirwaysScraper
 from .transairhawaii_scraper import TransairHawaiiScraper
 from .chevron_scraper import ChevronScraper
 from .virgingalactic_scraper import VirginGalacticScraper
@@ -268,6 +272,7 @@ from .gmr_scraper import GmrScraper
 from .magnificaair_scraper import MagnificaAirScraper
 from .qantas_scraper import QantasScraper
 from .flyairshare_scraper import FlyAirshareScraper
+from .fref_scraper import FrefScraper
 
 # Available scrapers
 SCRAPERS = {
@@ -510,12 +515,15 @@ SCRAPERS = {
     "aviationcareers": AviationCareersScraper,
     "flyinggroup": FlyingGroupScraper,
     "luxaviation": LuxaviationScraper,
+    "comlux": ComluxScraper,
+    "baker_aviation": BakerAviationScraper,
     "twenty_one_air": TwentyOneAirScraper,
     "sterling": SterlingScraper,
     "uchealth": UCHealthScraper,
     "usajet": USAJetScraper,
     "igoxair": IGoxAirScraper,
     "phoenix_air_group": PhoenixAirGroupScraper,
+    "globalx": GlobalXScraper,
     "cutter": CutterScraper,
     "jetstar": JetstarScraper,
     "hkexpress": HKExpressScraper,
@@ -527,6 +535,7 @@ SCRAPERS = {
     "adani_airports": AdaniScraper,
     "avconjet": AvconJetScraper,
     "travelcoup": TravelcoupScraper,
+    "airways": AirwaysScraper,
     "aaregional": AaRegionalScraper,
     "transairhawaii": TransairHawaiiScraper,
     "chevron": ChevronScraper,
@@ -535,6 +544,7 @@ SCRAPERS = {
     "magnificaair": MagnificaAirScraper,
     "qantas": QantasScraper,
     "flyairshare": FlyAirshareScraper,
+    "fref": FrefScraper,
 }
 
 

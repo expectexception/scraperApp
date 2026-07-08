@@ -9,13 +9,13 @@ from urllib.parse import urljoin
 logger = logging.getLogger(__name__)
 
 
-class ATSGScraper(BaseScraper):
-    """Scraper for Air Transport Services Group (ATSG) using their UKG Pro (Ultipro) portal via Playwright."""
+class FrefScraper(BaseScraper):
+    """Scraper for UKG Pro portal (FOR1029FREF) using Playwright."""
 
     def __init__(self, config: Dict, db_manager=None):
-        super().__init__(config, site_key="atsg", db_manager=db_manager)
-        self.base_url = "https://recruiting.ultipro.com/AIR1013ATSG/JobBoard/7f7953dc-22ab-4b56-ad7a-2fe1ad00de22/"
-        self.company_name = "Air Transport Services Group (ATSG)"
+        super().__init__(config, site_key="fref", db_manager=db_manager)
+        self.base_url = "https://recruiting2.ultipro.com/FOR1029FREF/JobBoard/64ac66bb-52b9-46df-9a34-49db2308f2fe/"
+        self.company_name = "FREF (UKG Pro)"
 
     async def fetch_jobs(self) -> List[Dict]:
         """Fetch jobs from the UKG Pro portal using Playwright."""
@@ -29,22 +29,22 @@ class ATSGScraper(BaseScraper):
             page = await context.new_page()
 
             try:
-                # Add query parameters for sorting by date desc as per user request
                 target_url = self.base_url + "?q=&o=postedDateDesc"
                 logger.info(f"[{self.site_key}] Navigating to {target_url}...")
-                await page.goto(target_url, wait_until="domcontentloaded", timeout=60000)
+                try:
+                    await page.goto(target_url, wait_until="domcontentloaded", timeout=60000)
+                except Exception as e:
+                    logger.warning(f"[{self.site_key}] Timeout or error during goto: {e}. Proceeding anyway...")
 
-                # Wait for job container to appear
                 try:
                     await page.wait_for_selector(
-                        '[data-automation="opportunity"], .opportunity', timeout=30000
+                        'a.opportunity-link', timeout=30000
                     )
                 except Exception as e:
                     logger.warning(
                         f"[{self.site_key}] Timeout waiting for job list: {e}"
                     )
 
-                # Handle "Load More" if it exists
                 load_more_attempts = 0
                 max_load_more = 5
                 while load_more_attempts < max_load_more:
@@ -61,12 +61,9 @@ class ATSGScraper(BaseScraper):
                     else:
                         break
 
-                # Extract job summary data from the list
                 job_elements = await page.query_selector_all(
-                    '[data-automation="opportunity"]'
+                    'a.opportunity-link'
                 )
-                if not job_elements:
-                    job_elements = await page.query_selector_all(".opportunity")
 
                 logger.info(
                     f"[{self.site_key}] Found {len(job_elements)} job elements on the board."
@@ -74,32 +71,18 @@ class ATSGScraper(BaseScraper):
 
                 job_data_list = []
                 for el in job_elements:
-                    title_el = await el.query_selector(
-                        '[data-automation="job-title"], h3 a'
-                    )
-                    if not title_el:
-                        continue
-
-                    title = (await title_el.inner_text()).strip()
-                    href = await title_el.get_attribute("href")
+                    title = (await el.inner_text()).strip()
+                    href = await el.get_attribute("href")
                     if not href:
                         continue
 
                     job_url = urljoin(self.base_url, href)
 
-                    # Get location
                     location = "Unknown"
-                    loc_el = await el.query_selector(
-                        '[data-automation="job-location"], .opportunity-location'
-                    )
-                    if loc_el:
-                        location = (await loc_el.inner_text()).strip()
 
-                    # Early filtering by title
                     if not self.should_process_job(title):
                         continue
 
-                    # Duplicate check
                     if await self.is_url_already_scraped(job_url):
                         continue
 
@@ -110,7 +93,6 @@ class ATSGScraper(BaseScraper):
                     if self.max_jobs and len(job_data_list) >= self.max_jobs:
                         break
 
-                # Now fetch details for each matched job
                 for item in job_data_list:
                     logger.info(
                         f"[{self.site_key}] Fetching details for: {item['title']}..."
@@ -119,7 +101,6 @@ class ATSGScraper(BaseScraper):
                         item["url"], wait_until="domcontentloaded", timeout=60000
                     )
 
-                    # Wait for description
                     try:
                         await page.wait_for_selector(
                             '[data-automation="job-description"], .opportunity-description',
@@ -161,15 +142,8 @@ class ATSGScraper(BaseScraper):
                 await browser.close()
 
     async def run(self):
-        """Standard execution method."""
         self.print_header()
-
         jobs = await self.fetch_jobs()
-
-        # Final match filtering
         matched_jobs, rejected_jobs, stats = self.apply_title_filter(jobs)
-
-        # Save to DB
         await self.save_results(matched_jobs)
-
         return matched_jobs
